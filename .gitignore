@@ -1,4 +1,5 @@
 .vscode
 .cursor
 .DS_Store
-report/build
+report/build/*
+!report/build/main.pdf
