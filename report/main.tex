@@ -27,6 +27,13 @@
 
 % load additional packages
 \usepackage{lipsum}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+
+\setlength\parindent{0pt}
 
 
 % article metadata
@@ -88,25 +95,253 @@ pipeline stages. \S3 covers the full pipeline as an integrated system;
 Cross-cutting concerns (evaluation, context management) are consolidated in the Discussion.
 
 \section{End-to-End Autonomous Software Engineering Agents}
-The big picture first: systems that orchestrate the entire pipeline---from a
-natural-language issue to a tested pull request---showing how the stages
-compose into a holistic system before we zoom into each stage.
+\label{sec:e2e}
+
+Before examining individual pipeline stages, we survey systems that orchestrate
+the \emph{entire} vibe coding pipeline, accepting a natural-language issue or
+specification and producing a tested code change with minimal human
+intervention. These end-to-end agents provide the holistic context in which
+planning (\S\ref{sec:planning}), multi-agent collaboration
+(\S\ref{sec:multiagent}), and feedback-driven refinement
+(\S\ref{sec:refinement}) operate.
+
+
+We begin by identifying the architectural patterns that underlie
+most current systems (\S\ref{sec:e2e-arch}). We then survey five representative
+agents that span the design space: from fully autonomous to deliberately
+non-agentic (\S\ref{sec:e2e-systems}). Finally, we examine how these systems
+are evaluated, focusing on SWE-bench and its variants
+(\S\ref{sec:e2e-eval}).
+
+\begin{table*}[t]
+  \centering
+  \caption{Comparison of end-to-end autonomous SE agents. Architectural
+    patterns: \textbf{OTA}~=~observe--think--act loop,
+    \textbf{ACI}~=~custom Agent--Computer Interface,
+    \textbf{CaA}~=~code-as-action,
+    \textbf{Pipe}~=~fixed multi-phase pipeline (no agent loop).
+    SWE-bench scores are single-pass (pass@1) unless noted;
+    \textbf{Lite}~=~SWE-bench Lite (300 instances),
+    \textbf{Full}~=~SWE-bench Full (2{,}294 instances).
+    Cost is average USD per task instance.}
+  \label{tab:e2e-systems}
+  \small
+  \begin{tabular}{@{}llllccc@{}}
+    \toprule
+    \textbf{System} & \textbf{Origin} & \textbf{Architecture} & \textbf{Context Strategy}
+      & \textbf{Lite} & \textbf{Full} & \textbf{Cost} \\
+    \midrule
+    SWE-agent & Princeton & OTA + ACI
+      & Observation compression & 18.0\% & 12.5\% & \$1.21 \\
+    Agentless & UIUC & Pipe
+      & Hierarchical skeleton + embeddings & 32.0\% & -- & \$0.70 \\
+    AutoCodeRover & NUS & OTA + AST search
+      & AST-based APIs + SBFL & 19\%$^{\dagger}$ & 12.4\% & \$0.43 \\
+    OpenHands & Multi-inst.\  & OTA + CaA
+      & Docker sandbox + delegation & 26.0\% & -- & -- \\
+    Devin & Cognition & OTA + Brain/DevBox
+      & Persistent knowledge store & --$^{\ddagger}$ & -- & propr. \\
+    \bottomrule
+    \multicolumn{7}{@{}l@{}}{\scriptsize $^{\dagger}$26\% with 3 retries (pass@3). \quad $^{\ddagger}$Proprietary; see text for Verified estimates.}
+  \end{tabular}
+\end{table*}
 
 \subsection{Architecture and Orchestration}
-Common architectural choices: tool-augmented LLMs, ReAct-style loops, memory modules,
-context management strategies, and how agents interface with codebases and dev tools.
-Emphasis on the orchestration layer that ties pipeline stages together.
+\label{sec:e2e-arch}
+
+Despite surface-level diversity, autonomous SE agents converge on a small
+number of architectural patterns.
+
+\paragraph{The observe--think--act loop.}
+The dominant paradigm is a ReAct-style~\cite{yao2023react} loop in which the
+agent alternates between (i)~observing the environment (file contents, test
+output, error traces), (ii)~reasoning about what to do next (chain-of-thought
+or structured plan), and (iii)~executing an action via a tool call. SWE-agent~\cite{yang2024sweagent} and OpenHands~\cite{wang2024openhands}
+both instantiate this loop, differing mainly in the \emph{action space} exposed
+to the model (Figure~\ref{fig:react-loop}).
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    node distance=0.35cm,
+    box/.style={
+      draw,
+      rounded corners=2pt,
+      align=center,
+      font=\scriptsize,
+      inner sep=2pt,
+      minimum height=0.45cm,
+    },
+    env/.style={box, fill=gray!12, minimum width=3.6cm},
+    phase/.style={box, fill=blue!6, minimum width=2.0cm},
+    arr/.style={-{Stealth[length=1.4mm]}, semithick},
+  ]
+    \node[env] (env) {Environment\\\tiny files, tests, errors};
+    \node[phase, below=of env] (observe) {(i)~Observe};
+    \node[phase, below=of observe] (think) {(ii)~Think};
+    \node[phase, below=of think] (act) {(iii)~Act};
+
+    \draw[arr] (observe.south) -- (think.north);
+    \draw[arr] (think.south) -- (act.north);
+
+    \coordinate (toolOut) at ([xshift=6mm]env.east);
+    \draw[arr] (act.east) -- (act.east -| toolOut)
+      -- node[pos=0.35, right, font=\tiny, align=left] {tool\\call} (toolOut)
+      -- (env.east);
+
+    \coordinate (stateOut) at ([xshift=-6mm]env.west);
+    \draw[arr] (env.west) -- (stateOut)
+      -- node[pos=0.35, left, font=\tiny, align=right] {updated\\state} (stateOut |- observe.west)
+      -- (observe.west);
+  \end{tikzpicture}%
+  }
+  \caption{ReAct-style observe--think--act loop. The agent reads environment
+    state, reasons about the next step, executes a tool call, and repeats.}
+  \label{fig:react-loop}
+\end{figure}
+
+\paragraph{Agent--Computer Interface (ACI).}
+Yang et al.~\cite{yang2024sweagent} introduce the ACI concept, arguing that
+LLMs are a ``new category of end users'' that need purpose-built interfaces
+rather than raw shell access. SWE-agent's ACI includes a windowed file viewer
+(100~lines), a linter-guarded \texttt{edit} command, summarised search results,
+and compressed observation history. Ablations show that each ACI component
+contributes measurably: removing the linter drops performance by 3~percentage
+points; switching to iterative search costs 6~pp; and showing full file content
+instead of a 100-line window costs 5.3~pp on SWE-bench Lite.
+
+\paragraph{Code-as-action.}
+OpenHands adopts the CodeAct paradigm~\cite{wang2024codeact}, consolidating all
+agent actions into executable Python and bash code rather than a fixed tool
+API. Each turn may run arbitrary IPython cells, bash commands, or browser
+interactions inside a Docker-sandboxed environment. This design maximises
+flexibility at the cost of a larger action space that the model must navigate.
+
+\paragraph{Context management.}
+Repository-level tasks easily exceed LLM context windows. Agents employ several
+mitigation strategies: SWE-agent collapses older observations beyond the last
+5~turns; AutoCodeRover~\cite{zhang2024autocoderover} parses the codebase into
+an AST and exposes structure-aware search APIs (\texttt{search\_class},
+\texttt{search\_method\_in\_class}) that return only signatures, not full
+definitions; Agentless~\cite{xia2024agentless} constructs a hierarchical
+repository skeleton and uses embedding-based retrieval to select candidate
+files before prompting the LLM.
 
 \subsection{Representative Systems}
-Concrete systems (e.g., SWE-Agent, Devin, OpenHands, AutoCodeRover, Agentless)
-with brief descriptions of their design and reported full-pipeline performance.
+\label{sec:e2e-systems}
+
+We survey five prominent systems that span the design space.
+Table~\ref{tab:e2e-systems} provides a comparative overview.
+
+\paragraph{SWE-agent~\cite{yang2024sweagent}.}
+Developed at Princeton, SWE-agent wraps a GPT-4 Turbo backbone in a
+custom ACI with specialised file navigation, editing, and search commands.
+It achieved 12.47\% on the full SWE-bench test set (2{,}294 tasks) and
+18.00\% on SWE-bench Lite when first published. The agent follows a
+typical trajectory: reproduce the issue, localise the faulty code via
+\texttt{find\_file}/\texttt{search\_dir}, then enter an edit--execute loop.
+The median successful run completes in 12~steps at \$1.21 API cost.
+
+\paragraph{Agentless~\cite{xia2024agentless}.}
+From UIUC, Agentless challenges the need for agentic autonomy. It replaces
+the interactive loop with a fixed three-phase pipeline:
+\emph{localise}~$\to$~\emph{repair}~$\to$~\emph{validate}. Localisation uses
+a hierarchical narrowing strategy (files~$\to$~classes/functions~$\to$~edit
+locations) combining LLM prompting with embedding retrieval. Repair generates
+up to 40~candidate patches in a search/replace diff format. Validation
+selects the best patch via regression testing, LLM-generated reproduction
+tests, and majority voting over AST-normalised candidates. Agentless
+resolved 32.00\% of SWE-bench Lite at an average cost of only \$0.70 per
+problem, making it the top open-source system at the time and establishing a
+strong non-agentic baseline. OpenAI later adopted Agentless as its default
+scaffold for showcasing GPT-4o and o1 on SWE-bench Verified.
+
+\paragraph{AutoCodeRover~\cite{zhang2024autocoderover}.}
+From NUS, AutoCodeRover takes a ``software-engineering-oriented'' approach,
+operating on program representations rather than raw files. It parses the
+codebase into an AST and provides the LLM with structure-aware search APIs.
+A stratified context retrieval process iteratively expands the agent's
+understanding, starting from issue keywords and refining through multiple
+search rounds until sufficient context is gathered. When a test suite is
+available, Spectrum-Based Fault Localisation (SBFL) augments the search with
+suspiciousness scores. AutoCodeRover achieved 19\% on SWE-bench Lite in a
+single run and 26\% with three retries, at a cost of \$0.43--\$1.30 per task.
+
+\paragraph{OpenHands~\cite{wang2024openhands}.}
+Formerly OpenDevin, OpenHands is an open-source platform (ICLR~2025,
+32K~GitHub stars, 188~contributors) built around the CodeAct agent. Each
+session runs inside a Docker container with a bash shell, IPython server, and
+Chromium browser. The platform supports multi-agent delegation---a generalist
+CodeAct agent can offload web browsing to a specialised BrowsingAgent. On
+SWE-bench Lite, CodeAct~v1.8 with Claude~3.5~Sonnet achieved 26.0\%.
+On SWE-bench Verified, a later submission reaches 60.6\% with a single
+rollout and 66.4\% when five trajectories are reranked by a dedicated critic
+model~\cite{openhands2025verified}.
+
+\paragraph{Devin (Cognition)~\cite{cognition2024devin}.}
+Devin is a proprietary cloud-hosted agent positioned as an ``autonomous AI
+software engineer.'' Its architecture separates a \emph{Brain} (reasoning
+layer) from a \emph{DevBox} (execution VM with shell, IDE, and browser).
+A persistent Knowledge store provides cross-session memory. Cognition reports
+strong full-benchmark results, but independent leaderboard analysis finds
+68.3\% on SWE-bench versus 48.2\% on SWE-bench Verified (a 29\% relative
+drop), suggesting possible overfitting to easier unfiltered
+instances~\cite{dataku2025swebench}.
+
+Taken together, these five systems expose a recurring trade-off between
+agentic flexibility and pipeline efficiency. Agentless shows that a fixed
+localise--repair--validate pipeline can outperform interactive agents on
+SWE-bench Lite at lower cost (\$0.70 vs.\ \$1.21), challenging the assumption
+that autonomy is necessary for strong results. Among agentic designs, interface
+and context strategy matter as much as the backbone LLM: SWE-agent's ACI
+ablations, OpenHands's CodeAct action space, and AutoCodeRover's AST search
+APIs each demonstrate that how an agent reads and edits code can shift resolve
+rates by several percentage points at comparable model capacity.
 
 \subsection{Full-Pipeline Evaluation}
-How end-to-end agents are evaluated: SWE-bench resolution rates, real-world issue benchmarks,
-and the methodology behind current leaderboards. Critical analysis of benchmark
-limitations is deferred to the Discussion (\S7.2).
+\label{sec:e2e-eval}
+
+\paragraph{SWE-bench and its variants.}
+The primary evaluation instrument for end-to-end agents is
+SWE-bench~\cite{jimenez2024swebench}, a dataset of 2{,}294 real GitHub issues
+from 12~Python repositories, each paired with a human-written pull request and
+regression test. Two filtered subsets are widely used:
+\textbf{SWE-bench Lite} (300~instances, selected for tractability) and
+\textbf{SWE-bench Verified} (500~instances, human-validated by OpenAI for
+problem clarity, test correctness, and solvability). The Verified split has
+become the de facto standard for comparing agents.
+
+\paragraph{Leaderboard trajectory.}
+Progress has been rapid. When SWE-agent was published in early~2024, the
+state of the art on SWE-bench Lite stood at $\sim$18\%. By mid-2025, top
+systems using frontier models exceed 70\% on SWE-bench Verified
+(e.g., Claude~Opus~4.5 at 79.2\% via Live-SWE-agent~\cite{xia2025livesweagent}).
+This pace raises concerns about benchmark saturation: the easier instances
+are solved by most agents, and marginal gains increasingly come from
+engineering tricks rather than fundamental capability improvements.
+
+\paragraph{Methodology concerns.}
+Xia et al.~\cite{xia2024agentless} identified significant quality issues in
+SWE-bench Lite: 4.3\% of problems contained the exact ground-truth patch in
+the issue description, 9.7\% contained complete solution steps in natural
+language, and 10\% lacked sufficient information to solve the problem. These
+findings motivated the creation of both SWE-bench Lite-S and SWE-bench
+Verified. An analysis of the SWE-bench leaderboard~\cite{dissecting2025}
+further notes that submission processes vary widely, making direct comparisons
+difficult---some systems use multi-rollout sampling while others report
+single-pass results.
+
+\paragraph{Beyond SWE-bench.}
+While SWE-bench dominates evaluation, it covers only Python bug-fixing. Newer
+benchmarks are beginning to address broader scopes: SWE-bench Multilingual
+(300~tasks across 9~languages), CodeAgentBench (interactive development
+environments), and real-world deployment metrics such as Devin's Agent Compute
+Units. A comprehensive discussion of the evaluation landscape is deferred
+to~\S\ref{sec:eval-landscape}.
 
 \section{Planning and Search Strategies for Code Synthesis}
+\label{sec:planning}
 Zooming into the first critical stage: how agents decide \emph{what} to generate
 before or during generation---decomposing problems, exploring solution spaces,
 and selecting among candidates.
@@ -124,6 +359,7 @@ How planning interleaves with code generation: plan-then-generate vs.
 interleaved planning, plan revision upon execution feedback, and plan grounding.
 
 \section{Multi-Agent Frameworks for Code Generation}
+\label{sec:multiagent}
 An alternative architectural approach to the generation-to-validation span:
 multiple specialized agents divide labor by role (architect, coder, tester, reviewer),
 collectively covering planning, generation, and internal verification
@@ -142,6 +378,7 @@ Conditions under which multi-agent designs outperform monolithic agents;
 coordination overhead, failure modes, and diminishing returns with agent count.
 
 \section{Execution Feedback and Iterative Refinement}
+\label{sec:refinement}
 Closing the loop: agents execute generated code, observe runtime outcomes
 (test failures, compiler errors, exceptions), and revise their output.
 Covers both general refinement and fault-specific self-repair.
@@ -170,6 +407,7 @@ LLM-as-judge verification). Macro trends: from single-shot prompting to agentic 
 from monolithic agents to composable pipelines, from flat CoT to tree-structured search.
 
 \subsection{The Evaluation Landscape}
+\label{sec:eval-landscape}
 Cross-cutting view of benchmarks (HumanEval, MBPP, SWE-bench, Defects4J, CrossCodeEval),
 their coverage of pipeline stages, saturation concerns, and gaps in realism.
 
@@ -189,5 +427,8 @@ and the economics of software production.
 Summarize key findings across the five research fronts,
 restate the pipeline framing as a unifying lens,
 and point to the most promising future directions.
+
+\bibliographystyle{plain}
+\bibliography{references}
 
 \end{document}
