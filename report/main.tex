@@ -454,17 +454,14 @@ The primary evaluation instrument for end-to-end agents is
 SWE-bench~\cite{jimenez2024swebench}. It was constructed by scraping merged
 pull requests from 12~popular open-source Python repositories (including
 Django, scikit-learn, sympy, matplotlib, and Flask). Each PR was filtered to
-retain only those that modify the project's test suite, yielding
-2{,}294~task instances in the \textbf{Full} split. For each instance the
-benchmark provides: (i)~the repository snapshot \emph{before} the PR was
-merged, (ii)~the issue description (title~+~body), (iii)~a gold patch
-(the human-written fix), and (iv)~a set of \emph{fail-to-pass} tests (which
-fail before the fix and should pass after) and \emph{pass-to-pass} tests
-(which must continue to pass). An agent receives only items~(i) and~(ii); its
-generated patch is applied and scored against both test sets.
-
-\paragraph{Splits and filtering.}
-Three subsets are commonly used (Table~\ref{tab:swebench-splits}):
+retain only those that modify the project's test suite. For each retained
+instance the benchmark provides: (i)~the repository snapshot \emph{before}
+the PR was merged, (ii)~the issue description (title~+~body), (iii)~a gold
+patch (the human-written fix), and (iv)~a set of \emph{fail-to-pass} tests
+(which fail before the fix and should pass after) and \emph{pass-to-pass}
+tests (which must continue to pass). An agent receives only items~(i)
+and~(ii); its generated patch is applied and scored against both test sets.
+\\
 
 \begin{table}[t]
   \centering
@@ -483,17 +480,15 @@ Three subsets are commonly used (Table~\ref{tab:swebench-splits}):
 \end{table}
 
 \noindent
-\textbf{SWE-bench Lite} selects 300~instances for faster iteration but
-was found to contain quality issues: Xia et al.~\cite{xia2024agentless}
-report that 4.3\% of instances contain the exact gold patch in the issue
-text, 9.7\% provide complete solution steps in natural language, and 10\%
-lack sufficient information to be solvable.
-\textbf{SWE-bench Verified}~\cite{openai2024verified} addresses these
-concerns: three independent human annotators assessed each Full instance
-for problem clarity, test correctness, and overall solvability, retaining
-500~high-quality instances. The Epoch AI analysis~\cite{epoch2025swebench}
-estimates a remaining error rate of 5--10\%.
-Verified has become the de facto standard for leaderboard comparisons.
+\textbf{Splits and filtering}: \textbf{Full} comprises all filtered instances.
+\textbf{Lite} selects 300~instances for faster iteration, but Xia
+et~al.~\cite{xia2024agentless} found quality issues---including gold-patch
+leakage in issue text and tasks that lack sufficient information to be
+solvable.
+\textbf{Verified}~\cite{openai2024verified} addresses these concerns: human
+annotators assessed each Full instance for problem clarity, test correctness,
+and solvability, retaining 500~high-quality instances that have become the
+de facto leaderboard standard~\cite{epoch2025swebench}.
 
 \paragraph{Task complexity profile.}
 Although SWE-bench tests real-world issues, most tasks are relatively
@@ -507,15 +502,6 @@ average 5~changed lines of code (LOC) and 1.0~files; medium tasks average
 fixes rather than feature requests or refactorings. The dominance of
 Django (nearly 50\% of instances) and four other repositories ($>$80\%
 combined) further limits diversity.
-
-\paragraph{Scaffold dependence.}
-An important confound is that \emph{performance reflects scaffold design as
-much as model capability}~\cite{epoch2025swebench}. The same model can vary
-by 20~pp depending on the scaffold: for example, Claude~3.7~Sonnet scores
-62.3\% with one scaffold and 70.2\% with another; GPT-4o scores 23\% under
-SWE-agent but 33.2\% under Agentless. This makes cross-system comparisons
-difficult unless the scaffold is controlled, motivating standardised
-evaluation harnesses such as Live-SWE-agent~\cite{xia2025livesweagent}.
 
 \paragraph{Leaderboard trajectory.}
 Figure~\ref{fig:swebench-trajectory} charts the rapid progress on SWE-bench
