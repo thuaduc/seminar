@@ -123,8 +123,7 @@ and compare it to classical SE process models (waterfall, agile inner loops).
   }
   \caption{The vibe coding pipeline. Intent flows through planning, generation,
     and execution. Test failures trigger refinement; replanning occurs when the
-    initial hypothesis is invalidated. Section~\ref{sec:e2e} surveys full-pipeline
-    systems; subsequent sections zoom into individual stages.}
+    initial hypothesis is invalidated.}
   \label{fig:vibe-pipeline}
 \end{figure}
 
@@ -132,15 +131,110 @@ The vibe coding pipeline (Figure~\ref{fig:vibe-pipeline}) consists of five
 stages forming a loop: Intent Capture \textrightarrow{} Planning
 \textrightarrow{} Code Generation \textrightarrow{} Execution
 \textrightarrow{} Refinement. Execution feedback drives refinement, which may
-trigger re-planning or re-generation. What inputs and outputs connect adjacent
-stages.
+trigger re-planning or re-generation. Adjacent stages exchange structured
+artefacts: natural-language intent and repository context flow into plans and
+candidate patches; generated code is run against test oracles; failures and
+traces feed back into replanning or repair.
 
 \subsection{Mapping to Survey Topics}
 Explicit mapping: how each of the three subsequent sections corresponds to one or more
-pipeline stages. \S3 covers the full pipeline as an integrated system;
-\S4 zooms into planning and search over candidate programs;
-\S5 covers the execution-feedback-refinement loop (including fault-specific self-repair).
-Cross-cutting concerns (evaluation, context management) are consolidated in the Discussion.
+pipeline stages. \S3 covers the full pipeline as an integrated system---including
+action interfaces for code generation (ACI, code-as-action, diff-based edits);
+\S4 zooms into planning, candidate search, and the plan--generate interface;
+\S5 covers execution environments, test-driven feedback, and the refinement loop
+(including fault-specific self-repair). Code generation is distributed across
+\S3 and \S4 rather than isolated in a dedicated section. Cross-cutting concerns
+(evaluation, context management) are consolidated in the Discussion.
+Figure~\ref{fig:survey-taxonomy} provides a document-wide taxonomy: report
+sections mapped to pipeline stages, with representative systems and techniques
+as leaf exemplars.
+
+\begin{figure*}[t]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{forest}
+    for tree={
+      rounded corners,
+      draw,
+      align=center,
+      font=\scriptsize,
+      edge={-stealth, semithick},
+      l sep=10mm,
+      s sep=2mm,
+      anchor=west,
+      child anchor=west,
+      parent anchor=east,
+      grow'=east,
+      fill=gray!10,
+      text width=8.5em,
+    }
+    [{Agentic AI for\\Code Generation}, text width=9.5em, fill=orange!10
+      [{End-to-End\\Systems (\S\ref{sec:e2e})}, text width=8em
+        [{Orchestration}
+          [{Agentic\\observe--think--act}
+            [{SWE-agent, OpenHands, Devin}, fill=blue!5, text width=14em, font=\tiny]
+          ]
+          [{Fixed pipeline}
+            [{Agentless}, fill=blue!5, text width=14em, font=\tiny]
+          ]
+        ]
+        [{Action\\interface}
+          [{Custom ACI; code-as-action; AST APIs; diff edits}, fill=blue!5, text width=22em, font=\tiny]
+        ]
+        [{Context\\management}
+          [{Compression; retrieval; AST+SBFL; sandbox; memory}, fill=blue!5, text width=22em, font=\tiny]
+        ]
+        [{Evaluation}
+          [{SWE-bench Full/Lite/Verified; pass@1; confounds}, fill=blue!5, text width=22em, font=\tiny]
+        ]
+      ]
+      [{Planning \&\\Search (\S\ref{sec:planning})}, text width=8em
+        [{Plan\\representations}
+          [{CoT, ToT, GoT; localisation plans (Agentless, AutoCodeRover)}, fill=green!5, text width=22em, font=\tiny]
+        ]
+        [{Search\\strategies}
+          [{Sample-and-rank (AlphaCode, CodeT); repo navigation}, fill=green!5, text width=22em, font=\tiny]
+        ]
+        [{Plan--generate\\interface}
+          [{Plan-then-generate; interleaved (ReAct); generate-then-refine}, fill=green!5, text width=22em, font=\tiny]
+        ]
+      ]
+      [{Execution\\Feedback (\S\ref{sec:refinement})}, text width=8em
+        [{Feedback\\signals}
+          [{Test results, compiler errors, static analysis; sandboxes}, fill=red!5, text width=22em, font=\tiny]
+        ]
+        [{Refinement\\mechanisms}
+          [{Reflexion, self-debugging, diff-based repair}, fill=red!5, text width=22em, font=\tiny]
+        ]
+        [{Fault\\localisation}
+          [{SBFL; FL-free repair (D4C); stack-trace reasoning}, fill=red!5, text width=22em, font=\tiny]
+        ]
+        [{Convergence}
+          [{Pass thresholds, iteration/token budgets, overfitting}, fill=red!5, text width=22em, font=\tiny]
+        ]
+      ]
+      [{Discussion\\(cross-cutting)}, text width=8em
+        [{Evaluation\\landscape}
+          [{HumanEval, MBPP, SWE-bench, Defects4J, saturation}, fill=yellow!8, text width=22em, font=\tiny]
+        ]
+        [{Context\\bottleneck}
+          [{RAG, hierarchical summarization, repo chunking}, fill=yellow!8, text width=22em, font=\tiny]
+        ]
+        [{Patterns \&\\challenges}
+          [{OTA loops, composable pipelines; cost, trust, HITL}, fill=yellow!8, text width=22em, font=\tiny]
+        ]
+      ]
+    ]
+  \end{forest}%
+  }
+  \caption{Survey taxonomy organised by report section and vibe coding pipeline
+    stage. \S\ref{sec:e2e} surveys integrated end-to-end systems;
+    \S\ref{sec:planning} and \S\ref{sec:refinement} zoom into planning/search
+    and execution-feedback mechanisms; the Discussion consolidates evaluation,
+    context limits, and open challenges. Leaf nodes name representative systems
+    or techniques.}
+  \label{fig:survey-taxonomy}
+\end{figure*}
 
 \section{End-to-End Autonomous Software Engineering Agents}
 \label{sec:e2e}
@@ -158,96 +252,8 @@ most current systems (\S\ref{sec:e2e-arch}). We then survey five representative
 agents that span the design space: from fully autonomous to deliberately
 non-agentic (\S\ref{sec:e2e-systems}). Finally, we examine how these systems
 are evaluated, focusing on SWE-bench and its variants
-(\S\ref{sec:e2e-eval}).
-Figure~\ref{fig:e2e-taxonomy} provides a taxonomy of representative systems
-along four key dimensions: orchestration approach, action interface design,
-context management strategy, and evaluation methodology.
-
-\begin{figure*}[t]
-  \centering
-  \resizebox{\textwidth}{!}{%
-  \begin{forest}
-    for tree={
-      rounded corners,
-      draw,
-      align=center,
-      font=\scriptsize,
-      edge={-stealth, semithick},
-      l sep=11mm,
-      s sep=2.5mm,
-      anchor=west,
-      child anchor=west,
-      parent anchor=east,
-      grow'=east,
-      fill=gray!10,
-      text width=9em,
-    }
-    [{End-to-End\\Autonomous\\SE Agents}, text width=10em, fill=orange!10
-      [{Orchestration\\(\S\ref{sec:e2e-arch})}, text width=8em
-        [{Agentic\\observe--think--act}
-          [{SWE-agent~\cite{yang2024sweagent}: custom ACI with windowed file viewer, linter-guarded edit}, fill=blue!5, text width=26em, font=\tiny]
-          [{OpenHands~\cite{wang2024openhands}: CodeAct agent in Docker sandbox}, fill=blue!5, text width=26em, font=\tiny]
-          [{AutoCodeRover~\cite{zhang2024autocoderover}: AST-based search APIs}, fill=blue!5, text width=26em, font=\tiny]
-          [{Devin~\cite{cognition2024devin}: Brain + DevBox architecture}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Fixed pipeline\\(non-agentic)}
-          [{Agentless~\cite{xia2024agentless}: localise $\to$ repair $\to$ validate with no agent loop}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-      ]
-      [{Action\\Interface}, text width=7em
-        [{Custom ACI}
-          [{SWE-agent: specialised file navigation, editing, search commands; observation compression}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Code-as-action}
-          [{OpenHands: arbitrary Python/bash execution via CodeAct paradigm}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Program-structure APIs}
-          [{AutoCodeRover: structure-aware search (class, method) returning only signatures}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Phase-wise edits}
-          [{Agentless: LLM-generated search/replace diffs without tool loop}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-      ]
-      [{Context\\Management}, text width=8em
-        [{Compression}
-          [{SWE-agent: collapse older observations beyond last 5 turns}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Retrieval + skeleton}
-          [{Agentless: hierarchical repo skeleton + embedding-based file selection}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{AST + SBFL}
-          [{AutoCodeRover: parse codebase into AST; SBFL for suspiciousness scores}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Sandbox + delegation}
-          [{OpenHands: multi-agent delegation (CodeAct $\to$ BrowsingAgent)}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Persistent memory}
-          [{Devin: cross-session Knowledge store}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-      ]
-      [{Evaluation\\(\S\ref{sec:e2e-eval})}, text width=8em
-        [{SWE-bench splits}
-          [{Full (2{,}294)~\cite{jimenez2024swebench}, Lite (300), Verified (500)~\cite{openai2024verified}}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Scoring protocol}
-          [{pass@1 against fail-to-pass and pass-to-pass test suites}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-        [{Known confounds}
-          [{Scaffold dependence: same model varies 20~pp across scaffolds~\cite{epoch2025swebench}}, fill=blue!5, text width=26em, font=\tiny]
-          [{Task profile: 86\% single-file, 87\% bug fixes, Django-dominated}, fill=blue!5, text width=26em, font=\tiny]
-        ]
-      ]
-    ]
-  \end{forest}%
-  }
-  \caption{Taxonomy of end-to-end autonomous SE agents. Systems are
-    classified along orchestration approach (agentic loop vs.\ fixed pipeline),
-    action interface design (custom ACI, code-as-action, structure-aware APIs),
-    context management strategy (compression, retrieval, AST, delegation, memory),
-    and evaluation methodology (benchmark splits, scoring, known confounds).
-    Representative systems are shown as leaf exemplars.}
-  \label{fig:e2e-taxonomy}
-\end{figure*}
+(\S\ref{sec:e2e-eval}). This section instantiates the \emph{End-to-End Systems}
+branch of Figure~\ref{fig:survey-taxonomy}.
 
 \begin{table*}[t]
   \centering
@@ -288,7 +294,7 @@ context management strategy, and evaluation methodology.
 Despite surface-level diversity, autonomous SE agents converge on a small
 number of architectural patterns. As illustrated in the
 \emph{Orchestration}, \emph{Action Interface}, and \emph{Context Management}
-branches of Figure~\ref{fig:e2e-taxonomy}, these patterns determine how agents
+branches of Figure~\ref{fig:survey-taxonomy}, these patterns determine how agents
 perceive their environment, what actions they can take, and how they manage
 repository-scale context.
 
@@ -442,7 +448,7 @@ rates by several percentage points at comparable model capacity.
 \subsection{Full-Pipeline Evaluation}
 \label{sec:e2e-eval}
 
-The \emph{Evaluation} branch of Figure~\ref{fig:e2e-taxonomy} summarizes the
+The \emph{Evaluation} branch of Figure~\ref{fig:survey-taxonomy} summarizes the
 primary benchmark splits, scoring protocols, and known confounds that shape
 current performance reports.
 
@@ -627,7 +633,11 @@ up-front step. Agents plan while reading issue reports, searching repositories,
 choosing files, decomposing edits, sampling candidate patches, and revising
 their strategy after failed tests. Thus, planning is best understood as a
 control layer over generation rather than as a separate document written before
-generation begins.
+generation begins. While \S\ref{sec:e2e} evaluates end-to-end agents primarily
+on SWE-bench, the planning and search mechanisms below are studied across
+function-level benchmarks (HumanEval, MBPP), competitive programming
+(CodeContests), and repository repair tasks alike. This section instantiates
+the \emph{Planning \& Search} branch of Figure~\ref{fig:survey-taxonomy}.
 
 This section surveys three aspects of that control layer:
 \begin{enumerate}
@@ -739,8 +749,9 @@ strategies---``change the parser'', ``change the caller'', or ``adjust the
 compatibility layer''---as explicit search states rather than implicit in a
 single sample.
 
-Repository-level agents usually add a more concrete representation:
-\emph{localisation plans}. Agentless decomposes issue resolution into files,
+Repository-level agents usually add a more concrete representation
+(recall \S\ref{sec:e2e-systems}): \emph{localisation plans}. Agentless
+decomposes issue resolution into files,
 classes/functions, and edit locations before generating a
 patch~\cite{xia2024agentless}. AutoCodeRover uses AST-backed APIs such as
 \texttt{search\_class} and \texttt{search\_method\_in\_class} to plan over
@@ -838,9 +849,10 @@ own misunderstanding. Execution-guided search is strongest when feedback
 includes external oracles---existing unit tests, compiler errors, type checkers,
 or repository-specific regression suites.
 
-Search also appears in repository navigation. Agentless samples multiple
-locations and candidate patches, then normalises patches by AST and uses
-validation to pick among them~\cite{xia2024agentless}. AutoCodeRover expands
+Search also appears in repository navigation, as in the systems surveyed in
+\S\ref{sec:e2e}. Agentless samples multiple locations and candidate patches,
+then normalises patches by AST and uses validation to pick among
+them~\cite{xia2024agentless}. AutoCodeRover expands
 context iteratively through program-structure queries, optionally using
 Spectrum-Based Fault Localisation (SBFL) to prioritise suspicious code when
 tests are available~\cite{zhang2024autocoderover}. In both cases, search is
@@ -903,10 +915,15 @@ search process, reframing code synthesis from ``write the answer'' to
 \section{Execution Feedback and Iterative Refinement}
 \label{sec:refinement}
 
-Code generation rarely succeeds in one shot. Even human programmers iterate:
-write, compile, test, debug, revise. Agentic systems close this loop by
-executing generated code, observing runtime outcomes---test failures, compiler
-errors, exceptions---and revising their output accordingly. This section
+Building on the plan--generate patterns surveyed in \S\ref{sec:planning}, this
+section examines how execution closes the loop. Code generation rarely succeeds
+in one shot. Even human programmers iterate: write, compile, test, debug,
+revise. Agentic systems execute generated code, observe runtime
+outcomes---test failures, compiler errors, exceptions---and revise their output
+accordingly. While \S\ref{sec:e2e} scores agents on SWE-bench, refinement
+mechanisms are often evaluated on function-level suites (HumanEval, MBPP),
+text-to-SQL (Spider), and APR benchmarks (Defects4J). This section instantiates
+the \emph{Execution Feedback} branch of Figure~\ref{fig:survey-taxonomy} and
 examines the feedback signals agents consume (\S\ref{sec:feedback-signals}),
 the mechanisms by which they refine code (\S\ref{sec:refinement-mechanisms}),
 the techniques for localising and repairing faults
@@ -1054,9 +1071,9 @@ exception type. Stack traces are rich signals: they identify the failing
 function, reveal the exception (NullPointerException, IndexError), and often
 include variable values. Agents can parse stack traces to infer root causes:
 ``IndexError at line~15 suggests the list is shorter than expected; check loop
-bounds.'' SelfEvolve~\cite{jiang2023selfevolve} and AgentCoder iteratively
-refine code by feeding error messages back to the LLM, which reasons about the
-fault and proposes targeted edits. The challenge is that stack traces can be
+bounds.'' SelfEvolve~\cite{jiang2023selfevolve} and SWE-agent~\cite{yang2024sweagent}
+iteratively refine code by feeding error messages back to the LLM, which
+reasons about the fault and proposes targeted edits. The challenge is that stack traces can be
 noisy (multiple exceptions, deep call stacks) and may not reveal semantic bugs
 (e.g., off-by-one errors that do not crash).
 
@@ -1067,9 +1084,9 @@ initial code, (2)~run tests, (3)~if any fail, extract failure messages,
 budget is exhausted. The stopping condition is critical: systems may iterate 1,
 3, 5, or 10 times. Empirically, most gains occur in the first 2--3 iterations;
 further iterations yield diminishing returns and risk introducing new bugs.
-MapCoder allocates separate iterations for debugging, while MetaGPT's feedback
-module runs until tests pass or a maximum round is reached. The iteration
-budget balances quality and cost.
+SWE-agent's edit--execute loop and Agentless's repair--validate pipeline both
+iterate until tests pass or a budget is exhausted. The iteration budget
+balances quality and cost.
 
 \paragraph{Candidate ranking and ensemble repair.}
 When multiple repair attempts produce different patches, agents must select the
