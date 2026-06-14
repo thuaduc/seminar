@@ -1163,25 +1163,240 @@ to refine orchestration protocols and role definitions.
 
 \section{Execution Feedback and Iterative Refinement}
 \label{sec:refinement}
-Closing the loop: agents execute generated code, observe runtime outcomes
-(test failures, compiler errors, exceptions), and revise their output.
-Covers both general refinement and fault-specific self-repair.
+
+Code generation rarely succeeds in one shot. Even human programmers iterate:
+write, compile, test, debug, revise. Agentic systems close this loop by
+executing generated code, observing runtime outcomes---test failures, compiler
+errors, exceptions---and revising their output accordingly. This section
+examines the feedback signals agents consume (\S\ref{sec:feedback-signals}),
+the mechanisms by which they refine code (\S\ref{sec:refinement-mechanisms}),
+the techniques for localising and repairing faults
+(\S\ref{sec:fault-localization}), and the criteria for deciding when to stop
+iterating (\S\ref{sec:convergence}).
 
 \subsection{Feedback Signals and Environments}
-Types of feedback: test results, compiler errors, runtime exceptions, static analysis,
-human approval signals. Sandboxed execution environments and their design.
+\label{sec:feedback-signals}
+
+Agents require feedback to improve. The type, source, and presentation of
+feedback critically affect refinement efficacy.
+
+\paragraph{Types of feedback.}
+The most common feedback is \emph{test execution results}: pass/fail verdicts,
+failing test cases, assertion messages, and expected-versus-actual output diffs.
+When tests fail, agents receive concrete evidence of incorrectness. A richer
+signal is \emph{compiler or interpreter errors}: syntax errors, type
+mismatches, undefined-variable messages, and stack traces. These pinpoint the
+location and nature of faults without requiring test design. Static analysis
+tools provide another layer: linters flag style violations, type checkers
+identify inconsistencies, and data-flow analysers detect null dereferences or
+race conditions before execution. Some systems incorporate \emph{human feedback}
+in the loop: developers approve or reject patches, provide natural-language
+explanations of failures, or annotate bug reports. Finally, agents can
+generate \emph{self-critique}: an LLM explains the generated code in natural
+language, identifies logical flaws, or predicts potential failures without
+executing the code (``rubber duck debugging'')~\cite{chen2024selfdebug}.
+
+\paragraph{Feedback sources: external versus internal.}
+Feedback may come from \emph{external} oracles---pre-written test suites,
+continuous-integration pipelines, runtime environments---or be
+\emph{internally simulated} by the agent itself. External feedback is
+authoritative but requires infrastructure and may be slow or expensive.
+Internal feedback is fast and requires no setup, but risks hallucination: the
+agent may incorrectly believe its code is correct or fabricate error messages.
+Hybrid approaches use external execution for validation and internal
+self-critique for diagnosis.
+
+\paragraph{Sandboxed execution environments.}
+To safely run untrusted generated code, systems employ sandboxing. Common
+techniques include \emph{containerisation} (Docker), \emph{virtual machines},
+\emph{language-level isolation} (restricted Python interpreters), and
+\emph{timeout and resource limits}. SWE-agent and AutoCodeRover run generated
+code in Docker containers with filesystem restrictions and network isolation.
+Reflexion~\cite{shinn2023reflexion} uses a Python interpreter with timeout
+guards and exception handling. Sandboxing prevents malicious code from damaging
+the host system, but introduces latency and limits access to system resources,
+databases, or network services that the real code may need. Balancing safety
+and realism is an ongoing design challenge.
 
 \subsection{Iterative Refinement Mechanisms}
-How agents incorporate feedback: reflexion-style verbal self-critique, repair prompts,
-diff-based editing, and multi-turn conversation with the environment.
+\label{sec:refinement-mechanisms}
+
+Once feedback is available, agents must incorporate it to produce better code.
+Refinement strategies vary in how they represent feedback, how they prompt the
+model to revise, and whether they maintain memory across iterations.
+
+\paragraph{Reflexion: verbal reinforcement learning.}
+Reflexion~\cite{shinn2023reflexion}, from Northeastern, MIT, and Princeton,
+treats refinement as a form of reinforcement learning without weight updates.
+After each trial, the agent reflects on what went wrong by generating a
+natural-language critique (``The function failed because it did not handle
+negative inputs''). This reflection is stored in an episodic memory buffer and
+retrieved in subsequent attempts, conditioning the model to avoid past
+mistakes. Reflexion accepts diverse feedback: scalar rewards (e.g., pass rate),
+binary verdicts, or free-form error messages. The key innovation is converting
+feedback into \emph{verbal} form that persists across trials, enabling the
+model to learn from experience within a single episode. On HumanEval, Reflexion
+achieves 91\% pass@1, surpassing single-shot GPT-4 (80\%) by explicitly
+encoding trial-and-error history. The approach generalises beyond code: it
+improves sequential decision-making in games and language reasoning tasks.
+
+\paragraph{Self-debugging: rubber duck debugging.}
+Chen~et~al.~\cite{chen2024selfdebug} propose \emph{self-debugging}, where the
+model critiques and repairs its own code without external feedback. The agent
+generates code, then \emph{explains} the code line-by-line in natural language.
+This explanation serves as a self-generated specification, allowing the model
+to spot discrepancies between intent and implementation. If the explanation
+reveals a flaw (``This loop iterates over indices, but I wanted to iterate over
+values''), the model revises the code. Self-debugging also incorporates
+external execution feedback when available: the model receives error messages
+or failing test outputs and reasons about root causes before proposing fixes.
+On Spider (text-to-SQL), self-debugging improves baseline accuracy by 2--3\%
+without unit tests and by up to 12\% on MBPP when tests are available. The
+method demonstrates that internal self-critique complements external execution
+signals.
+
+\paragraph{Repair prompts and diff-based editing.}
+Simpler refinement strategies use \emph{repair prompts}: the agent receives the
+original task, the buggy code, and the error message, then generates a revised
+version. To reduce token costs, some systems use \emph{diff-based editing},
+where the model outputs only the changes (insertions, deletions) rather than
+the full code. This is particularly effective for large files: instead of
+regenerating hundreds of lines, the agent specifies ``replace line 42'' or
+``insert after line 57''. SWE-agent's edit tool and Agentless's diff-based
+repair both adopt this paradigm. The trade-off is that models must learn the
+diff format, and parsing errors can break the repair loop.
+
+\paragraph{Multi-turn conversation with the environment.}
+Some agents treat refinement as a dialogue with the execution environment. The
+agent generates code, the environment returns feedback, the agent asks
+clarifying questions or requests additional context (``What is the expected
+output for negative inputs?''), the environment answers, and the cycle repeats.
+This conversational pattern mirrors human debugging sessions with a
+collaborator. However, it assumes the environment can answer semantic questions,
+which is typically not the case for automated test suites. In practice,
+multi-turn systems interact with a supervisor LLM that interprets test failures
+and generates explanations, adding an extra layer of inference cost.
 
 \subsection{Fault Localization and Self-Repair}
-When refinement becomes debugging: stack-trace analysis, LLM-driven root-cause reasoning,
-edit-based patching, candidate ranking, and test-driven repair loops.
+\label{sec:fault-localization}
+
+When refinement targets bugs in existing code rather than improving draft
+solutions, it becomes \emph{automated program repair} (APR). The classic APR
+pipeline has three stages: fault localisation (identify buggy lines), patch
+generation (propose fixes), and patch validation (test the fix). LLM-based
+agents challenge this structure by generating end-to-end repairs.
+
+\paragraph{Traditional fault localisation.}
+Pre-LLM APR systems rely on \emph{spectrum-based fault localisation} (SBFL),
+which ranks code lines by suspiciousness scores derived from test coverage:
+lines executed by failing tests and not by passing tests receive high scores.
+Ochiai, Tarantula, and DStar are standard SBFL metrics. LLM-based systems
+initially adopted this pattern, using SBFL to extract a small code snippet and
+prompting the model to repair it. However, fault localisation is imperfect:
+even oracle-provided bug locations (``perfect FL'') do not guarantee correct
+repairs, and SBFL scores are often noisy.
+
+\paragraph{FL-free repair with objective alignment.}
+Recent work questions whether explicit fault localisation is necessary. D4C
+(Direct Debug Drives Decent Code)~\cite{xu2024d4c} argues that LLMs should
+repair entire functions rather than isolated hunks, aligning the task with
+their pre-training objective (next-token or infilling completion). D4C prompts
+the model with the full function, failing test cases, and error messages, and
+asks it to output a corrected function. On Defects4J, D4C repairs 180
+single-function bugs with only 10 samples per bug, outperforming systems with
+perfect fault localisation by 10\% and reducing sample count by 90\%. The
+insight is that LLMs, trained on vast corpora of correct code, implicitly learn
+to locate faults when given sufficient context; forcing them to target specific
+lines may constrain their reasoning.
+
+\paragraph{Stack-trace analysis and root-cause reasoning.}
+When execution fails, agents receive stack traces showing the call chain and
+exception type. Stack traces are rich signals: they identify the failing
+function, reveal the exception (NullPointerException, IndexError), and often
+include variable values. Agents can parse stack traces to infer root causes:
+``IndexError at line~15 suggests the list is shorter than expected; check loop
+bounds.'' SelfEvolve~\cite{jiang2023selfevolve} and AgentCoder iteratively
+refine code by feeding error messages back to the LLM, which reasons about the
+fault and proposes targeted edits. The challenge is that stack traces can be
+noisy (multiple exceptions, deep call stacks) and may not reveal semantic bugs
+(e.g., off-by-one errors that do not crash).
+
+\paragraph{Test-driven repair loops.}
+A refinement loop driven by test feedback proceeds as follows: (1)~generate
+initial code, (2)~run tests, (3)~if any fail, extract failure messages,
+(4)~prompt the model to fix the code, (5)~repeat until all tests pass or a
+budget is exhausted. The stopping condition is critical: systems may iterate 1,
+3, 5, or 10 times. Empirically, most gains occur in the first 2--3 iterations;
+further iterations yield diminishing returns and risk introducing new bugs.
+MapCoder allocates separate iterations for debugging, while MetaGPT's feedback
+module runs until tests pass or a maximum round is reached. The iteration
+budget balances quality and cost.
+
+\paragraph{Candidate ranking and ensemble repair.}
+When multiple repair attempts produce different patches, agents must select the
+best one. Ranking strategies include: (i)~test coverage (choose the patch
+that passes the most tests), (ii)~LLM-as-judge (ask the model to explain and
+rank patches by confidence), (iii)~ensemble voting (generate $N$ patches and
+pick the most common or most syntactically similar to the original), and
+(iv)~semantic similarity (prefer patches that minimally alter the original
+code). AlphaRepair and CodeT use candidate ranking with test execution to
+filter implausible patches before final selection.
 
 \subsection{Convergence and Stopping Criteria}
-When to stop iterating: pass-rate thresholds, diminishing improvement detection,
-budget limits, and the risk of over-fitting to weak test suites.
+\label{sec:convergence}
+
+Iterative refinement must terminate. Agents need stopping criteria that balance
+solution quality, cost, and the risk of overfitting to weak test suites.
+
+\paragraph{Pass-rate thresholds.}
+The simplest criterion is \emph{full test pass}: stop when all provided tests
+pass. This works well for competitive programming (HumanEval, CodeContests)
+where test suites are comprehensive. However, in software engineering tasks
+(SWE-bench), tests may be incomplete or incorrect. A patch that passes all
+tests may still be wrong (a ``plausible but incorrect'' patch), and a correct
+patch may fail tests due to environment issues. Some systems use a
+\emph{relaxed threshold}: stop when $\geq 80\%$ of tests pass, trading
+coverage for faster convergence.
+
+\paragraph{Diminishing improvement detection.}
+If successive iterations yield no improvement---measured by test pass rate,
+execution success, or LLM confidence scores---the agent should stop. For
+example, if iterations 3, 4, and 5 all produce code that fails the same test
+with the same error, further iteration is unlikely to help. SelfEvolve monitors
+improvement deltas: if the pass rate increases by less than 1\% across two
+iterations, refinement halts. This heuristic prevents endless loops where the
+model oscillates between two incorrect states.
+
+\paragraph{Budget limits: iterations and tokens.}
+Practical systems impose hard limits. Iteration budgets (3, 5, 10 rounds) cap
+the number of refinement cycles. Token budgets limit total inference cost:
+after consuming a threshold (e.g., 50k tokens), the agent returns its best
+attempt. Reflexion and Agentless both use iteration caps, while D4C's low
+sample count (10 tries per bug) implicitly limits token use. The optimal budget
+depends on task difficulty: simple bugs may resolve in one iteration, while
+complex logical errors may require many.
+
+\paragraph{Risk of overfitting to weak test suites.}
+A critical failure mode is overfitting. If the test suite is weak (few tests,
+shallow coverage), the agent may generate code that narrowly passes those tests
+but fails on unseen inputs. This is the ``plausible patch'' problem in APR:
+patches that satisfy the validation oracle but do not generalise. Mitigations
+include: (i)~\emph{test augmentation}, where the agent or a separate test
+generator produces additional test cases to catch edge cases; (ii)~\emph{static
+checks}, requiring generated code to satisfy linting, type checking, or
+invariant assertions beyond test pass; (iii)~\emph{semantic similarity
+constraints}, penalising patches that radically alter program structure; and
+(iv)~\emph{LLM-based verification}, asking the model to critique the patch or
+predict whether it will generalise. However, no technique fully eliminates
+overfitting, and the problem remains open.
+
+\paragraph{Human-in-the-loop approval.}
+In high-stakes domains (medical software, financial systems), automated
+iteration may be unacceptable without human oversight. Systems like OpenHands
+and Devin allow developers to inspect intermediate outputs, approve or reject
+patches, and provide guidance before the next iteration. This trades speed for
+safety and introduces latency, but ensures that convergence criteria align with
+human judgment rather than proxy metrics.
 
 \section{Discussion}
 
