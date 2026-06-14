@@ -12,10 +12,11 @@ The report is organised around a **vibe coding pipeline**: Intent → Plan → G
 2. **The Vibe Coding Pipeline** — Pipeline definition, mapping to sections
 3. **End-to-End Autonomous SE Agents** — Full-pipeline systems (SWE-agent, Agentless, AutoCodeRover, OpenHands, Devin) *(written)*
 4. **Planning & Search Strategies** — Task decomposition, search over programs
-5. **Multi-Agent Frameworks** — Role-based collaboration for generation & validation
-6. **Execution Feedback & Iterative Refinement** — Feedback loops, self-repair, convergence
-7. **Discussion** — Patterns/trends, evaluation landscape, context bottleneck, open challenges
-8. **Conclusion**
+5. **Execution Feedback & Iterative Refinement** — Feedback loops, self-repair, convergence
+6. **Discussion** — Patterns/trends, evaluation landscape, context bottleneck, open challenges
+7. **Conclusion**
+
+*(Multi-Agent Frameworks section archived in `report/archive/multi-agent-frameworks.tex`.)*
 
 ## Files
 
@@ -32,6 +33,6 @@ The report is organised around a **vibe coding pipeline**: Intent → Plan → G
 - §2 (Vibe Coding Pipeline): structure with pipeline overview figure
 - §3 (End-to-End Agents): drafted with citations and comparison table
 - §4 (Planning & Search Strategies): drafted with citations and 4 new visualizations (plan shapes, localisation pipeline, candidate selection, plan-generate table)
-- §5 (Multi-Agent Frameworks): drafted with citations and comparison table
-- §6 (Execution Feedback & Iterative Refinement): drafted with citations
-- §7–§8: structure and placeholder descriptions only
+- §5 (Execution Feedback & Iterative Refinement): drafted with citations
+- §6–§7: structure and placeholder descriptions only
+- Multi-Agent Frameworks: archived (see `report/archive/multi-agent-frameworks.tex`)
