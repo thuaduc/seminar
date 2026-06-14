@@ -85,10 +85,57 @@ Present the vibe coding pipeline as a unifying conceptual framework
 and compare it to classical SE process models (waterfall, agile inner loops).
 
 \subsection{Pipeline Stages}
-Formal definition of each stage: Intent Capture \textrightarrow{} Planning \textrightarrow{}
-Code Generation \textrightarrow{} Execution \textrightarrow{} Refinement.
-Five stages forming a loop: execution feedback drives refinement, which may trigger
-re-planning or re-generation. What inputs and outputs connect adjacent stages.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    node distance=1.2cm,
+    stage/.style={draw, rounded corners=3pt, fill=blue!12, font=\small,
+                  align=center, minimum height=0.8cm, minimum width=2.4cm},
+    arr/.style={-{Stealth[length=1.8mm]}, very thick},
+    feedback/.style={{Stealth[length=1.8mm]}-, very thick, dashed, red!60},
+  ]
+    \node[stage] (intent) {Intent\\Capture};
+    \node[stage, right=of intent] (plan) {Planning};
+    \node[stage, right=of plan] (gen) {Code\\Generation};
+    \node[stage, below=0.8cm of gen] (exec) {Execution};
+    \node[stage, left=of exec] (refine) {Refinement};
+    
+    \draw[arr] (intent) -- (plan);
+    \draw[arr] (plan) -- (gen);
+    \draw[arr] (gen) -- (exec);
+    \draw[arr] (exec) -- (refine);
+    \draw[arr] (refine) -- (intent);
+    
+    \draw[feedback] (exec) -- node[right, font=\tiny, text=red!70, align=center] {test\\failures} (gen);
+    \draw[feedback] (refine.west) to[bend right=25] node[below, font=\tiny, text=red!70] {replan} (plan.south);
+    
+    \node[below=0.15cm of intent, font=\scriptsize, text width=2.4cm, align=center]
+      {NL issue\\or spec};
+    \node[below=0.15cm of plan, font=\scriptsize, text width=2.4cm, align=center]
+      {\S\ref{sec:planning}};
+    \node[below=0.15cm of gen, font=\scriptsize, text width=2.4cm, align=center]
+      {\S\ref{sec:multiagent}};
+    \node[above=0.15cm of exec, font=\scriptsize, text width=2.4cm, align=center]
+      {tests, traces};
+    \node[below=0.15cm of refine, font=\scriptsize, text width=2.4cm, align=center]
+      {\S\ref{sec:refinement}};
+  \end{tikzpicture}%
+  }
+  \caption{The vibe coding pipeline. Intent flows through planning, generation,
+    and execution. Test failures trigger refinement; replanning occurs when the
+    initial hypothesis is invalidated. Section~\ref{sec:e2e} surveys full-pipeline
+    systems; subsequent sections zoom into individual stages.}
+  \label{fig:vibe-pipeline}
+\end{figure}
+
+The vibe coding pipeline (Figure~\ref{fig:vibe-pipeline}) consists of five
+stages forming a loop: Intent Capture \textrightarrow{} Planning
+\textrightarrow{} Code Generation \textrightarrow{} Execution
+\textrightarrow{} Refinement. Execution feedback drives refinement, which may
+trigger re-planning or re-generation. What inputs and outputs connect adjacent
+stages.
 
 \subsection{Mapping to Survey Topics}
 Explicit mapping: how each of the four subsequent sections corresponds to one or more
@@ -430,7 +477,7 @@ Three subsets are commonly used (Table~\ref{tab:swebench-splits}):
     \midrule
     Full   & 2{,}294 & All filtered PRs \\
     Lite   & 300     & Subset selected for tractability \\
-    Verified & 500   & Human-validated (3~annotators per instance) \\
+    Verified & 500   & Human-validated \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -589,21 +636,286 @@ is deferred to~\S\ref{sec:eval-landscape}.
 
 \section{Planning and Search Strategies for Code Synthesis}
 \label{sec:planning}
-Zooming into the first critical stage: how agents decide \emph{what} to generate
-before or during generation---decomposing problems, exploring solution spaces,
-and selecting among candidates.
+Planning is the stage in which an agent turns a vague intent into an
+operational hypothesis about \emph{what} code should change and \emph{how} the
+change can be produced. In the vibe coding pipeline, this stage sits between
+intent capture and code generation, but in practice it is rarely a single
+up-front step. Agents plan while reading issue reports, searching repositories,
+choosing files, decomposing edits, sampling candidate patches, and revising
+their strategy after failed tests. Thus, planning is best understood as a
+control layer over generation rather than as a separate document written before
+generation begins.
+
+This section surveys three aspects of that control layer:
+\begin{enumerate}
+  \item Plan representations: determine what intermediate state the
+    agent exposes to itself: natural-language rationales, hierarchical task
+    lists, program sketches, or repository-localisation hypotheses;
+  \item Search strategies: determine how many possible solutions are
+    explored and how candidates are ranked;
+  \item The plan-generate interface: determines whether planning happens
+    once, repeatedly, or only when execution feedback invalidates the current
+    hypothesis.
+\end{enumerate}
+
+\begin{table}[t]
+  \centering
+  \caption{Planning and search mechanisms in LLM-based code synthesis.}
+  \label{tab:planning-search}
+  \scriptsize
+  \begin{tabular}{@{}p{0.22\columnwidth}p{0.31\columnwidth}p{0.34\columnwidth}@{}}
+    \toprule
+    \textbf{Mechanism} & \textbf{Planning object} & \textbf{Role in code tasks} \\
+    \midrule
+    Chain / tree / graph of thoughts
+      & Intermediate reasoning steps
+      & Explore alternative designs, algorithms, or debugging hypotheses before emitting code \\
+    Hierarchical decomposition
+      & Subtasks, files, functions, edit locations
+      & Reduce repository-scale tasks into bounded local edits \\
+    Candidate sampling
+      & Multiple complete or partial programs
+      & Trade inference cost for higher pass@k and diversity \\
+    Execution-guided selection
+      & Tests, generated tests, compiler output
+      & Rank or prune candidates using external evidence rather than model confidence alone \\
+    ReAct-style replanning
+      & Updated belief state after tool observations
+      & Interleave search, reading, editing, and feedback in a single loop \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{Plan Representations and Decomposition}
-Pseudocode plans, hierarchical task decomposition, chain-of-thought outlines,
-dependency graphs, and specification sketches used to guide generation.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    node distance=0.8cm and 1.2cm,
+    thought/.style={draw, circle, fill=blue!10, minimum size=0.6cm, font=\tiny},
+    arr/.style={-{Stealth[length=1.2mm]}, semithick},
+    backarr/.style={{Stealth[length=1.2mm]}-, semithick, dashed},
+  ]
+    % Chain of Thought
+    \node[thought] (c1) {A};
+    \node[thought, right=of c1] (c2) {B};
+    \node[thought, right=of c2] (c3) {C};
+    \node[thought, right=of c3] (c4) {D};
+    \draw[arr] (c1) -- (c2);
+    \draw[arr] (c2) -- (c3);
+    \draw[arr] (c3) -- (c4);
+    \node[above=0.15cm of c2, font=\scriptsize\bfseries] {Chain of Thought};
+    
+    % Tree of Thoughts
+    \node[thought, below=2cm of c1] (t1) {A};
+    \node[thought, below right=0.5cm and 0.4cm of t1] (t2a) {B$_1$};
+    \node[thought, below left=0.5cm and 0.4cm of t1] (t2b) {B$_2$};
+    \node[thought, below right=0.5cm and 0.2cm of t2a] (t3a) {C$_1$};
+    \node[thought, below left=0.5cm and 0.2cm of t2a] (t3b) {C$_2$};
+    \node[thought, below=0.7cm of t2b] (t3c) {C$_3$};
+    \draw[arr] (t1) -- (t2a);
+    \draw[arr] (t1) -- (t2b);
+    \draw[arr] (t2a) -- (t3a);
+    \draw[arr] (t2a) -- (t3b);
+    \draw[arr] (t2b) -- (t3c);
+    \draw[backarr, red!60] (t3b) -- (t2a);
+    \node[above=0.15cm of t1, font=\scriptsize\bfseries] {Tree of Thoughts};
+    \node[right=0.05cm of t3b, font=\tiny, text=red!70] {backtrack};
+    
+    % Graph of Thoughts
+    \node[thought, below=2cm of c3] (g1) {A};
+    \node[thought, below right=0.5cm and 0.4cm of g1] (g2a) {B$_1$};
+    \node[thought, below left=0.5cm and 0.4cm of g1] (g2b) {B$_2$};
+    \node[thought, below=1.2cm of g1] (g3) {C};
+    \node[thought, below=0.7cm of g3] (g4) {D};
+    \draw[arr] (g1) -- (g2a);
+    \draw[arr] (g1) -- (g2b);
+    \draw[arr] (g2a) -- (g3);
+    \draw[arr] (g2b) -- (g3);
+    \draw[arr] (g3) to[bend right=40] (g2a);
+    \draw[arr] (g3) -- (g4);
+    \node[above=0.15cm of g1, font=\scriptsize\bfseries] {Graph of Thoughts};
+    \node[right=0.05cm of g3, font=\tiny, text=blue!70] {merge};
+  \end{tikzpicture}%
+  }
+  \caption{Plan representation structures. Chain of Thought commits to a single
+    linear path. Tree of Thoughts explores alternatives and backtracks. Graph of
+    Thoughts merges branches and revisits earlier states.}
+  \label{fig:plan-shapes}
+\end{figure}
+
+Plan representations determine how an agent organises reasoning before generating
+code. The simplest is chain of thought~\cite{wei2022chain}: a linear sequence
+that commits early to one trajectory. If the first design choice is wrong,
+subsequent steps elaborate the mistake. Tree of Thoughts~\cite{yao2023tree} and
+Graph of Thoughts~\cite{besta2024graph} relax this by allowing exploration,
+backtracking, and merging across alternative paths (Figure~\ref{fig:plan-shapes}).
+For code synthesis, this means agents can consider multiple decomposition
+strategies---``change the parser'', ``change the caller'', or ``adjust the
+compatibility layer''---as explicit search states rather than implicit in a
+single sample.
+
+Repository-level agents usually add a more concrete representation:
+\emph{localisation plans}. Agentless decomposes issue resolution into files,
+classes/functions, and edit locations before generating a
+patch~\cite{xia2024agentless}. AutoCodeRover uses AST-backed APIs such as
+\texttt{search\_class} and \texttt{search\_method\_in\_class} to plan over
+program structure rather than raw text~\cite{zhang2024autocoderover}. These
+grounded representations name concrete program elements that can be validated
+against the repository (Figure~\ref{fig:localisation-pipeline}), turning a
+broad intent into a bounded search problem.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{0.9\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    node distance=0.6cm,
+    box/.style={draw, rounded corners=2pt, fill=green!8, font=\scriptsize,
+                align=center, minimum height=0.55cm, minimum width=1.8cm},
+    arr/.style={-{Stealth[length=1.2mm]}, semithick},
+  ]
+    \node[box] (issue) {Issue\\text};
+    \node[box, right=of issue] (files) {Candidate\\files};
+    \node[box, right=of files] (funcs) {Classes/\\functions};
+    \node[box, right=of funcs] (locs) {Edit\\locations};
+    \node[box, right=of locs] (patch) {Patch};
+    
+    \draw[arr] (issue) -- (files);
+    \draw[arr] (files) -- (funcs);
+    \draw[arr] (funcs) -- (locs);
+    \draw[arr] (locs) -- (patch);
+  \end{tikzpicture}%
+  }
+  \caption{Hierarchical localisation pipeline. Agents narrow scope
+    iteratively from repository-level to line-level edits.}
+  \label{fig:localisation-pipeline}
+\end{figure}
+
+Plans may also be expressed as \emph{specification sketches}: partial
+interfaces, pseudocode, assertions, or examples that constrain the generated
+implementation. Useful plans are grounded in observable artefacts---issue text,
+existing code, API conventions, and failing tests---rather than invented
+requirements.
 
 \subsection{Search and Exploration Strategies}
-Tree/graph search over partial programs (MCTS, beam search, best-first),
-sampling-and-ranking, evolutionary approaches, and backtracking mechanisms.
+
+Once a representation exists, an agent must decide how broadly to search.
+Single-sample generation is fast, but it treats the model's first completion as
+the solution. Search-based systems instead spend additional inference or
+execution budget to explore alternatives. The simplest form is self-consistency:
+sample multiple reasoning paths and select the most common or most consistent
+answer~\cite{wang2023selfconsistency}. For programming, the same idea becomes
+sample-and-rank: generate several candidate programs or patches, then choose
+using tests, static checks, model judges, or majority voting.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{%
+  \begin{tikzpicture}[
+    node distance=0.8cm,
+    box/.style={draw, rounded corners=2pt, fill=blue!8, font=\scriptsize,
+                align=center, minimum height=0.6cm, minimum width=2.2cm},
+    arr/.style={-{Stealth[length=1.4mm]}, semithick},
+  ]
+    \node[box] (gen) {Generate\\$N$ candidates};
+    \node[box, right=of gen] (exec) {Execute \&\\test};
+    \node[box, right=of exec] (cluster) {Cluster \&\\rank};
+    \node[box, right=of cluster] (select) {Select\\patch};
+    
+    \draw[arr] (gen) -- (exec);
+    \draw[arr] (exec) -- (cluster);
+    \draw[arr] (cluster) -- (select);
+    
+    \node[below=0.25cm of gen, font=\tiny, text width=2.2cm, align=center]
+      {LLM samples\\or mutations};
+    \node[below=0.25cm of exec, font=\tiny, text width=2.2cm, align=center]
+      {unit tests,\\generated tests};
+    \node[below=0.25cm of cluster, font=\tiny, text width=2.2cm, align=center]
+      {AST similarity,\\pass/fail groups};
+    \node[below=0.25cm of select, font=\tiny, text width=2.2cm, align=center]
+      {top-1 or\\small ensemble};
+  \end{tikzpicture}%
+  }
+  \caption{Candidate-selection pipeline. Systems like AlphaCode and CodeT
+    generate many candidates, execute them against tests (real or generated),
+    cluster by behaviour, and select a small high-quality set.}
+  \label{fig:candidate-selection}
+\end{figure}
+
+AlphaCode~\cite{li2022alphacode} and CodeT~\cite{chen2022codet} exemplify this
+pattern (Figure~\ref{fig:candidate-selection}). AlphaCode generated millions of
+candidates for competitive programming, filtered and clustered by execution
+results, then submitted a small diverse set. CodeT generates both programs and
+tests, selecting code consistent with generated test cases. The key insight is
+that LLMs often contain the right solution somewhere in the sample distribution
+even when top-ranked output is wrong. The limitation is self-referential
+objectives: if generated tests are weak, selection optimises for the model's
+own misunderstanding. Execution-guided search is strongest when feedback
+includes external oracles---existing unit tests, compiler errors, type checkers,
+or repository-specific regression suites.
+
+Search also appears in repository navigation. Agentless samples multiple
+locations and candidate patches, then normalises patches by AST and uses
+validation to pick among them~\cite{xia2024agentless}. AutoCodeRover expands
+context iteratively through program-structure queries, optionally using
+Spectrum-Based Fault Localisation (SBFL) to prioritise suspicious code when
+tests are available~\cite{zhang2024autocoderover}. In both cases, search is
+not over complete programs alone; it is also over \emph{where to look} and
+\emph{what evidence to include}. This matters because code generation quality
+is bounded by context quality. A correct patch is unlikely if the agent never
+places the relevant function, invariant, or failing trace in context.
+
+The cost of search is the main trade-off. More samples increase diversity and
+pass@k, but they also increase latency, token cost, and validation cost.
+Moreover, search can overfit to narrow tests: a candidate that passes the
+available suite may still violate unstated requirements. Strong systems
+therefore combine multiple pruning signals: syntactic validity, static
+analysis, failing-test repair, pass-to-pass regression preservation, and
+semantic similarity to the intended behaviour. Search is most useful when the
+ranking signal is at least as reliable as the generator is diverse.
 
 \subsection{Plan--Generate Interplay}
-How planning interleaves with code generation: plan-then-generate vs.
-interleaved planning, plan revision upon execution feedback, and plan grounding.
+
+Planning and generation can be coupled in three broad ways
+(Table~\ref{tab:plan-generate}). \emph{Plan-then-generate} is easy to inspect
+and aligns with human practice, but brittle if the initial plan is
+wrong~\cite{xia2024agentless}. \emph{Interleaved planning} adapts to new
+information but distributes the plan across many turns, making it harder to
+audit~\cite{yao2023react}. \emph{Generate-then-refine} treats the first output
+as a hypothesis and revises via self-critique or execution
+feedback~\cite{madaan2023selfrefine}, connecting planning to the refinement
+loop in \S\ref{sec:refinement}.
+
+\begin{table}[t]
+  \centering
+  \caption{Plan--generate coupling patterns.}
+  \label{tab:plan-generate}
+  \small
+  \begin{tabular}{@{}p{0.23\columnwidth}p{0.35\columnwidth}p{0.28\columnwidth}@{}}
+    \toprule
+    \textbf{Pattern} & \textbf{Mechanism} & \textbf{Trade-off} \\
+    \midrule
+    Plan-then-generate
+      & Plan once, then generate code conditioned on it
+      & Easy to inspect; brittle if plan is wrong \\
+    Interleaved planning
+      & Alternate plan updates and tool use in observe--think--act loop
+      & Adaptive; plan distributed across turns \\
+    Generate-then-refine
+      & Generate, critique via feedback, revise iteratively
+      & Self-correcting; may reopen planning after execution \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The central design question is not whether agents should plan, but how plans
+remain \emph{grounded}. Grounding mechanisms include retrieval over repository
+structure, AST-level symbol search, execution traces, failing tests, and
+explicit constraints extracted from the issue report. Effective systems keep
+plans close to these artefacts and treat generation as one move in a larger
+search process, reframing code synthesis from ``write the answer'' to
+``maintain and test a hypothesis about the required program change''.
 
 \section{Multi-Agent Frameworks for Code Generation}
 \label{sec:multiagent}
