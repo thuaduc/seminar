@@ -32,4 +32,5 @@ The report is organised around a **vibe coding pipeline**: Intent → Plan → G
 - §2 (Vibe Coding Pipeline): structure with pipeline overview figure
 - §3 (End-to-End Agents): drafted with citations and comparison table
 - §4 (Planning & Search Strategies): drafted with citations and 4 new visualizations (plan shapes, localisation pipeline, candidate selection, plan-generate table)
-- §5–§8: structure and placeholder descriptions only
+- §5 (Multi-Agent Frameworks): drafted with citations and comparison table
+- §6–§8: structure and placeholder descriptions only
