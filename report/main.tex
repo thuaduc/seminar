@@ -30,8 +30,11 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{arrows.meta, positioning, fit}
+\usepackage{forest}
 
 \setlength\parindent{0pt}
 
@@ -112,6 +115,95 @@ agents that span the design space: from fully autonomous to deliberately
 non-agentic (\S\ref{sec:e2e-systems}). Finally, we examine how these systems
 are evaluated, focusing on SWE-bench and its variants
 (\S\ref{sec:e2e-eval}).
+Figure~\ref{fig:e2e-taxonomy} provides a taxonomy of representative systems
+along four key dimensions: orchestration approach, action interface design,
+context management strategy, and evaluation methodology.
+
+\begin{figure*}[t]
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{forest}
+    for tree={
+      rounded corners,
+      draw,
+      align=center,
+      font=\scriptsize,
+      edge={-stealth, semithick},
+      l sep=11mm,
+      s sep=2.5mm,
+      anchor=west,
+      child anchor=west,
+      parent anchor=east,
+      grow'=east,
+      fill=gray!10,
+      text width=9em,
+    }
+    [{End-to-End\\Autonomous\\SE Agents}, text width=10em, fill=orange!10
+      [{Orchestration\\(\S\ref{sec:e2e-arch})}, text width=8em
+        [{Agentic\\observe--think--act}
+          [{SWE-agent~\cite{yang2024sweagent}: custom ACI with windowed file viewer, linter-guarded edit}, fill=blue!5, text width=26em, font=\tiny]
+          [{OpenHands~\cite{wang2024openhands}: CodeAct agent in Docker sandbox}, fill=blue!5, text width=26em, font=\tiny]
+          [{AutoCodeRover~\cite{zhang2024autocoderover}: AST-based search APIs}, fill=blue!5, text width=26em, font=\tiny]
+          [{Devin~\cite{cognition2024devin}: Brain + DevBox architecture}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Fixed pipeline\\(non-agentic)}
+          [{Agentless~\cite{xia2024agentless}: localise $\to$ repair $\to$ validate with no agent loop}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+      ]
+      [{Action\\Interface}, text width=7em
+        [{Custom ACI}
+          [{SWE-agent: specialised file navigation, editing, search commands; observation compression}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Code-as-action}
+          [{OpenHands: arbitrary Python/bash execution via CodeAct paradigm}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Program-structure APIs}
+          [{AutoCodeRover: structure-aware search (class, method) returning only signatures}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Phase-wise edits}
+          [{Agentless: LLM-generated search/replace diffs without tool loop}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+      ]
+      [{Context\\Management}, text width=8em
+        [{Compression}
+          [{SWE-agent: collapse older observations beyond last 5 turns}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Retrieval + skeleton}
+          [{Agentless: hierarchical repo skeleton + embedding-based file selection}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{AST + SBFL}
+          [{AutoCodeRover: parse codebase into AST; SBFL for suspiciousness scores}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Sandbox + delegation}
+          [{OpenHands: multi-agent delegation (CodeAct $\to$ BrowsingAgent)}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Persistent memory}
+          [{Devin: cross-session Knowledge store}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+      ]
+      [{Evaluation\\(\S\ref{sec:e2e-eval})}, text width=8em
+        [{SWE-bench splits}
+          [{Full (2{,}294)~\cite{jimenez2024swebench}, Lite (300), Verified (500)~\cite{openai2024verified}}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Scoring protocol}
+          [{pass@1 against fail-to-pass and pass-to-pass test suites}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+        [{Known confounds}
+          [{Scaffold dependence: same model varies 20~pp across scaffolds~\cite{epoch2025swebench}}, fill=blue!5, text width=26em, font=\tiny]
+          [{Task profile: 86\% single-file, 87\% bug fixes, Django-dominated}, fill=blue!5, text width=26em, font=\tiny]
+        ]
+      ]
+    ]
+  \end{forest}%
+  }
+  \caption{Taxonomy of end-to-end autonomous SE agents. Systems are
+    classified along orchestration approach (agentic loop vs.\ fixed pipeline),
+    action interface design (custom ACI, code-as-action, structure-aware APIs),
+    context management strategy (compression, retrieval, AST, delegation, memory),
+    and evaluation methodology (benchmark splits, scoring, known confounds).
+    Representative systems are shown as leaf exemplars.}
+  \label{fig:e2e-taxonomy}
+\end{figure*}
 
 \begin{table*}[t]
   \centering
@@ -150,7 +242,11 @@ are evaluated, focusing on SWE-bench and its variants
 \label{sec:e2e-arch}
 
 Despite surface-level diversity, autonomous SE agents converge on a small
-number of architectural patterns.
+number of architectural patterns. As illustrated in the
+\emph{Orchestration}, \emph{Action Interface}, and \emph{Context Management}
+branches of Figure~\ref{fig:e2e-taxonomy}, these patterns determine how agents
+perceive their environment, what actions they can take, and how they manage
+repository-scale context.
 
 \paragraph{The observe--think--act loop.}
 The dominant paradigm is a ReAct-style~\cite{yao2023react} loop in which the
@@ -302,43 +398,194 @@ rates by several percentage points at comparable model capacity.
 \subsection{Full-Pipeline Evaluation}
 \label{sec:e2e-eval}
 
-\paragraph{SWE-bench and its variants.}
+The \emph{Evaluation} branch of Figure~\ref{fig:e2e-taxonomy} summarizes the
+primary benchmark splits, scoring protocols, and known confounds that shape
+current performance reports.
+
+\paragraph{SWE-bench: dataset construction.}
 The primary evaluation instrument for end-to-end agents is
-SWE-bench~\cite{jimenez2024swebench}, a dataset of 2{,}294 real GitHub issues
-from 12~Python repositories, each paired with a human-written pull request and
-regression test. Two filtered subsets are widely used:
-\textbf{SWE-bench Lite} (300~instances, selected for tractability) and
-\textbf{SWE-bench Verified} (500~instances, human-validated by OpenAI for
-problem clarity, test correctness, and solvability). The Verified split has
-become the de facto standard for comparing agents.
+SWE-bench~\cite{jimenez2024swebench}. It was constructed by scraping merged
+pull requests from 12~popular open-source Python repositories (including
+Django, scikit-learn, sympy, matplotlib, and Flask). Each PR was filtered to
+retain only those that modify the project's test suite, yielding
+2{,}294~task instances in the \textbf{Full} split. For each instance the
+benchmark provides: (i)~the repository snapshot \emph{before} the PR was
+merged, (ii)~the issue description (title~+~body), (iii)~a gold patch
+(the human-written fix), and (iv)~a set of \emph{fail-to-pass} tests (which
+fail before the fix and should pass after) and \emph{pass-to-pass} tests
+(which must continue to pass). An agent receives only items~(i) and~(ii); its
+generated patch is applied and scored against both test sets.
+
+\paragraph{Splits and filtering.}
+Three subsets are commonly used (Table~\ref{tab:swebench-splits}):
+
+\begin{table}[t]
+  \centering
+  \caption{SWE-bench dataset splits.}
+  \label{tab:swebench-splits}
+  \small
+  \begin{tabular}{@{}lrl@{}}
+    \toprule
+    \textbf{Split} & \textbf{Size} & \textbf{Selection criterion} \\
+    \midrule
+    Full   & 2{,}294 & All filtered PRs \\
+    Lite   & 300     & Subset selected for tractability \\
+    Verified & 500   & Human-validated (3~annotators per instance) \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent
+\textbf{SWE-bench Lite} selects 300~instances for faster iteration but
+was found to contain quality issues: Xia et al.~\cite{xia2024agentless}
+report that 4.3\% of instances contain the exact gold patch in the issue
+text, 9.7\% provide complete solution steps in natural language, and 10\%
+lack sufficient information to be solvable.
+\textbf{SWE-bench Verified}~\cite{openai2024verified} addresses these
+concerns: three independent human annotators assessed each Full instance
+for problem clarity, test correctness, and overall solvability, retaining
+500~high-quality instances. The Epoch AI analysis~\cite{epoch2025swebench}
+estimates a remaining error rate of 5--10\%.
+Verified has become the de facto standard for leaderboard comparisons.
+
+\paragraph{Task complexity profile.}
+Although SWE-bench tests real-world issues, most tasks are relatively
+small~\cite{ganhotra2025difficulty,epoch2025swebench}. In the Verified split,
+human annotators estimated that 39\% of tasks are trivial ($<$15~min fix),
+52\% are small (15~min--1~h), 8\% are substantial (1--4~h), and only 3~tasks
+were rated $>$4~h. These estimates correlate with patch size: easy tasks
+average 5~changed lines of code (LOC) and 1.0~files; medium tasks average
+14~LOC and 1.3~files; hard tasks average 56~LOC and 2.0~files. Crucially,
+86\% of instances are single-file changes, and 87\% are classified as bug
+fixes rather than feature requests or refactorings. The dominance of
+Django (nearly 50\% of instances) and four other repositories ($>$80\%
+combined) further limits diversity.
+
+\paragraph{Scaffold dependence.}
+An important confound is that \emph{performance reflects scaffold design as
+much as model capability}~\cite{epoch2025swebench}. The same model can vary
+by 20~pp depending on the scaffold: for example, Claude~3.7~Sonnet scores
+62.3\% with one scaffold and 70.2\% with another; GPT-4o scores 23\% under
+SWE-agent but 33.2\% under Agentless. This makes cross-system comparisons
+difficult unless the scaffold is controlled, motivating standardised
+evaluation harnesses such as Live-SWE-agent~\cite{xia2025livesweagent}.
 
 \paragraph{Leaderboard trajectory.}
-Progress has been rapid. When SWE-agent was published in early~2024, the
-state of the art on SWE-bench Lite stood at $\sim$18\%. By mid-2025, top
-systems using frontier models exceed 70\% on SWE-bench Verified
-(e.g., Claude~Opus~4.5 at 79.2\% via Live-SWE-agent~\cite{xia2025livesweagent}).
-This pace raises concerns about benchmark saturation: the easier instances
-are solved by most agents, and marginal gains increasingly come from
-engineering tricks rather than fundamental capability improvements.
+Figure~\ref{fig:swebench-trajectory} charts the rapid progress on SWE-bench
+from late~2023 through mid-2026.
+In October~2023, the best RAG baselines resolved 1.96\% of Full and
+0.33\% of Lite~\cite{jimenez2024swebench}. SWE-agent's agentic loop lifted
+Full to 12.5\% and Lite to 18.0\% in early~2024. On the Full set,
+AutoCodeRover reached 18.0\% (pass@3) and Devin 13.9\% around the same
+period. The scaffolding race then accelerated both tracks: by late~2024,
+Agentless~1.5 with Claude~3.5~Sonnet reached 40.7\% on Lite; by mid-2025
+the best Lite score stood at 60.3\%. On the Full 2{,}294-instance set,
+fewer teams report results post-2024, but dataku's independent
+analysis~\cite{dataku2025swebench} records Claude~Opus~4 at 71.2\% and
+Devin at 68.3\%. On Lite, the frontier reached $\sim$63\% by
+early~2026~\cite{dissecting2025}.
 
-\paragraph{Methodology concerns.}
-Xia et al.~\cite{xia2024agentless} identified significant quality issues in
-SWE-bench Lite: 4.3\% of problems contained the exact ground-truth patch in
-the issue description, 9.7\% contained complete solution steps in natural
-language, and 10\% lacked sufficient information to solve the problem. These
-findings motivated the creation of both SWE-bench Lite-S and SWE-bench
-Verified. An analysis of the SWE-bench leaderboard~\cite{dissecting2025}
-further notes that submission processes vary widely, making direct comparisons
-difficult---some systems use multi-rollout sampling while others report
-single-pass results.
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      width=\columnwidth,
+      height=5.5cm,
+      xlabel={Date},
+      ylabel={\% Resolved},
+      ymin=0, ymax=85,
+      xmin=2023.65, xmax=2026.45,
+      xtick={2024, 2024.5, 2025, 2025.5, 2026},
+      xticklabels={2024, {mid-24}, 2025, {mid-25}, 2026},
+      xticklabel style={font=\scriptsize},
+      yticklabel style={font=\scriptsize},
+      ylabel style={font=\small},
+      xlabel style={font=\small},
+      grid=major,
+      grid style={dashed, gray!40},
+      legend style={font=\tiny, at={(0.02,0.98)}, anchor=north west,
+                    draw=none, fill=white, fill opacity=0.8,
+                    row sep=1pt},
+      every axis plot/.append style={thick, mark size=1.6pt},
+    ]
+    % ---- SWE-bench Full (2,294 tasks) -- best-in-class frontier ----
+    \addplot[blue!70!black, mark=square*] coordinates {
+      (2023.78, 1.96)    % Oct 2023 RAG + GPT-4
+      (2024.25, 12.47)   % Apr 2024 SWE-agent GPT-4 Turbo
+      (2024.33, 13.86)   % Mar 2024 Devin (570 subset, extrapolated)
+      (2024.50, 17.96)   % Jun 2024 AutoCodeRover pass@3
+      (2025.33, 52.8)    % ~Apr 2025 GPT-4o agent (dataku)
+      (2025.58, 64.8)    % ~Jul 2025 Claude 4 Sonnet (dataku)
+      (2025.75, 71.2)    % ~Sep 2025 Claude Opus 4 (dataku)
+    };
+    \addlegendentry{SWE-bench Full (2{,}294)}
+
+    % ---- SWE-bench Lite (300 tasks) -- best-in-class frontier ----
+    \addplot[red!70!black, mark=triangle*] coordinates {
+      (2023.78, 0.33)    % Oct 2023 RAG + ChatGPT-3.5
+      (2024.08, 2.67)    % Jan 2024 RAG + GPT-4
+      (2024.25, 18.0)    % Apr 2024 SWE-agent GPT-4
+      (2024.42, 26.33)   % May 2024 Aider
+      (2024.50, 43.0)    % Jul 2024 CodeStory Aide
+      (2024.83, 49.0)    % Oct 2024 Blackbox AI
+      (2025.00, 55.0)    % Jan 2025 Isoform
+      (2025.17, 56.67)   % Feb 2025 SWE-agent Claude 3.7
+      (2025.33, 60.0)    % Apr 2025 Refact.ai
+      (2025.50, 60.3)    % Jun 2025 ExpeRepair + Claude 4 Sonnet
+      (2026.17, 62.7)    % Feb 2026 Claude Opus 4.6
+    };
+    \addlegendentry{SWE-bench Lite (300)}
+
+    % ---- Easy tasks (<15 min) on Verified ----
+    \addplot[green!60!black, mark=*, dashed] coordinates {
+      (2024.25, 27.3)    % SWE-agent + Claude 3 Opus
+      (2024.58, 36.6)    % SWE-agent + GPT-4o
+      (2024.83, 47.9)    % SWE-agent + Claude 3.5 Sonnet
+      (2024.92, 70.6)    % Agentless-1.5 + Claude 3.5 Sonnet
+      (2025.25, 80.4)    % Augment Agent v0
+    };
+    \addlegendentry{Verified -- Easy ($<$15 min)}
+
+    % ---- Hard tasks (>1 h) on Verified ----
+    \addplot[orange!80!black, mark=diamond*, dashed] coordinates {
+      (2024.25, 0.0)     % SWE-agent + Claude 3 Opus
+      (2024.58, 2.2)     % SWE-agent + GPT-4o
+      (2024.83, 4.4)     % SWE-agent + Claude 3.5 Sonnet
+      (2024.92, 13.3)    % Agentless-1.5 + Claude 3.5 Sonnet
+      (2025.25, 20.0)    % Augment Agent v0
+    };
+    \addlegendentry{Verified -- Hard ($>$1 h)}
+
+    \end{axis}
+  \end{tikzpicture}
+  \caption{SWE-bench progress over time. Solid lines: best-in-class
+    resolve rate on the Full set (blue, 2{,}294~tasks) and Lite (red,
+    300~tasks). Dashed lines: performance on easy ($<$15~min, green)
+    vs.\ hard ($>$1~h, orange) subsets of Verified, illustrating the
+    widening difficulty gap~\cite{ganhotra2025difficulty}.
+    Data compiled from leaderboard
+    submissions~\cite{dissecting2025,dataku2025swebench,agentmarketcap2026}.}
+  \label{fig:swebench-trajectory}
+\end{figure}
+
+The easy--hard gap is striking: the best individual system solves
+$\sim$80\% of easy tasks ($<$15~min) but only $\sim$20\% of hard ones
+($>$1~h)~\cite{ganhotra2025difficulty}. Combined across all top systems,
+95\% of easy instances have been resolved by at least one agent, versus only
+42\% of hard ones---and among hard multi-file issues, only 9 of 25 have
+ever been solved. This ceiling effect, combined with contamination risk
+(half the issues predate 2020 and the repositories are widely used as
+training data~\cite{epoch2025swebench}), raises concerns about the
+benchmark's continued discriminative power. SWE-bench Pro, a harder
+leaderboard with novel uncontaminated problems, shows Claude~Opus~4.5
+dropping to $\sim$46\%~\cite{agentmarketcap2026}.
 
 \paragraph{Beyond SWE-bench.}
-While SWE-bench dominates evaluation, it covers only Python bug-fixing. Newer
-benchmarks are beginning to address broader scopes: SWE-bench Multilingual
-(300~tasks across 9~languages), CodeAgentBench (interactive development
-environments), and real-world deployment metrics such as Devin's Agent Compute
-Units. A comprehensive discussion of the evaluation landscape is deferred
-to~\S\ref{sec:eval-landscape}.
+SWE-bench covers only Python bug-fixing in 12~repositories. Newer benchmarks
+begin to address broader scopes: SWE-bench Multilingual (300~tasks, 9~languages),
+CodeAgentBench (interactive development environments), and real-world
+deployment metrics. A comprehensive discussion of the evaluation landscape
+is deferred to~\S\ref{sec:eval-landscape}.
 
 \section{Planning and Search Strategies for Code Synthesis}
 \label{sec:planning}
