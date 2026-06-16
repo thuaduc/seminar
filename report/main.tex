@@ -138,7 +138,7 @@ traces feed back into replanning or repair.
 
 \subsection{Mapping to Survey Topics}
 Explicit mapping: how each of the three subsequent sections corresponds to one or more
-pipeline stages. \S3 covers the full pipeline as an integrated system---including
+pipeline stages. \S3 covers the full pipeline as an integrated system, including
 action interfaces for code generation (ACI, code-as-action, diff-based edits);
 \S4 zooms into planning, candidate search, and the plan--generate interface;
 \S5 covers execution environments, test-driven feedback, and the refinement loop
@@ -418,7 +418,7 @@ single run and 26\% with three retries, at a cost of \$0.43--\$1.30 per task.
 Formerly OpenDevin, OpenHands is an open-source platform (ICLR~2025,
 32K~GitHub stars, 188~contributors) built around the CodeAct agent. Each
 session runs inside a Docker container with a bash shell, IPython server, and
-Chromium browser. The platform supports multi-agent delegation---a generalist
+Chromium browser. The platform supports multi-agent delegation: a generalist
 CodeAct agent can offload web browsing to a specialised BrowsingAgent. On
 SWE-bench Lite, CodeAct~v1.8 with Claude~3.5~Sonnet achieved 26.0\%.
 On SWE-bench Verified, a later submission reaches 60.6\% with a single
@@ -485,7 +485,7 @@ and~(ii); its generated patch is applied and scored against both test sets.
 \noindent
 \textbf{Splits and filtering}: \textbf{Full} comprises all filtered instances.
 \textbf{Lite} selects 300~instances for faster iteration, but Xia
-et~al.~\cite{xia2024agentless} found quality issues---including gold-patch
+et~al.~\cite{xia2024agentless} found quality issues, including gold-patch
 leakage in issue text and tasks that lack sufficient information to be
 solvable.
 \textbf{Verified}~\cite{openai2024verified} addresses these concerns: human
@@ -544,7 +544,7 @@ early~2026~\cite{dissecting2025}.
                     row sep=1pt},
       every axis plot/.append style={thick, mark size=1.6pt},
     ]
-    % ---- SWE-bench Full (2,294 tasks) -- best-in-class frontier ----
+    % SWE-bench Full (2,294 tasks) - best-in-class frontier
     \addplot[blue!70!black, mark=square*] coordinates {
       (2023.78, 1.96)    % Oct 2023 RAG + GPT-4
       (2024.25, 12.47)   % Apr 2024 SWE-agent GPT-4 Turbo
@@ -556,7 +556,7 @@ early~2026~\cite{dissecting2025}.
     };
     \addlegendentry{SWE-bench Full (2{,}294)}
 
-    % ---- SWE-bench Lite (300 tasks) -- best-in-class frontier ----
+    % SWE-bench Lite (300 tasks) - best-in-class frontier
     \addplot[red!70!black, mark=triangle*] coordinates {
       (2023.78, 0.33)    % Oct 2023 RAG + ChatGPT-3.5
       (2024.08, 2.67)    % Jan 2024 RAG + GPT-4
@@ -572,7 +572,7 @@ early~2026~\cite{dissecting2025}.
     };
     \addlegendentry{SWE-bench Lite (300)}
 
-    % ---- Easy tasks (<15 min) on Verified ----
+    % Easy tasks (<15 min) on Verified
     \addplot[green!60!black, mark=*, dashed] coordinates {
       (2024.25, 27.3)    % SWE-agent + Claude 3 Opus
       (2024.58, 36.6)    % SWE-agent + GPT-4o
@@ -582,7 +582,7 @@ early~2026~\cite{dissecting2025}.
     };
     \addlegendentry{Verified -- Easy ($<$15 min)}
 
-    % ---- Hard tasks (>1 h) on Verified ----
+    % Hard tasks (>1 h) on Verified
     \addplot[orange!80!black, mark=diamond*, dashed] coordinates {
       (2024.25, 0.0)     % SWE-agent + Claude 3 Opus
       (2024.58, 2.2)     % SWE-agent + GPT-4o
@@ -608,7 +608,7 @@ The easy--hard gap is striking: the best individual system solves
 $\sim$80\% of easy tasks ($<$15~min) but only $\sim$20\% of hard ones
 ($>$1~h)~\cite{ganhotra2025difficulty}. Combined across all top systems,
 95\% of easy instances have been resolved by at least one agent, versus only
-42\% of hard ones---and among hard multi-file issues, only 9 of 25 have
+42\% of hard ones. Among hard multi-file issues, only 9 of 25 have
 ever been solved. This ceiling effect, combined with contamination risk
 (half the issues predate 2020 and the repositories are widely used as
 training data~\cite{epoch2025swebench}), raises concerns about the
@@ -745,8 +745,8 @@ subsequent steps elaborate the mistake. Tree of Thoughts~\cite{yao2023tree} and
 Graph of Thoughts~\cite{besta2024graph} relax this by allowing exploration,
 backtracking, and merging across alternative paths (Figure~\ref{fig:plan-shapes}).
 For code synthesis, this means agents can consider multiple decomposition
-strategies---``change the parser'', ``change the caller'', or ``adjust the
-compatibility layer''---as explicit search states rather than implicit in a
+strategies (``change the parser'', ``change the caller'', or ``adjust the
+compatibility layer'') as explicit search states rather than implicit in a
 single sample.
 
 Repository-level agents usually add a more concrete representation
@@ -788,8 +788,8 @@ broad intent into a bounded search problem.
 
 Plans may also be expressed as \emph{specification sketches}: partial
 interfaces, pseudocode, assertions, or examples that constrain the generated
-implementation. Useful plans are grounded in observable artefacts---issue text,
-existing code, API conventions, and failing tests---rather than invented
+implementation. Useful plans are grounded in observable artefacts (issue text,
+existing code, API conventions, and failing tests) rather than invented
 requirements.
 
 \subsection{Search and Exploration Strategies}
@@ -846,8 +846,8 @@ that LLMs often contain the right solution somewhere in the sample distribution
 even when top-ranked output is wrong. The limitation is self-referential
 objectives: if generated tests are weak, selection optimises for the model's
 own misunderstanding. Execution-guided search is strongest when feedback
-includes external oracles---existing unit tests, compiler errors, type checkers,
-or repository-specific regression suites.
+includes external oracles (existing unit tests, compiler errors, type checkers,
+or repository-specific regression suites).
 
 Search also appears in repository navigation, as in the systems surveyed in
 \S\ref{sec:e2e}. Agentless samples multiple locations and candidate patches,
@@ -919,7 +919,7 @@ Building on the plan--generate patterns surveyed in \S\ref{sec:planning}, this
 section examines how execution closes the loop. Code generation rarely succeeds
 in one shot. Even human programmers iterate: write, compile, test, debug,
 revise. Agentic systems execute generated code, observe runtime
-outcomes---test failures, compiler errors, exceptions---and revise their output
+outcomes (test failures, compiler errors, exceptions), and revise their output
 accordingly. While \S\ref{sec:e2e} scores agents on SWE-bench, refinement
 mechanisms are often evaluated on function-level suites (HumanEval, MBPP),
 text-to-SQL (Spider), and APR benchmarks (Defects4J). This section instantiates
@@ -953,8 +953,8 @@ language, identifies logical flaws, or predicts potential failures without
 executing the code (``rubber duck debugging'')~\cite{chen2024selfdebug}.
 
 \paragraph{Feedback sources: external versus internal.}
-Feedback may come from \emph{external} oracles---pre-written test suites,
-continuous-integration pipelines, runtime environments---or be
+Feedback may come from \emph{external} oracles (pre-written test suites,
+continuous-integration pipelines, runtime environments) or be
 \emph{internally simulated} by the agent itself. External feedback is
 authoritative but requires infrastructure and may be slow or expensive.
 Internal feedback is fast and requires no setup, but risks hallucination: the
@@ -1115,8 +1115,8 @@ patch may fail tests due to environment issues. Some systems use a
 coverage for faster convergence.
 
 \paragraph{Diminishing improvement detection.}
-If successive iterations yield no improvement---measured by test pass rate,
-execution success, or LLM confidence scores---the agent should stop. For
+If successive iterations yield no improvement (measured by test pass rate,
+execution success, or LLM confidence scores), the agent should stop. For
 example, if iterations 3, 4, and 5 all produce code that fails the same test
 with the same error, further iteration is unlikely to help. SelfEvolve monitors
 improvement deltas: if the pass rate increases by less than 1\% across two
