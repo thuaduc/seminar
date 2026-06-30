@@ -52,7 +52,7 @@
 
 
 
-\date{April 1, 2025}
+\date{June 30, 2026}
 
 
 \begin{document}
@@ -60,7 +60,26 @@
 \maketitle
 
 \begin{abstract}
-  % TODO: Write abstract
+  Large language models have moved from autocompleting single functions to
+  autonomously resolving real software issues end to end---a shift popularly
+  termed ``vibe coding.'' This report surveys autonomous AI agents for code
+  generation through a single unifying lens: a five-stage \emph{vibe coding
+  pipeline} (intent capture, planning, code generation, execution, and
+  refinement). Using this framing we synthesise three active research fronts.
+  First, we survey end-to-end software-engineering agents (SWE-agent, Agentless,
+  AutoCodeRover, OpenHands, Devin) and the architectural patterns they share---the
+  observe--think--act loop, agent--computer interfaces, code-as-action, and
+  repository-scale context management---together with their evaluation on
+  SWE-bench and its variants. Second, we examine planning and search strategies,
+  from chain/tree/graph-of-thought reasoning to hierarchical localisation and
+  sample-and-rank candidate selection. Third, we analyse execution feedback and
+  iterative refinement, covering feedback signals, self-repair mechanisms,
+  fault localisation, and convergence criteria. Across all three fronts we find
+  recurring patterns---feedback-driven loops, execution-grounded selection, and a
+  persistent context bottleneck---and we highlight open challenges in evaluation
+  realism, cost, and trust. The pipeline framing exposes how planning and
+  refinement, often studied in isolation, function as a coupled control layer over
+  generation.
 \end{abstract}
 
 \section{Introduction}
@@ -72,7 +91,11 @@ how natural-language-driven programming is reshaping the developer workflow.
 \paragraph{Background and Related Surveys.}
 Positioning relative to prior surveys on LLM-based code generation,
 automated program repair, and AI agent architectures.
-What this report adds: a pipeline-centric synthesis across four active research fronts.
+Existing surveys catalogue agents in software engineering~\cite{wang2024agentsse}
+and LLM-based code-generation agents~\cite{dong2025surveycodegen} largely by
+system or capability. What this report adds: a pipeline-centric synthesis that
+organises three active research fronts---end-to-end agents, planning/search, and
+execution-feedback refinement---around the stages they instantiate.
 
 \paragraph{Scope and Contribution.}
 Define the scope (autonomous code-generation agents, 2023--2025 literature),
@@ -1157,7 +1180,7 @@ human judgment rather than proxy metrics.
 \section{Discussion}
 
 \subsection{Consolidated Patterns and Trends}
-Recurring design patterns across all four topics (observe-think-act loops, tool orchestration,
+Recurring design patterns across all three fronts (observe-think-act loops, tool orchestration,
 LLM-as-judge verification). Macro trends: from single-shot prompting to agentic scaffolds,
 from monolithic agents to composable pipelines, from flat CoT to tree-structured search.
 
@@ -1179,7 +1202,7 @@ How these advances may reshape developer workflows, team structures,
 and the economics of software production.
 
 \section{Conclusion}
-Summarize key findings across the four research fronts,
+Summarize key findings across the three research fronts,
 restate the pipeline framing as a unifying lens,
 and point to the most promising future directions.
 
