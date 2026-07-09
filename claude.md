@@ -34,5 +34,7 @@ The report is organised around a **vibe coding pipeline**: Intent → Plan → G
 - §3 (End-to-End Agents): drafted with citations and comparison table
 - §4 (Planning & Search Strategies): drafted with citations and 4 new visualizations (plan shapes, localisation pipeline, candidate selection, plan-generate table)
 - §5 (Execution Feedback & Iterative Refinement): drafted with citations
-- §6–§7: structure and placeholder descriptions only
+- §6 (Discussion): drafted in full — consolidated patterns, evaluation landscape (SWE-bench Pro/Multilingual, reward hacking, SWE-Effi), context bottleneck, open challenges (long-horizon, ambiguity, cost, security), SE-practice implications; grounded in 2025–2026 sources
+- §7 (Conclusion): drafted in full — synthesis across three fronts + future directions
+- New 2025–2026 citations added to references.bib (SWE-bench Pro, Multilingual, Veracode GenAI security, SusVibes, SWE-Effi, context-management, reward-hacking)
 - Multi-Agent Frameworks: archived (see `report/archive/multi-agent-frameworks.tex`)
