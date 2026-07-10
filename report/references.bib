@@ -21,12 +21,12 @@
   year={2024}
 }
 
-@article{wang2024openhands,
+@inproceedings{wang2024openhands,
   title={{OpenHands}: An Open Platform for {AI} Software Developers as Generalist Agents},
-  author={Wang, Xingyao and others},
-  journal={arXiv preprint arXiv:2407.16741},
-  note={ICLR 2025},
-  year={2024}
+  author={Wang, Xingyao and Li, Boxuan and Song, Yufan and Xu, Frank F. and Neubig, Graham and others},
+  booktitle={The Thirteenth International Conference on Learning Representations (ICLR)},
+  year={2025},
+  note={arXiv:2407.16741}
 }
 
 @article{wang2024codeact,
@@ -69,9 +69,7 @@
 }
 
 % ---- Multi-Agent Frameworks ----
-% Not cited by main.tex; retained because archive/multi-agent-frameworks.tex
-% cites them. BibTeX omits uncited entries, so they do not reach the printed
-% bibliography.
+% Out of scope; cited only by the scope paragraph of the Introduction.
 
 @inproceedings{qian2024chatdev,
   title={{ChatDev}: Communicative Agents for Software Development},
@@ -85,21 +83,6 @@
   title={{MetaGPT}: Meta Programming for A Multi-Agent Collaborative Framework},
   author={Hong, Sirui and Zhuge, Mingchen and Chen, Jonathan and Zheng, Xiawu and Cheng, Yuheng and Wang, Jinlin and Zhang, Ceyao and Wang, Zili and Yau, Steven Ka Shing and Lin, Zijuan and Zhou, Liyang and Ran, Chenyu and Xiao, Lingfeng and Wu, Chenglin and Schmidhuber, J{\"u}rgen},
   booktitle={The Twelfth International Conference on Learning Representations},
-  year={2024}
-}
-
-@article{huang2023agentcoder,
-  title={{AgentCoder}: Multi-Agent-based Code Generation with Iterative Testing and Optimisation},
-  author={Huang, Dong and Bu, Qingwen and Zhang, Jie M. and Luck, Michael and Cui, Heming},
-  journal={arXiv preprint arXiv:2312.13010},
-  year={2023}
-}
-
-@inproceedings{islam2024mapcoder,
-  title={{MapCoder}: Multi-Agent Code Generation for Competitive Problem Solving},
-  author={Islam, Md. Ashraful and Ali, Mohammed Eunus and Parvez, Md Rizwan},
-  booktitle={Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
-  pages={4912--4944},
   year={2024}
 }
 
@@ -128,11 +111,20 @@
   year={2023}
 }
 
-@article{xu2024d4c,
-  title={Aligning {LLM}s for {FL}-free Program Repair},
-  author={Xu, Hao and others},
-  journal={arXiv preprint arXiv:2404.08877},
-  year={2024}
+@inproceedings{xu2024d4c,
+  title={Aligning the Objective of {LLM}-Based Program Repair},
+  author={Xu, Junjielong and Fu, Ying and Tan, Shin Hwei and He, Pinjia},
+  booktitle={Proceedings of the 47th IEEE/ACM International Conference on Software Engineering (ICSE)},
+  year={2025},
+  note={D4C. arXiv:2404.08877}
+}
+
+@inproceedings{bouzenia2025repairagent,
+  title={{RepairAgent}: An Autonomous, {LLM}-Based Agent for Program Repair},
+  author={Bouzenia, Islem and Devanbu, Premkumar and Pradel, Michael},
+  booktitle={Proceedings of the 47th IEEE/ACM International Conference on Software Engineering (ICSE)},
+  year={2025},
+  note={arXiv:2403.17134}
 }
 
 % ---- Planning and Search (continued) ----
@@ -219,17 +211,6 @@
   year={2024}
 }
 
-% ---- Terminology ----
-
-@misc{karpathy2025vibecoding,
-  title={There's a new kind of coding I call ``vibe coding''},
-  author={Karpathy, Andrej},
-  year={2025},
-  howpublished={Post on X, 2 February 2025.
-    \url{https://x.com/karpathy/status/1886192184808149383}},
-  note={Accessed: 2026-07-09}
-}
-
 % ---- Surveys ----
 
 @article{wang2024agentsse,
@@ -272,23 +253,7 @@
   note={Blog post, accessed: 2025-06-01}
 }
 
-@misc{agentmarketcap2026,
-  title={{SWE}-bench Verified: How {AI} Coding Agents Went From 1.96\% to 80.9\% in 30 Months},
-  author={{AgentMarketCap}},
-  year={2026},
-  howpublished={\url{https://agentmarketcap.ai/blog/2026/04/09/swe-bench-verified-progress-timeline-2023-2026}},
-  note={Accessed: 2026-06-30}
-}
-
 % ---- Web references ----
-
-@misc{dataku2025swebench,
-  title={The {SWE}-bench Verified Leaderboard: Who's Actually Solving Real Bugs?},
-  author={{dataku}},
-  year={2025},
-  howpublished={\url{https://dataku.ai/blog/swe-bench-verified-leaderboard-who-solving-real-bugs}},
-  note={Accessed: 2025-05-28}
-}
 
 @misc{swebench_leaderboard,
   title={{SWE}-bench Leaderboards},
@@ -299,12 +264,11 @@
   note={Accessed: 2026-07-09}
 }
 
-@misc{dissecting2025,
+@article{dissecting2025,
   title={Dissecting the {SWE}-Bench Leaderboards: Profiling Submitters and Architectures of {LLM}- and Agent-Based Repair Systems},
-  author={various},
-  year={2025},
-  howpublished={\url{https://arxiv.org/abs/2506.17208}},
-  note={arXiv:2506.17208}
+  author={Martinez, Matias and Franch, Xavier},
+  journal={arXiv preprint arXiv:2506.17208},
+  year={2025}
 }
 
 @misc{cognition2024devin,
@@ -323,19 +287,10 @@
   note={Accessed: 2026-07-09}
 }
 
-@misc{xia2025livesweagent,
-  title={{Live-SWE-agent}: Can Software Engineering Agents Self-Evolve on the Fly?},
-  author={Xia, Chunqiu Steven and Wang, Zhe and Yang, Yan and Wei, Yuxiang and Zhang, Lingming},
-  year={2025},
-  eprint={2511.13646},
-  archivePrefix={arXiv},
-  primaryClass={cs.SE}
-}
-
-% ---- Discussion: evaluation, context, trust (2025-2026) ----
+% ---- Discussion: evaluation, context, cost (2025-2026) ----
 
 @misc{openai2026swebench,
-  title={Why We No Longer Evaluate on {SWE}-bench Verified},
+  title={Why {SWE}-bench Verified No Longer Measures Frontier Coding Capabilities},
   author={{OpenAI}},
   year={2026},
   howpublished={\url{https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/}},
@@ -368,28 +323,30 @@
 @misc{cursor2025rewardhacking,
   title={Reward Hacking is Swamping Model Intelligence Gains},
   author={{Cursor}},
-  year={2025},
+  year={2026},
   howpublished={\url{https://cursor.com/blog/reward-hacking-coding-benchmarks}},
   note={Accessed: 2026-06-30}
 }
 
 @article{sweeffi2025,
   title={{SWE}-Effi: Re-Evaluating Software {AI} Agent System Effectiveness Under Resource Constraints},
-  author={others},
+  author={Fan, Zhiyu and Vasilevski, Kirill and Lin, Dayi and Chen, Boyuan and Chen, Yihao and
+    Zhong, Zhiqing and Zhang, Jie M. and He, Pinjia and Hassan, Ahmed E.},
   journal={arXiv preprint arXiv:2509.09853},
   year={2025}
 }
 
 @article{turncontrol2025,
   title={More with Less: An Empirical Study of Turn-Control Strategies for Efficient Coding Agents},
-  author={others},
+  author={Gao, Pengfei and Peng, Chao},
   journal={arXiv preprint arXiv:2510.16786},
   year={2025}
 }
 
 @article{contextastool2025,
   title={Context as a Tool: Context Management for Long-Horizon {SWE}-Agents},
-  author={others},
+  author={Liu, Shukai and Yang, Jian and Jiang, Bo and Li, Yizhi and Guo, Jinyang and
+    Liu, Xianglong and Dai, Bryan},
   journal={arXiv preprint arXiv:2512.22087},
   year={2025}
 }
@@ -401,32 +358,85 @@
   year={2025}
 }
 
-@misc{veracode2025genai,
-  title={2025 {GenAI} Code Security Report},
-  author={{Veracode}},
-  year={2025},
-  howpublished={\url{https://www.veracode.com/blog/genai-code-security-report/}},
-  note={45\% of generation tasks introduce a known security flaw. Accessed: 2026-06-30}
-}
-
-@article{susvibes2025,
-  title={Is Vibe Coding Safe? Benchmarking Vulnerability of Agent-Generated Code in Real-World Tasks},
-  author={others},
-  journal={arXiv preprint arXiv:2512.03262},
-  year={2025}
-}
-
-@inproceedings{securitydebt2025,
-  title={When Developer Aid Becomes Security Debt: A Systematic Analysis of Insecure Behaviors in {LLM} Coding Agents},
-  author={Kozak, Matous and Zilouchian Moghaddam, Roshanak and Sivaraman, Kalpathy},
-  booktitle={Workshop on Security of Agentic AI (SEA), NeurIPS},
-  year={2025}
-}
-
 @misc{openhands2025verified,
   title={{SOTA} on {SWE-Bench} Verified with Inference-Time Scaling and Critic Model},
   author={{OpenHands}},
   year={2025},
   howpublished={\url{https://www.openhands.dev/blog/sota-on-swe-bench-verified-with-inference-time-scaling-and-critic-model}},
   note={Accessed: 2026-05-28}
+}
+
+% ---- Tool-augmented self-correction ----
+
+@inproceedings{gou2024critic,
+  title={{CRITIC}: Large Language Models Can Self-Correct with Tool-Interactive Critiquing},
+  author={Gou, Zhibin and Shao, Zhihong and Gong, Yeyun and Shen, Yelong and Yang, Yujiu and
+    Duan, Nan and Chen, Weizhu},
+  booktitle={The Twelfth International Conference on Learning Representations (ICLR)},
+  year={2024},
+  note={arXiv:2305.11738}
+}
+
+% ---- Search over repository-scale trajectories ----
+
+@article{antoniades2024swesearch,
+  title={{SWE}-Search: Enhancing Software Agents with Monte Carlo Tree Search and Iterative Refinement},
+  author={Antoniades, Antonis and {\"O}rwall, Albert and Zhang, Kexun and Xie, Yuxi and
+    Goyal, Anirudh and Wang, William},
+  journal={arXiv preprint arXiv:2410.20285},
+  year={2024},
+  note={ICLR 2025}
+}
+
+% ---- Interactive intent capture ----
+
+@article{lahiri2022ticoder,
+  title={Interactive Code Generation via Test-Driven User-Intent Formalization},
+  author={Lahiri, Shuvendu K. and Fakhoury, Sarah and Naik, Aaditya and Sakkas, Georgios and
+    Chakraborty, Saikat and Musuvathi, Madanlal and Choudhury, Piali and von Veh, Curtis and
+    Inala, Jeevana Priya and Wang, Chenglong and Gao, Jianfeng},
+  journal={arXiv preprint arXiv:2208.05950},
+  year={2022},
+  note={TiCoder}
+}
+
+@article{mu2024clarifygpt,
+  title={{ClarifyGPT}: A Framework for Enhancing {LLM}-Based Code Generation via Requirements Clarification},
+  author={Mu, Fangwen and Shi, Lin and Wang, Song and Yu, Zhuohao and Zhang, Binquan and
+    Wang, Chenxue and Liu, Shichao and Wang, Qing},
+  journal={Proceedings of the ACM on Software Engineering (FSE)},
+  volume={1},
+  pages={2332--2354},
+  year={2024},
+  note={arXiv:2310.10996}
+}
+
+@inproceedings{vijayvargiya2026ambiguity,
+  title={Interactive Agents to Overcome Ambiguity in Software Engineering},
+  author={Vijayvargiya, Sanidhya and Zhou, Xuhui and Yerukola, Akhila and Sap, Maarten and
+    Neubig, Graham},
+  booktitle={The Fourteenth International Conference on Learning Representations (ICLR)},
+  year={2026},
+  note={arXiv:2502.13069; later revised as ``Ambig-SWE''}
+}
+
+% ---- Contamination-resistant function-level evaluation ----
+
+@inproceedings{jain2025livecodebench,
+  title={{LiveCodeBench}: Holistic and Contamination Free Evaluation of Large Language Models for Code},
+  author={Jain, Naman and Han, King and Gu, Alex and Li, Wen-Ding and Yan, Fanjia and
+    Zhang, Tianjun and Wang, Sida and Solar-Lezama, Armando and Sen, Koushik and Stoica, Ion},
+  booktitle={The Thirteenth International Conference on Learning Representations (ICLR)},
+  year={2025},
+  note={arXiv:2403.07974}
+}
+
+% ---- Field evidence on developer productivity ----
+
+@misc{metr2025rct,
+  title={Measuring the Impact of Early-2025 {AI} on Experienced Open-Source Developer Productivity},
+  author={Becker, Joel and Rush, Nate and Barnes, Elizabeth and Rein, David},
+  year={2025},
+  howpublished={arXiv preprint arXiv:2507.09089},
+  note={METR randomised controlled trial}
 }
