@@ -1,5 +1,16 @@
 .vscode
 .cursor
 .DS_Store
+
 report/build/*
 !report/build/main.pdf
+
+slides/build/*
+!slides/build/main.pdf
+!slides/build/main_notes.pdf
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log

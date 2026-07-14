@@ -1,0 +1,10 @@
+# Point the LaTeX compiler at the TUM class/package files, which live in the
+# report's tum/ subdirectory. The recursive '//' also lets graphicx resolve the
+# class's resources/TUM_*.png background images.
+$ENV{'TEXINPUTS'} = '../report/tum//:' . ($ENV{'TEXINPUTS'} // '');
+
+# references.bib is shared with the report so citations cannot drift apart.
+$ENV{'BIBINPUTS'} = '../report//:' . ($ENV{'BIBINPUTS'} // '');
+
+$pdf_mode = 1;
+$out_dir  = 'build';

@@ -1,0 +1,860 @@
+%% Agentic AI for Code Generation --- seminar talk (15 minutes).
+%%
+%% Companion deck to report/main.tex. Uses the same TUM template (tum/ is shared
+%% via TEXINPUTS, see latexmkrc) and the same references.bib, so citations here
+%% and in the report cannot drift apart.
+%%
+%%   latexmk  ->  build/main.pdf
+%%
+%% What to SAY lives in script.md, not in this file -- the deck is the visual, the
+%% script is the delivery, and they are edited for different reasons.
+
+\documentclass[
+  aspectratio=169,
+  font=times,      % match the report's body font
+  sectionpage,     % the two acts get a TUM section divider
+]{tumbeamer}
+
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta, positioning, fit}
+
+% 'TUM more space' buys back the vertical room the default frametitle spends, and
+% the headline strip is dropped on content pages: the TUM logo is already in the
+% background, so a "Technical University of Munich" banner on every slide is a
+% redundant use of the scarcest resource on a slide. The footline stays, for the
+% page numbers.
+\TUMbeamersetup{
+  title page   = TUM tower,
+  content page = TUM more space,
+  footline     = TUM infoline,
+  footline on  = {content page},
+}
+
+% The class installs the head/footline per frame style, so at \begin{document}
+% beamer still sees the *empty* templates of the title page and computes a text
+% height spanning the whole slide. Content then runs silently under the footline
+% -- with no Overfull warning, because beamer does not know the footline is there.
+% Install the content-page footline once up front and recompute, so \textheight
+% actually excludes it and TeX warns when a frame is genuinely too full.
+\makeatletter
+\AtBeginDocument{%
+  \setbeamertemplate{footline}[TUM infoline]%
+  \beamer@calculateheadfoot
+}
+\makeatother
+
+% The three positions of the loop-closure axis. Colour is load-bearing here: the
+% same three colours recur on the axis slide, the re-reading slide, and the
+% closing slide, so the audience can track a mechanism across the talk.
+%
+% These are for BODY TEXT ONLY. Never use them in a block title: beamer sets
+% block titles in white on TUM blue, so \oracle there is blue-on-blue.
+\definecolor{oracleblue}{HTML}{0065BD}   % TUM blue   -- authoritative oracle
+\definecolor{proxyamber}{HTML}{E37222}   % TUM orange -- learned/generated proxy
+\definecolor{selfgrey}{HTML}{808080}     % grey       -- same-distribution self-critique
+
+\newcommand{\oracle}[1]{\textcolor{oracleblue}{\textbf{#1}}}
+\newcommand{\proxy}[1]{\textcolor{proxyamber}{\textbf{#1}}}
+\newcommand{\selfc}[1]{\textcolor{selfgrey}{\textbf{#1}}}
+
+% A tag pinned to the right margin, naming which position on the axis a result
+% actually occupies. Used on the re-reading slide. (Not \tag: amsmath owns that.)
+\newcommand{\axistag}[1]{\hfill{\footnotesize #1}}
+
+% Pipeline-figure edge colours. Deliberately OUTSIDE the axis palette above: the
+% figure's two backward edges are not axis positions, and reusing oracle blue or
+% proxy amber here would teach the audience a colour code the figure does not mean.
+% Both are picked for projector contrast -- the previous red!60 / gray!55 washed out
+% once the figure was scaled down.
+\definecolor{feedbackred}{HTML}{C4071B}  % real feedback: execution -> refinement -> back
+\definecolor{newtaskgrey}{HTML}{595959}  % the NON-feedback edge into intent capture
+
+\title{Agentic AI for Code Generation}
+\subtitle{Seminar Report --- SS26}
+\author{Thua Duc Nguyen}
+\institute{Supervisor: Derui Zhu \\ \theDepartmentName, \theUniversityName}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+
+
+% ============================================================================
+\section{What works}
+% ============================================================================
+
+% ---------------------------------------------------------------- slide 2 ---
+% Every number in this talk is a SWE-bench resolve rate, so the vocabulary is paid
+% for once, before the first measurement is shown.
+%
+% The slide also plants the talk's ending: the test filter is what gives SWE-bench a
+% grading oracle, the issue filter is what gives it an intent, and those are exactly
+% the two stages Act II attacks. That plant is SPOKEN, not shown -- see script.md.
+% A slide that says "remember these two things" telegraphs the payoff and spends the
+% audience's attention on a callback they cannot use yet.
+\begin{frame}{What SWE-bench measures}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.53\textwidth}
+      \textbf{One instance}~\cite{jimenez2024swebench} = a real merged pull
+      request that
+      \begin{enumerate}
+        \item closes a linked GitHub issue, \emph{and}
+        \item modifies the test suite.
+      \end{enumerate}
+      \medskip
+
+      \textbf{The agent sees} the repository \emph{before} the merge, plus the
+      issue text. It returns a patch.
+      \medskip
+
+      \textbf{The patch is graded} by running tests:
+      \begin{itemize}
+        \item \emph{fail-to-pass} must flip,
+        \item \emph{pass-to-pass} must not regress.
+      \end{itemize}
+      \medskip
+
+      \oracle{Resolve rate} = both hold, on the first patch (pass@1).
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \footnotesize
+      % NB: inside a column, \textwidth IS the column width -- not the slide's.
+      \setlength{\tabcolsep}{3pt}
+      \renewcommand{\arraystretch}{0.88}
+      \scriptsize
+      \begin{tabular}{@{}llp{0.50\textwidth}@{}}
+        \toprule
+        \textbf{Split} & \textbf{Size} & \textbf{Kept only} \\
+        \midrule
+        Full     & 2{,}294 & every scraped PR that touches tests \\
+        Lite     & 300     & single-file patches; some issues leak the fix \\
+        Verified & 500     & human-screened: clear issues, fair tests \\
+        Pro      & 1{,}865 & multi-file, long-horizon; held-out repos \\
+        \bottomrule
+      \end{tabular}
+      \footnotesize
+      \medskip
+
+      \alert{Rates are not comparable across splits.} Verified is the most
+      \emph{curated} split, not the hardest.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 3 ---
+% Now that resolve rate is defined, the first measurement. Every row holds the
+% model and the benchmark fixed and varies only the scaffold -- the only structure
+% that can attribute anything to the scaffold at all.
+\begin{frame}{No scaffold wins twice}
+  \small
+  \begin{center}
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    & \textbf{SWE-agent} & \textbf{OpenHands} & \textbf{mini-SWE-agent}
+      & \textbf{spread} \\
+    & {\scriptsize custom ACI} & {\scriptsize code-as-action}
+      & {\scriptsize \raisebox{0pt}[0pt][0pt]{$\sim$}100 lines of Python}
+      & \\
+    \midrule
+    GPT-5-mini        & 38.8 & 38.6 & \textbf{51.8} & $13.2$ \\
+    Qwen3 Coder 480B  & 36.6 & \textbf{54.0} & 40.2 & $17.4$ \\
+    DeepSeek R1       & \textbf{22.6} & 18.0 & 11.0 & $11.6$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  {\footnotesize Resolve rate (pass@1) on SWE-bench Verified, April
+   2026~\cite{suri2026codescout,miniswegent2026}.}
+  \vfill
+  \pause
+  \begin{itemize}
+    \item Same model, same benchmark: the scaffold alone is worth
+      \textbf{11--17 points}.
+    \item \alert{No scaffold wins twice.} The best scaffold \emph{depends on the
+      model} --- and for GPT-5-mini the winner is the 100-line one.
+  \end{itemize}
+  \vfill
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 4 ---
+\begin{frame}{The agent pipeline}
+  \begin{center}
+  % 0.72 rather than 0.60: the figure is the whole slide now, and \resizebox shrinks
+  % line widths along with everything else -- scaling it down was half of why the
+  % arrows were hard to read.
+  \resizebox{0.72\textwidth}{!}{%
+  \begin{tikzpicture}[
+    stage/.style={draw, rounded corners=3pt, fill=TUMBlue!12, font=\small,
+                  align=center, minimum height=0.9cm, minimum width=2.4cm},
+    note/.style={font=\scriptsize, align=center, inner sep=1pt},
+    arr/.style={-{Stealth[length=2.2mm]}, very thick},
+    feedback/.style={-{Stealth[length=2.2mm]}, ultra thick, dashed,
+                     feedbackred},
+    newtask/.style={-{Stealth[length=2.0mm]}, very thick, dotted, newtaskgrey},
+    fblab/.style={font=\scriptsize\bfseries, text=feedbackred, align=center,
+                  inner sep=2pt, fill=white},
+    ntlab/.style={font=\scriptsize, text=newtaskgrey, align=center, inner sep=2pt,
+                  fill=white},
+  ]
+    \node[stage] (intent) at (0,0)      {Intent\\Capture};
+    \node[stage] (plan)   at (3.6,0)    {Planning};
+    \node[stage] (gen)    at (7.2,0)    {Code\\Generation};
+    \node[stage] (exec)   at (7.2,-2.4) {Execution};
+    \node[stage] (refine) at (3.6,-2.4) {Refinement};
+
+    \draw[arr] (intent) -- (plan);
+    \draw[arr] (plan) -- (gen);
+    \draw[arr] (gen) -- (exec);
+    \draw[arr] (exec) -- (refine);
+    \draw[newtask] (refine.west) to[out=180, in=270]
+      node[ntlab, pos=0.55] {new task,\\not feedback} (intent.south);
+
+    \draw[feedback] (refine.north) -- node[fblab, right] {replan} (plan.south);
+    \draw[feedback] (refine.north east) -- node[fblab, pos=0.5] {regenerate} (gen.south west);
+
+    \node[note, above=0.2cm of intent] {NL issue or spec};
+    \node[note, below=0.2cm of exec]   {test failures,\\traces};
+  \end{tikzpicture}%
+  }
+  \end{center}
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 5 ---
+% Slides 5-7 walk the three stages the talk actually argues about, in pipeline order:
+% plan -> execute -> refine. They come BEFORE the systems table on purpose. The stages
+% are the vocabulary; the table is a claim expressed in it, and a table of five systems
+% means nothing to an audience that cannot yet say what a "plan" is here. Generation is
+% deliberately not given its own slide: it is the plant, not the control layer, and the
+% interface slide (9) is where what it can actually DO gets defined.
+\begin{frame}{Planning is localisation, not design}
+  \small
+  \begin{itemize}
+    \item \textbf{Where it sits} --- input: an issue. Output: \emph{a place to edit}.
+      \smallskip
+    \item \textbf{What a ``plan'' is} --- a \emph{narrowing}: repository $\to$ files
+      $\to$ classes/functions $\to$ edit locations.
+      \smallskip
+    \item \textbf{What shape it takes} --- a chain, a backtracking tree, or a merging
+      graph.
+      \smallskip
+    \item \textbf{What it contributes} --- \oracle{grounding}, not deliberation.
+  \end{itemize}
+  \begin{center}
+    Planning is not reasoning about \emph{how} to write the code.\\
+    It is reasoning about \emph{where} the code is.
+  \end{center}
+  \vfill
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 6 ---
+% The stage that was missing from the walk. It is kept strictly DESCRIPTIVE: what runs,
+% and what comes back. The temptation is to say here that execution is the only stage
+% that can contradict the model -- that is the whole of Act II, and saying it now spends
+% the punchline eight slides early. Name the machinery; let slide 11 name its privilege.
+\begin{frame}{Execution: the code meets the environment}
+  \small
+  \begin{itemize}
+    \item \textbf{Where it sits} --- input: a patch. Output: \emph{evidence}.
+      \smallskip
+    \item \textbf{What actually runs} --- the repository, checked out at the parent
+      commit, inside a container~\cite{wang2024openhands}. The agent runs the test
+      suite, the interpreter, the linter.
+      \smallskip
+    \item \textbf{What comes back} --- failing tests, tracebacks, a rejected edit.
+      Not a score: \emph{a symptom}, which still has to be read.
+      \smallskip
+    \item \textbf{Why it is the expensive stage} --- every observation costs a
+      container round-trip, and the transcript grows with each one.
+  \end{itemize}
+  \begin{center}
+    The only stage whose output the model did not write.\\
+    {\footnotesize\itshape Everything in Act II turns on that sentence.}
+  \end{center}
+  \vfill
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 7 ---
+% Deliberately thin. Refinement's SUBSTANCE is Act II -- the axis slide sorts these same
+% mechanisms and is where the thinking happens. This slide's only job is to name the
+% stage, show that the loop pays, and set up the "...or so this reads" turn. Reflexion
+% was cut (its headline is on HumanEval, a different benchmark from every other number
+% here); the per-mechanism detail lives on the backup slide.
+\begin{frame}{Refinement: what to do with the signal}
+  \small
+  \textbf{Where it sits} --- input: whatever execution returned. Output: a
+  \emph{decision} --- repair the patch, re-plan, or stop.
+  \medskip
+
+  \begin{itemize}
+    \item \textbf{Repair from the trace}~\cite{jiang2023selfevolve} --- the traceback
+      goes straight back into the prompt.
+    \item \textbf{Explain your own code}~\cite{chen2024selfdebug} --- discrepancies
+      surface. Up to $+12$\,\%, but only where tests exist.
+    \item \textbf{Sample $N$, rerank with a trained critic}~\cite{openhands2025verified}
+      --- OpenHands on Verified: 60.6\,\% $\to$ \textbf{66.4\,\%}.
+  \end{itemize}
+  \vfill
+  \begin{center}
+    \large Agents improve their own code. \\[0.2em]
+    {\small\itshape \ldots{}or so this reads.}
+  \end{center}
+  \vfill
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 8 ---
+% Why Lite and not Full: Agentless and OpenHands were never RUN on Full (their
+% authors cite compute cost), and Agentless is the row the argument needs. Lite is
+% simply the only split all of these papers share -- so the Full column is carried
+% explicitly, gaps and all, rather than quietly omitted. The table is then demoted:
+% it is a map of the design space, and the matched-backbone comparison underneath is
+% what actually carries the Agentless claim.
+%
+% This now lands AFTER the stage walk, which is what makes the Agentless row legible:
+% the audience has just been told a plan is a narrowing, so "a fixed pipeline leads"
+% reads as a claim about localisation rather than as a curiosity.
+\begin{frame}{A map of the design space, not a ranking}
+  \small
+  \setlength{\tabcolsep}{5pt}
+  \begin{tabular}{@{}llccc@{}}
+    \toprule
+    \textbf{System} & \textbf{Architecture} & \textbf{Backbone}
+      & \textbf{Lite} & \textbf{Full} \\
+     &  & & {\scriptsize\itshape pass@1} & {\scriptsize\itshape pass@1} \\
+    \midrule
+    SWE-agent~\cite{yang2024sweagent}       & OTA loop + ACI
+      & GPT-4 Turbo & 18.0\,\% & 12.5\,\% \\
+    Agentless~\cite{xia2024agentless}       & \emph{Fixed pipeline}
+      & GPT-4o & \textbf{32.0\,\%} & --$^{\dagger}$ \\
+    AutoCodeRover~\cite{zhang2024autocoderover} & OTA loop + AST search
+      & GPT-4 & 19.0\,\% & 12.4\,\% \\
+    OpenHands~\cite{wang2024openhands}      & OTA loop + code-as-action
+      & Sonnet 3.5 & 26.0\,\% & --$^{\dagger}$ \\
+    Devin~\cite{cognition2024devin}         & OTA loop + Brain/DevBox
+      & undisclosed & -- & 13.9\,\%$^{\ddagger}$ \\
+    \bottomrule
+  \end{tabular}
+  \\
+  {\scriptsize \textsc{ota} = observe--think--act loop; \textsc{aci} = agent--computer
+   interface (both defined next slide).
+   \quad $^{\dagger}$Never run on Full --- the authors cite compute cost.
+   \quad $^{\ddagger}$Self-reported on a random 25\,\% subset.}
+\end{frame}
+
+
+% ---------------------------------------------------------------- slide 9 ---
+% Each bullet must be a DESCRIPTION of something every system has, not advice on how
+% to build one -- the title asks what they share, so the bullets answer that. The
+% ablation numbers are evidence that the shared component is load-bearing, not a
+% recommendation to the audience.
+%
+% This is also where GENERATION gets its content: the stage walk skipped it because the
+% interesting question is not "the model writes code" but what it is allowed to do --
+% and that is the action interface, defined here.
+\begin{frame}{Interface and context move scores as much as the model}
+  \small
+  \begin{enumerate}
+    \item \textbf{They all run an observe--think--act loop}~\cite{yao2023react} ---
+      observe, reason, act via a tool call.
+    \item \textbf{They all manage context explicitly} --- no repository fits in the
+      window, so each must choose what to read: repo skeleton $+$ embeddings
+      (Agentless), coarse-to-fine AST search (AutoCodeRover), observation compression
+      (SWE-agent).
+    \item \textbf{They all build a purpose-built action interface} --- none hands the
+      model a raw shell. The agent only ever sees what its commands print back. Two
+      opposite bets~\cite{yang2024sweagent}:
+  \end{enumerate}
+  \smallskip
+
+  \begin{center}
+  {\footnotesize
+  \setlength{\tabcolsep}{6pt}
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    & \textbf{SWE-agent} & \textbf{OpenHands} \\
+    \midrule
+    \textbf{The bet} & Constrain the action space & Give it a general one \\
+    \textbf{Reading} & 100-line file window       & Python $+$ bash, \\
+    \textbf{Editing} & Linter may \emph{reject} the edit & in a Docker sandbox \\
+    \midrule
+    \textbf{Ablated} & \multicolumn{2}{l}{Remove one part of SWE-agent's interface:
+      $-3$ to $-6$\,pp (Lite)} \\
+    \bottomrule
+  \end{tabular}}
+  \end{center}
+  \vfill
+  \begin{center}
+    \small\itshape Interface and context strategy move resolve rates as much as
+    the backbone does.
+  \end{center}
+\end{frame}
+
+
+% ============================================================================
+\section{What the numbers hide}
+% ============================================================================
+
+% --------------------------------------------------------------- slide 10 ---
+\begin{frame}{The question this talk asks}
+  \vfill\vfill
+  \begin{center}
+    {\usebeamerfont{frametitle}\textcolor{TUMBlue}{At each stage,\\[0.3em]
+     what can tell the model it is wrong?}}
+  \end{center}
+  \vfill
+  \pause
+  \begin{center}
+    \small Read as a control system: intent is the uncontrolled input,
+    generation is the plant, \\ execution is the oracle, planning and refinement
+    are the control layer.
+  \end{center}
+  \vfill\vfill
+\end{frame}
+
+
+% --------------------------------------------------------------- slide 11 ---
+% NB: the frame body must not begin with a brace group --- beamer would read it as
+% a frame subtitle and typeset it as a blue bold heading.
+%
+% The title is slide 10's question, restated: this slide IS the answer, and saying so
+% in the title spares the audience the work of noticing. The previous title ("Only one
+% signal can surprise the model") asserted the punchline using a word the slide never
+% defined -- "surprise" is information-theoretic here (a signal the model could not have
+% produced itself), and an audience meeting it cold reads it as hand-waving. The word is
+% still worth having, because it is the ONLY word under which the three-way split holds:
+% a trained critic *can* contradict the generator (that is why reranking pays), it just
+% cannot bring in information from outside. So the term is now introduced by apposition
+% in the oracle block, where the plain phrasing defines it -- and the conclusion slide,
+% which leans on "cannot surprise", stays anchored.
+\begin{frame}{What can tell the model it is wrong? Three answers}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Authoritative oracle}
+        \footnotesize
+        Test runner, compiler, human. \oracle{Ground truth.}
+        \medskip
+
+        It can tell the model something it did not already believe --- it can
+        \oracle{surprise} it.
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \onslide<2->{
+      \begin{block}{Learned / generated proxy}
+        \footnotesize
+        Trained critic, generated tests, LLM judge.
+        \medskip
+
+        Carries real information --- but never more than it was fitted with. A
+        generated test \emph{runs} for real; the model still wrote the answer key.
+        \proxy{Ceiling: its own fidelity.}
+      \end{block}}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \onslide<3->{
+      \begin{block}{Same-distribution self-critique}
+        \footnotesize
+        The model judging itself.
+        \medskip
+
+        \selfc{No information from outside the model} --- the critic is drawn from
+        the distribution that produced the error~\cite{huang2024selfcorrect}.
+      \end{block}}
+    \end{column}
+  \end{columns}
+  \vfill
+  \onslide<4->{
+  \begin{center}
+    \small
+    An agent that could tell its wrong code from its right code by inspection
+    would have written the right code in the first place.\\[0.2em]
+    {\footnotesize\itshape It can \emph{reorganise} what the model believes.
+     It cannot \emph{add} to it.}
+  \end{center}}
+\end{frame}
+
+
+% --------------------------------------------------------------- slide 12 ---
+% The opening line is the slide's licence to exist. Without it this is a benchmark
+% critique dropped into the middle of a control-theory argument, and the audience
+% spends the whole slide not knowing why. The bridge is that SWE-bench's grading tests
+% are an instance of the axis just defined -- they are the oracle, for the agent AND for
+% us -- so a weak grader is a weak oracle, and every gain in Act I was measured against
+% it. That sentence used to be the LAST thing said here; it has to be the first.
+%
+% Body must not begin with a brace group (beamer reads it as a frame subtitle), so the
+% line opens on \small, not on {\small ...}.
+\begin{frame}{The benchmark can be gamed}
+  \small
+  The grading tests \emph{are} the oracle.
+  \alert{A weak oracle makes optimising against it \emph{overfitting}.}
+  \smallskip
+
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          width=\textwidth, height=4.2cm,
+          ybar, bar width=6pt, enlarge x limits=0.18,
+          ymin=0, ymax=100, ylabel={\% Resolved},
+          symbolic x coords={Opus 4.5, GPT-5.2, GPT-5.3, GLM-5.1},
+          xtick=data,
+          x tick label style={font=\scriptsize, rotate=18, anchor=east},
+          yticklabel style={font=\scriptsize},
+          ylabel style={font=\scriptsize},
+          legend style={font=\tiny, at={(0.5,1.02)}, anchor=south,
+                        legend columns=2, draw=none, fill=none,
+                        /tikz/every even column/.append style={column sep=5pt}},
+          grid=major, grid style={dashed, gray!30},
+          nodes near coords, point meta=explicit symbolic,
+          every node near coord/.append style={font=\scriptsize, rotate=90,
+                                               anchor=west},
+        ]
+        \addplot[fill=oracleblue, draw=oracleblue] coordinates {
+          (Opus 4.5,80.9) [80.9] (GPT-5.2,80.0) [80.0]
+          (GPT-5.3,85)   [85]   (GLM-5.1,78)   [78]};
+        \addplot[fill=proxyamber, draw=proxyamber] coordinates {
+          (Opus 4.5,45.9) [45.9] (GPT-5.2,56.4) [56.4]
+          (GPT-5.3,56.8) [56.8] (GLM-5.1,58.4) [58.4]};
+        \legend{Verified, Pro}
+        \end{axis}
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \footnotesize
+      \vspace{0.2cm}
+      The \emph{same weights} drop $\geq$\,20 points on the contamination-resistant
+      SWE-bench Pro~\cite{deng2025swebenchpro}.
+      \medskip
+      \pause
+
+      \alert{Read only the floor.} Pro is harder \emph{as well as} fresher, and the
+      column mixes harnesses.
+      \medskip
+      \pause
+      \begin{itemize}
+        \item \textbf{91\,\%} of Verified is work a developer finishes \emph{within
+          the hour}~\cite{ganhotra2025difficulty}.
+        \item OpenAI dropped Verified in early 2026: models reproduce gold patches
+          \emph{from the task ID alone}~\cite{openai2026swebench}.
+        \item ``Reward hacking is swamping model intelligence
+          gains''~\cite{cursor2025rewardhacking}.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+
+% --------------------------------------------------------------- slide 13 ---
+% This slide IS the thesis, and it used to be the only slide in Act II with no evidence
+% on it: two blocks of assertion and three citations. The numbers below fix that, and
+% they cost no new research -- they were already being SPOKEN, once, back on slide 2.
+%
+% The title no longer asserts a false symmetry. The two stages are not symmetric: intent
+% has no oracle at all, validation has one with holes -- so "the two stages nothing can
+% check" was contradicted by the right-hand block's own first line ("the oracle exists"),
+% and "nothing can say no" was false of a test suite, which says no to everything it
+% covers. What IS exactly true of both is the phrase the right block already used: a
+% wrong guess is never contradicted. That is the shared property; the title now names it.
+%
+% PROVENANCE OF THE TWO FIGURES -- verified 2026-07-14 against OpenAI, "Introducing
+% SWE-bench Verified" (openai.com/index/introducing-swe-bench-verified/). Verbatim:
+%
+%   "We see that 38.3% of samples were flagged for underspecified problem statements,
+%    and 61.1% were flagged for unit tests that may unfairly mark valid solutions as
+%    incorrect."
+%   "Overall, our annotation process resulted in 68.3% of SWE-bench samples being
+%    filtered out due to underspecification, unfair unit tests, or other issues."
+%   "Each annotation criterion has a label ranging [0, 1, 2, 3] in increasing severity.
+%    Labels 0 and 1 are minor; labels 2 and 3 are severe and indicate that the sample is
+%    inadequate in some way and should be discarded."  (93 devs, 1,699 samples.)
+%
+% CRITICAL: the post does NOT say whether "flagged" means severity >=1 or >=2. The
+% DISCARD threshold is >=2, but the 38.3/61.1 headline figures are not pinned to it. So
+% the slide uses OpenAI's own verb -- "flagged" -- and OpenAI's own hedge -- "may unfairly
+% mark a valid solution incorrect". Do not tighten these into "too underspecified to
+% determine the patch" or "would reject a valid fix": those assert the severe reading, and
+% the source will not back it if anyone asks at what threshold.
+%
+% Note the two figures measure OPPOSITE oracle failures, and the right block must not
+% blur them: 61.1% is the suite rejecting a VALID fix (too strict, and visible). The claim
+% the thesis needs is the suite accepting an INVALID one (too lenient, and invisible --
+% catching it would need the better oracle we do not have). The 61.1% earns the weaker,
+% safer premise -- the suite is not a trustworthy account of "correct" -- and the block
+% then argues from there.
+\begin{frame}{Where a wrong guess is never contradicted}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Intent capture}
+        \footnotesize
+        OpenAI's screen of 1{,}699 real issues \alert{flagged 38.3\,\%} as
+        \emph{underspecified}~\cite{openai2024verified}.
+        \medskip
+
+        No surveyed system asks a clarifying question. Each commits to a reading.
+        \textbf{Open loop.}
+        \medskip
+
+        The mechanism exists --- TiCoder, ClarifyGPT, and an underspecified SWE-bench
+        where the agent that \emph{asks}
+        wins~\cite{lahiri2022ticoder,mu2024clarifygpt,vijayvargiya2026ambiguity}.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Test-based validation}
+        \footnotesize
+        The same screen \alert{flagged 61.1\,\%} for tests that \emph{may unfairly mark a
+        valid solution incorrect}~\cite{openai2024verified}.
+        \medskip
+
+        That is the failure we can \emph{see}. The one we cannot: a wrong guess about an
+        \emph{untested} invariant is never contradicted --- it scores as success.
+        \medskip
+
+        And augmenting the \proxy{proxy} inherits the generator's own misreading, exactly
+        where the new tests were needed.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \pause
+  \begin{center}
+    \small
+    Both benchmarks \textbf{hand-solve these two stages} before the agent starts:
+    Verified \emph{discards} \textbf{68.3\,\%} of what it
+    screened~\cite{openai2024verified}; Pro pays experts to \emph{rewrite} every
+    issue~\cite{deng2025swebenchpro}.\\[0.2em]
+    {\footnotesize\itshape No agent does either. Nothing ever asked it to.}
+  \end{center}
+\end{frame}
+
+
+% --------------------------------------------------------------- slide 14 ---
+% Every bullet here must be traceable to something the deck actually showed --- no
+% claim resting only on a citation nobody in the room saw evidence for. The Olausson
+% budget-normalisation point and the CRITIC tool-use point were both cut for exactly
+% that reason: neither appeared as data on any slide, only as a name-drop, so neither
+% belongs in a conclusion that is supposed to be read off the evidence just presented.
+%
+% Bullet 3's CodeScout claim was breaking that rule -- "lifted all nine cells" rested on
+% a paper whose treatment condition appears on no slide. It is kept, but only because it
+% is now anchored: the grid on slide 3 IS that paper's control condition, so the cells it
+% lifted are cells the audience has seen. Saying "slide 3" out loud is what discharges
+% the rule. The honest remaining gap is that the audience sees the control and hears the
+% treatment; if the per-cell deltas are ever worth the space, they belong on slide 3.
+%
+% Bullet 2 no longer says self-critique "adds nothing". Huang et al. is a REASONING-task
+% result and reports no reliable gain plus possible degradation; "adds nothing" is a
+% strengthening the deck cannot cash. The slide now states the finding, and the speaker
+% owns the generalisation to code -- which is the talk's claim, not Huang's.
+\begin{frame}{Conclusion --- three things the numbers showed}
+  \small
+  \begin{enumerate}
+    \item \textbf{The wrapper carries the score --- but no wrapper carries it twice.}\\
+      {\footnotesize The scaffold alone moved \textbf{11--17 points}, and the winning
+      column changed row by row. What the wrapper \emph{feeds} the generator ---
+      interface, context, localisation --- does the work.}
+    \pause
+
+    \item \textbf{Refinement pays exactly as much as its signal can contradict it.}\\
+      {\footnotesize \oracle{Execution} grounds the gains. A \proxy{trained critic} is
+      a real gain (60.6 $\to$ 66.4\,\%), but it is still a model --- it cannot
+      \emph{surprise} the generator. \selfc{Self-critique} alone: no reliable gain,
+      and it can degrade~\cite{huang2024selfcorrect}.}
+    \pause
+
+    \item \textbf{The two stages nothing contradicts are where the numbers are
+      softest.}\\
+      {\footnotesize \textbf{Intent} and \textbf{validation} have no gate --- OpenAI's
+      own screen flagged \textbf{38.3\,\%} and \textbf{61.1\,\%} of real issues --- and
+      the benchmark hid it: the same weights drop $\geq$\,20 points on Pro. Yet the one
+      paper that \emph{instrumented} intent lifted \emph{all nine} cells of the grid on
+      slide~3~\cite{suri2026codescout} --- its own control condition. The stage nobody
+      instruments still pays out.}
+  \end{enumerate}
+  \vfill
+  \pause
+  \begin{center}
+    \footnotesize Impressive $\to$ dependable turns on letting \oracle{the
+    environment say no} --- because on this evidence, \selfc{the model will not say
+    it to itself.}
+  \end{center}
+\end{frame}
+
+
+% ============================================================================
+% Backup slides --- for Q&A, not counted in the 15 minutes.
+% ============================================================================
+
+\appendix
+
+\begin{frame}[noframenumbering]{Backup: every refinement mechanism, sorted}
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}p{0.23\textwidth}p{0.07\textwidth}p{0.31\textwidth}p{0.29\textwidth}@{}}
+    \toprule
+    \textbf{Mechanism} & \textbf{Closed by} & \textbf{Signal}
+      & \textbf{Characteristic failure} \\
+    \midrule
+    Self-Refine~\cite{madaan2023selfrefine}
+      & \selfc{S} & Model critiques own output
+      & Plateaus; nothing can contradict the generator \\
+    Self-debug, no tests~\cite{chen2024selfdebug}
+      & \selfc{S} & Self-generated explanation
+      & Explains the bug as intended behaviour \\
+    Self-debug, with tests~\cite{chen2024selfdebug}
+      & \oracle{O}$+$\selfc{S} & Test verdict $+$ model diagnosis
+      & Bounded by test coverage \\
+    Reflexion~\cite{shinn2023reflexion}
+      & \oracle{O} or \proxy{P} & Task reward where one exists; on HumanEval,
+        self-generated tests
+      & Filed as external, but its code result rests on a proxy \\
+    SelfEvolve~\cite{jiang2023selfevolve}
+      & \oracle{O} & Interpreter errors, traces
+      & Silent (non-crashing) semantic bugs \\
+    D4C~\cite{xu2024d4c}
+      & \oracle{O} & Failing tests $+$ full function
+      & Plausible-but-incorrect patches \\
+    CRITIC~\cite{gou2024critic}
+      & \oracle{O} & Self-critique routed \emph{through} an external tool
+      & Needs a tool covering the error class \\
+    Agentless validate~\cite{xia2024agentless}
+      & \oracle{O}$+$\proxy{P} & Regression tests $+$ generated reproduction tests
+      & The proxy half inherits the model's misreading \\
+    Best-of-$N$ $+$ critic~\cite{openhands2025verified}
+      & \oracle{O}$+$\proxy{P} & Executed rollouts ranked by a trained critic
+      & Critic is a distilled proxy; cost scales with $N$ \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+% This figure is tall, not wide: constrain it by height, or it pushes the caption
+% through the footline.
+\begin{frame}[noframenumbering]{Backup: how plans are shaped}
+  \centering
+  \resizebox{!}{0.62\textheight}{%
+  \begin{tikzpicture}[
+    node distance=0.8cm and 1.2cm,
+    thought/.style={draw, circle, fill=TUMBlue!10, minimum size=0.6cm,
+                    font=\tiny},
+    arr/.style={-{Stealth[length=1.2mm]}, semithick},
+    backarr/.style={-{Stealth[length=1.2mm]}, semithick, dashed},
+  ]
+    \node[thought] (c1) {A};
+    \node[thought, right=of c1] (c2) {B};
+    \node[thought, right=of c2] (c3) {C};
+    \node[thought, right=of c3] (c4) {D};
+    \draw[arr] (c1) -- (c2);
+    \draw[arr] (c2) -- (c3);
+    \draw[arr] (c3) -- (c4);
+    \node[above=0.15cm of c2, font=\scriptsize\bfseries] {Chain of Thought};
+
+    \node[thought, below=2cm of c1] (t1) {A};
+    \node[thought, below right=0.5cm and 0.4cm of t1] (t2a) {B$_1$};
+    \node[thought, below left=0.5cm and 0.4cm of t1] (t2b) {B$_2$};
+    \node[thought, below right=0.5cm and 0.2cm of t2a] (t3a) {C$_1$};
+    \node[thought, below left=0.5cm and 0.2cm of t2a] (t3b) {C$_2$};
+    \node[thought, below=0.7cm of t2b] (t3c) {C$_3$};
+    \draw[arr] (t1) -- (t2a);
+    \draw[arr] (t1) -- (t2b);
+    \draw[arr] (t2a) -- (t3a);
+    \draw[arr] (t2a) -- (t3b);
+    \draw[arr] (t2b) -- (t3c);
+    \draw[backarr, red!60] (t3b) to[bend right=45] (t2a);
+    \node[above=0.15cm of t1, font=\scriptsize\bfseries] {Tree of Thoughts};
+    \node[below=0.05cm of t3b, font=\tiny, text=red!70] {backtrack};
+
+    \node[thought, below=2cm of c3] (g1) {A};
+    \node[thought, below right=0.5cm and 0.4cm of g1] (g2a) {B$_1$};
+    \node[thought, below left=0.5cm and 0.4cm of g1] (g2b) {B$_2$};
+    \node[thought, below=1.2cm of g1] (g3) {C};
+    \node[thought, below=0.7cm of g3] (g4) {D};
+    \draw[arr] (g1) -- (g2a);
+    \draw[arr] (g1) -- (g2b);
+    \draw[arr, TUMBlue] (g2a) -- (g3);
+    \draw[arr, TUMBlue] (g2b) -- (g3);
+    \draw[arr] (g3) to[bend right=40]
+      node[midway, right, font=\tiny, inner sep=1pt] {revisit} (g2a);
+    \draw[arr] (g3) -- (g4);
+    \node[above=0.15cm of g1, font=\scriptsize\bfseries] {Graph of Thoughts};
+    \node[left=0.05cm of g3, font=\tiny, text=TUMBlue] {merge};
+  \end{tikzpicture}%
+  }
+  \vfill
+  {\footnotesize The evaluator, not the branching, makes the structure useful ---
+   and it is what a repository-scale agent finds hardest to supply. \emph{What is
+   a half-finished patch worth, before any test has run?}
+   SWE-Search~\cite{antoniades2024swesearch} builds one (MCTS + LLM value
+   function, $+23\,\%$ relative) --- and must invoke a model at every node.}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Backup: context and cost}
+  \small
+  \begin{itemize}
+    \item \textbf{Longer windows do not dissolve the bottleneck.} Retaining full
+      \emph{dependency} context works best; padding with loosely related code
+      \emph{degrades} correctness~\cite{repoexec2025}.
+      \medskip
+    \item \textbf{Context explosion and semantic drift.} Appending every
+      observation buries the critical early information~\cite{contextastool2025}.
+      \medskip
+    \item \textbf{Cost is quadratic in turns.} The whole prefix is re-sent each
+      turn, so tokens grow as $O(n^2)$~\cite{turncontrol2025}. A property of the
+      protocol, not an empirical finding; prompt caching cuts the constant, not
+      the growth rate.
+      \medskip
+    \item \textbf{Resolve rate decouples from compute}~\cite{sweeffi2025}.
+      Agentless leads on resolve rate (48\,\% with Qwen3-32B) at 83.1 API calls
+      and 209.4\,s per issue. The frontier is accuracy \emph{per dollar}.
+      \medskip
+    \item \textbf{And verification is the human bottleneck.} In an RCT,
+      experienced developers were 19\,\% \emph{slower} with early-2025 AI tools ---
+      while believing they had been 20\,\% faster~\cite{metr2025rct}.
+  \end{itemize}
+\end{frame}
+
+% The bibliography is already minimal: BibTeX prints only the entries actually cited
+% (32 of the 51 in the shared references.bib). What made it sprawl over eight pages
+% was beamer's default bibliography formatting, not the entry count:
+%   - the default bibliography item is an ICON, which forces a wide hanging indent;
+%   - beamer sets \itemsep between entries as if they were bullets.
+% Text-numbered items, no icon, and zero itemsep pack the same 32 entries into ~3.
+\setbeamertemplate{bibliography item}[text]
+\setbeamerfont{bibliography item}{size=\tiny}
+\setbeamerfont{bibliography entry author}{size=\tiny}
+\setbeamerfont{bibliography entry title}{size=\tiny}
+\setbeamerfont{bibliography entry location}{size=\tiny}
+\setbeamerfont{bibliography entry note}{size=\tiny}
+
+% \itemsep set in the frame body does NOT reach the bibliography: thebibliography
+% opens its own list, which resets the spacing. Patch the environment itself.
+\makeatletter
+\let\beamer@oldthebibliography\thebibliography
+\renewcommand{\thebibliography}[1]{%
+  \beamer@oldthebibliography{#1}%
+  \setlength{\itemsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\topsep}{0pt}%
+}
+\makeatother
+
+\begin{frame}[noframenumbering, allowframebreaks]{References}
+  \tiny
+  \bibliographystyle{abbrv}
+  \bibliography{references,slides-extra}
+\end{frame}
+
+\end{document}
