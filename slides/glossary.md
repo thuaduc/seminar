@@ -1,5 +1,27 @@
 # Glossary
 
+## The pipeline
+
+The talk organises every agent as five stages: **Intent capture** (read the issue/spec) →
+**Planning** (narrow down to where to edit) → **Generation** (write the patch) →
+**Execution** (run it against the real repo) → **Refinement** (decide what to do with what
+came back — repair, re-plan, or stop). It's a lens for comparing systems that use completely
+different internal vocabulary, not a claim that every system is built this way on purpose.
+Feedback normally flows backward from execution into refinement, and from there into planning
+or generation — except into intent capture, which nothing ever revisits; going back there
+would mean starting a new task, not correcting the current one.
+
+## Intent capture
+
+Intent capture is the first stage: turning the user's natural-language issue or request into
+whatever the rest of the pipeline will treat as "the task." In every system surveyed, this
+stage **commits to a single reading and never revisits it** — no system asks a clarifying
+question when the request is ambiguous or underspecified. That makes it an **open loop**: an
+input that shapes everything downstream, without anything ever feeding a correction back into
+it. It sits next to test-based validation as one of the two stages nothing can check — there
+is no oracle for "did we understand the request correctly," so a misunderstood intent is
+simply never contradicted, only ever restarted as a fresh task.
+
 ## Oracle
 
 An **authoritative oracle** is a source of ground truth that sits *outside* the model

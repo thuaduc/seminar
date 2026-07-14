@@ -1,51 +1,64 @@
 # Speaking script — Agentic AI for Code Generation
 
-15-minute seminar talk. Companion to `main.tex` (the deck).
+**20-minute** seminar talk (hard ceiling). Companion to `main.tex` (the deck).
 
 **Thesis:** planning and refinement form a control layer over generation, but only where a
 signal the generator did not produce can contradict it.
 
-**Act I** (slides 2–9) sells the good news. **Act II** (10–14) reads it again against one
-instrument: the three-position axis — oracle / proxy / self-critique. The axis is applied to
-Act I's results in the conclusion.
+**Act I** (slides 2–9) sells the good news. **Act II** (10–15) reads it again against one
+instrument: the three-position axis — oracle / proxy / self-critique.
+
+Act II's shape: the question (10), the axis **defined** (11), the axis **proved** (12), then
+the axis applied — to the instrument (13) and to the pipeline (14) — and the conclusion (15).
+*Define → prove → apply.* Slide 12 is what stops the axis being a taxonomy.
 
 Act I's shape: the ruler (2), the first surprise (3), then the **pipeline and a walk through
 its stages** (4–7), and only then real systems (8–9). Stages before systems — the table is a
 claim, and the stages are the vocabulary it's expressed in.
 
 
-`Target` is the budget. `Script` is what the bullets below actually contain, at 140 wpm —
-measure it again if you rewrite anything, because a script that overruns is a script whose
-*unanchored* material gets dropped at the podium, and that is exactly the material carrying
-the argument.
+`Script` is what the bullets below actually contain, at 140 wpm. Re-measure if you rewrite
+anything.
 
-| #   | Slide                                                  | Target | Script   |
-| --- | ------------------------------------------------------ | ------ | -------- |
-| 1   | **Opening** (title slide)                              | 0:50   | 1:27 ⚠️  |
-| 2   | What SWE-bench measures                                | 0:55   | 1:46 ⚠️  |
-| 3   | No scaffold wins twice                                 | 1:20   | 0:57     |
-| 4   | The agent pipeline                                     | 0:50   | 0:28     |
-| 5   | Planning is localisation, not design                   | 1:10   | 1:49 ⚠️  |
-| 6   | Execution: the code meets the environment              | 0:45   | 1:12 ⚠️  |
-| 7   | Refinement: what to do with the signal                 | 0:40   | 0:51     |
-| 8   | A map of the design space, not a ranking               | 1:00   | 1:39 ⚠️  |
-| 9   | Interface and context move scores as much as the model | 1:10   | 1:10     |
-| —   | *divider — Act II*                                     | 0:10   | —        |
-| 10  | The question this talk asks                            | 0:30   | 0:31     |
-| 11  | What can tell the model it is wrong? Three answers     | 1:50   | 1:52     |
-| 12  | The benchmark can be gamed                             | 1:20   | 1:18     |
-| 13  | Where a wrong guess is never contradicted              | 1:45   | 1:45     |
-| 14  | Conclusion — three things the numbers showed           | 0:55   | 1:06     |
+| #   | Slide                                                  | Script  |
+| --- | ------------------------------------------------------ | ------- |
+| 1   | **Opening** (title slide)                              | 1:27 ✂️ |
+| 2   | What SWE-bench measures                                | 1:46 ✂️ |
+| 3   | No scaffold wins twice                                 | 0:57    |
+| 4   | The agent pipeline                                     | 1:15    |
+| 5   | Planning is localisation, not design *(figure)*        | 1:27    |
+| 6   | Execution: the code meets the environment *(figure)*   | 0:51    |
+| 7   | Refinement: what to do with the signal                 | 0:51    |
+| 8   | A map of the design space, not a ranking               | 1:39 ✂️ |
+| 9   | Interface and context move scores as much as the model | 1:11    |
+| —   | *divider — Act II*                                     | 0:10    |
+| 10  | The question this talk asks                            | 0:31    |
+| 11  | What can tell the model it is wrong? Three answers     | 1:52    |
+| 12  | **Same model, same prompt — one variable** *(new)*     | 1:32    |
+| 13  | The benchmark can be gamed                             | 1:18    |
+| 14  | Where a wrong guess is never contradicted              | 1:48    |
+| 15  | Conclusion — three things the numbers showed           | 1:06    |
 
-**Act I: 8:40 target, 11:21 of script — still ~2:40 over, and untouched.** That is the next
-job. Act II: 6:00 target, **6:32** of script (it was 9:32).
+**Total: ~19:40 at 140 wpm — which means it does *not* fit 20 minutes.** That estimate assumes
+you never pause. With two figures to let land and a slide that needs silence after the
+punchline, real delivery runs 10–15 % slower, so this is a **21–22 minute** talk as it stands.
+**About 1:20 has to come out of Act I**, and the ✂️ rows are where the fat is — slides 1, 2
+and 8 all re-narrate what the slide already shows. Cut those and nothing in the argument is
+lost.
 
-**Act II's centre of gravity is now slide 13, not 12.** It used to be the other way round:
-12 spent nearly two minutes narrating how SWE-bench Pro is built, while 13 — the slide that
-*is* the thesis — carried no evidence at all, only assertion. The two figures that measure
-the two ungated stages (**38 % / 61 %**) now sit on 13 where they belong, and the one Pro
-construction detail that mattered (Scale pays humans to rewrite every issue) went with them.
-**Say the numbers; do not re-narrate the benchmarks.**
+**Do not buy the time back from Act II.** Every slide there is now carrying evidence.
+
+**Slide 12 is new, and it is the most important thing added to this deck.** Slide 11 defines
+the axis and proves nothing; "here is a distinction I find useful" is the weakest possible
+claim for a talk's own contribution. Slide 12 is the controlled experiment — two of them,
+moving the same variable in opposite directions — and both were already in the report, cut
+from the deck only because they had no slide to sit on. Now they do.
+
+**Slides 5 and 6 carry figures, and both got *shorter* for it** (−22 s and −21 s). That is the
+test a figure must pass: take work *off* the speaker, don't add a thing to explain. Slide 5's
+funnel replaces an arrow chain that was being read aloud; slide 6's boundary replaces two
+bullets and plants the Act II hinge silently. **Refinement was deliberately left without one —
+see slide 7.**
 
 
 ---
@@ -93,9 +106,9 @@ threw out unclear issues and unfair tests. Everything I quote is Verified unless
   instances; **500 survived.** *Why the other two-thirds didn't is my last argument, so I'm
   saving it.* The difficulty tiers I use later (< 15 min / 15 min–1 h / 1–4 h / 4 h+) are
   theirs too.
-  - **Pro is Scale AI's** — a different organisation, deliberately harder (slide 12).
+  - **Pro is Scale AI's** — a different organisation, deliberately harder (slide 13).
 - Do **not** spend the rejection breakdown here. Those two numbers are the evidence for
-slide 13, and they only land once. Plant the 1,699 → 500; let 13 say what happened to the
+slide 14, and they only land once. Plant the 1,699 → 500; let 14 say what happened to the
 1,199.
 
 ## 2 → 3
@@ -125,10 +138,17 @@ not a claim I resolve later.
 
 - Every paper uses its own vocabulary. Underneath, nearly all do these five things.
 - A **lens, not an architecture** — a device for comparing systems that share no vocabulary.
+- **The five stages, in one breath:** intent capture reads the request; planning narrows it
+down to *where* to edit; generation writes the patch; execution runs that patch for real;
+refinement decides what to do with whatever comes back.
+- **Intent capture — where it sits.** Input: the raw NL issue or spec, handed over as-is.
+Output: whatever the rest of the pipeline is going to treat as "the task" from then on. It's
+the only stage that talks to a human at all, and it runs exactly once per task.
 - Feedback flows backwards from execution into refinement, and from refinement into
 planning and generation.
 - **The dotted edge:** nothing re-enters intent capture. Going back there is a *new task*,
-not a correction. Nothing here ever fixes a misread issue.
+not a correction. Nothing here ever fixes a misread issue — whatever intent capture commits
+to on the first pass is what the rest of the pipeline is stuck with.
 
 ## 4 → 5
 
@@ -138,30 +158,36 @@ systems."*
 
 ## 5 — Planning is localisation, not design
 
-- **Where it sits.** Second stage of the pipeline: input is an issue, output is *a place to
-  edit*.
+The funnel does the narrowing for you — **do not read the boxes out loud.** The old script
+spent forty seconds narrating an arrow chain that is now a picture. Spend that time on the
+**boundary** instead: it is the only thing on this slide an audience cannot guess, and it
+pre-empts the objection a listener who knows the APR literature will otherwise raise.
+
 - **What a "plan" actually is here.** Not a design for the code — not "first I'll add a
-  helper, then refactor the caller." It is a **narrowing**: repository → candidate files →
-  classes and functions → the exact edit locations. Planning, in these systems, is
-  *localisation*.
-- **What shape a plan takes.** A linear chain; a tree that can backtrack; a graph that
-  merges branches back together. (Backup slide has the picture.)
-  - But branching is only worth anything if something can **score a half-finished patch** —
-    and at repository scale, before a test has run, nothing can. The evaluator, not the
-    branching, is the hard part. SWE-Search has to build one, and pays a model call at every
-    node.
-- **What planning contributes: grounding, not deliberation.** Tying the hypothesis to
-  artefacts that can be *checked* — real files, real symbols — rather than thinking harder
-  in the abstract.
-- **Two witnesses for that claim:**
-  - **Agentless** plans least — a fixed localise → repair → validate pipeline, no loop — and
-    still leads. It *hard-codes* the narrowing an agentic loop has to rediscover by
-    exploring. Same grounding, none of the search. (You'll see it top the table in three
-    slides — this is why.)
-  - **AutoCodeRover's** SBFL variant changes *nothing* about repair — only localisation — and
-    buys three points. Finding the right place is harder than editing it once found.
+  helper, then refactor the caller." It is a **narrowing**, and that is the whole of it.
+  Planning, in these systems, is *localisation*.
+- **What it contributes: grounding, not deliberation.** Tying the hypothesis to artefacts
+  that can be *checked* — real files, real symbols — rather than thinking harder in the
+  abstract.
+- **The boundary — the point of the figure.** Localisation **flips sign** at the function.
+  *Above* it, localisation is the task: which function, among tens of thousands? AutoCodeRover's
+  SBFL ranks functions and buys three points. *Below* it, it **hurts** — D4C *un-ranks* lines
+  and beats perfect-localisation systems by ten per cent, because line-level targeting fights
+  the model's infilling prior. Two results that look opposed, measuring opposite sides of one
+  boundary.
+- **Agentless is the witness.** It plans least — a fixed localise → repair → validate
+  pipeline, no loop — and still leads: it *hard-codes* the narrowing an agentic loop has to
+  rediscover by exploring. You'll see it top the table in three slides. This is why.
 - **Planning is not reasoning about *how* to write the code. It is reasoning about *where*
-  the code is.**
+  the code is — and only down to the function.**
+
+*If you are short on time, cut the D4C half:* say only "localisation is the task above the
+function, and stops being useful below it," and let the figure carry the rest.
+
+*Plan shape (chain / backtracking tree / merging graph) is now a backup slide only.* If asked:
+branching is worthless unless something can score a half-finished patch, and at repository
+scale nothing can. The evaluator, not the branching, is the hard part — SWE-Search has to
+build one, and pays a model call at every node.
 
 ## 5 → 6
 
@@ -170,23 +196,24 @@ that isn't a language model."*
 
 ## 6 — Execution: the code meets the environment
 
-Keep this one **short and concrete**. It is the stage everyone skips, and the whole of Act II
-turns on it — but its privilege is *not* argued here. Name the machinery; slide 11 names what
-makes it special.
+Short and concrete. **The figure argues this slide for you.** The vertical rule is the whole of
+Act II — the model on one side, a real machine on the other — but its privilege is *not*
+argued here. Do not lean on it, do not explain it. Name the machinery and move; the audience
+will notice the asymmetry by themselves, and slide 11 then lands as a *name* for something
+they already saw rather than as a new claim.
 
-- **Where it sits.** Input: a patch. Output: **evidence**.
 - **What actually runs.** The repository, checked out at the parent commit, inside a
-  container. The agent runs the test suite, the interpreter, the linter. This is a real
-  machine executing real code — not a model predicting what would happen if it did.
+  container. The agent runs the test suite, the interpreter, the linter. A real machine
+  executing real code — not a model predicting what would happen if it did.
 - **What comes back is a *symptom*, not a score.** A traceback, three failing tests, a
   rejected edit. Nobody hands the agent "you are wrong, here is why" — it gets a stack trace
   and still has to *read* it. That reading is the next stage.
-- **Why it's the expensive stage.** Every observation is a container round-trip, and the
-  transcript grows with each one. Cost is superlinear in turns — the context slide in the
-  backup has the numbers if anyone pushes.
-- **Land it, then move on:** *"the only stage whose output the model did not write."* Say it
-  flatly and don't explain it yet. It should feel like a passing remark now and like a
-  hinge in eight slides.
+- **Land it flatly, then move on:** *"the only stage whose output the model did not write."*
+  Don't explain it. It should feel like a passing remark now, and like a hinge in eight
+  slides.
+
+*Cost is superlinear in turns — the context slide in the backup has the numbers if anyone
+pushes.*
 
 ## 6 → 7
 
@@ -197,6 +224,14 @@ it."*
 
 Thin on purpose — the *thinking* about refinement is Act II. Here: name the stage, show the
 loop pays, set up the turn.
+
+**No figure here, deliberately** — planning and execution got one, refinement does not, and
+the asymmetry is the point. Every good refinement visual *is* the Act II punchline. A
+cost-vs-signal ladder, a convergence plateau, CRITIC's tool-vs-no-tool bars: each one detonates
+the reversal this slide exists to set up (*"…or so this reads"*) eight slides early. The only
+data here is a single delta (60.6 → 66.4), and two bars is not a chart, it is decoration.
+Refinement already has its visual — the three-block axis on slide 11, and the sorted table in
+the backup. **Give it a second one in Act I and slide 11 has nothing left to reveal.**
 
 - **Where it sits.** Input: whatever execution returned. Output: a **decision** — repair the
   patch, re-plan, or stop.
@@ -307,15 +342,47 @@ written the right code in the first place.**
 
 ## 11 → 12
 
-*"Hold that axis in mind. Now look again at the headline numbers everyone quotes."*
+*"That's the axis. But I've only asserted it — so before I use it on anything, let me show
+you that it is a real variable and not a taxonomy I invented."*
 
-## 12 — The benchmark can be gamed
+## 12 — Same model, same prompt — one variable
+
+**This slide exists because the axis was, until now, asserted.** Slide 11 defines three
+positions and proves none of them — and "here is a three-way distinction I find useful" is the
+weakest thing a talk can say about its own contribution. These two experiments are the proof.
+**The experimental *design* is the evidence — lead with it, not with the numbers.** Both hold
+everything fixed except one thing: whether something from outside the model is in the loop.
+The caveat in the left block is not a footnote to skim: an audience that catches you quietly
+generalising a QA result to code stops believing the rest of the talk. Say it yourself, first.
+
+- **CRITIC — add a tool, the gain appears.** Same model, same prompt. One toggle: may the
+critic use an external tool? **Critique alone is worth nothing** — minus 0.03, plus 2.33 F1,
+at or *below* the model's own first answer. **The same critique through a tool: plus 7.7.**
+Not the model. Not the prompt. The tool.
+  - Caveat, said out loud and unprompted: CRITIC is **QA and maths, not code** — which is
+  exactly why there is a second column.
+- **Olausson — match the budget, the gain vanishes.** On code, this time. A repair loop spends
+tokens that could have drawn more *independent* samples. Compare it against best-of-*k* i.i.d.
+at **equal cost** and much of the gain evaporates: it was inference-time scaling wearing a
+control loop's clothes.
+  - **The number that matters.** Same model, same loop — change only *who writes the
+  critique*, from the model to an experienced human. **1.58× more repairs pass.** The loop
+  didn't get better. The signal did.
+- **Close.** One *adds* an external signal and the gain appears. One *matches the budget* and
+the gain disappears. **Same knob — and it is not the model.**
+
+## 12 → 13
+
+*"So the axis is real. Now hold it in mind, and look again at the headline numbers everyone
+quotes."*
+
+## 13 — The benchmark can be gamed
 
 Lead with the line at the top of the slide — it is this slide's licence to exist. Without it,
 a benchmark critique dropped into the middle of a control-theory argument reads as a
 digression. And do **not** re-narrate Pro's three tiers or its 107-lines-across-4.1-files:
 that cost a full minute and bought nothing the floor does not already buy. The one Pro
-construction detail that matters now lives on slide 13, where it does argumentative work.
+construction detail that matters now lives on slide 14, where it does argumentative work.
 
 - **The grading tests *are* the oracle** — the agent's, and ours. Same suite, both jobs. So
 this is not a change of subject: it is the axis, applied to the instrument. **A weak oracle
@@ -336,11 +403,11 @@ intelligence gains.** That is the top line, cashed out.
 computable stopped being published in mid-2025 — vendors now self-report a single number. The
 composition fact holds; the time series can no longer be built.
 
-## 12 → 13
+## 13 → 14
 
 *"A weak oracle. Now — the two places in the pipeline where there is barely one at all."*
 
-## 13 — Where a wrong guess is never contradicted
+## 14 — Where a wrong guess is never contradicted
 
 The payoff slide, and the one that used to carry no evidence at all. It now holds the two
 numbers Act I deliberately withheld. Take the time — this is where the argument is cashed.
@@ -380,11 +447,11 @@ that if asked at what severity. *If asked:* say plainly that the post reports th
 and separately states the discard threshold is 2, and that 68.3 % were in fact discarded —
 which is the number that does the work anyway.
 
-## 13 → 14
+## 14 → 15
 
 *"So, to close."*
 
-## 14 — Conclusion: three things the numbers showed
+## 15 — Conclusion: three things the numbers showed
 
 Fifty-five seconds. One sentence per bullet, then stop. This slide used to run two and a half
 minutes — everything cut from it had already been said once, and a conclusion that re-argues
@@ -397,7 +464,7 @@ the winning column changed row by row. What the wrapper *feeds* the generator do
 critic** is real — 60.6 → 66.4 — but it is still a model: it cannot *surprise* the generator.
 **Self-critique** alone: no reliable gain. The control layer is exactly as strong as its
 signal.
-- **3.** *(slides 12–13)* **Intent** and **validation** have no gate — **38 %** and
+- **3.** *(slides 13–14)* **Intent** and **validation** have no gate — **38 %** and
 **61 %** — and the benchmark hid it. **And yet:** the one paper that *instrumented* intent
 lifted **all nine** cells of the grid I opened with — its own control condition.
 - **Close.** Whether this crosses from *impressive* to *dependable* depends on whether we

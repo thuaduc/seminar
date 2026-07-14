@@ -234,24 +234,64 @@
 % means nothing to an audience that cannot yet say what a "plan" is here. Generation is
 % deliberately not given its own slide: it is the plant, not the control layer, and the
 % interface slide (9) is where what it can actually DO gets defined.
+% The figure REPLACES the "what a plan is" bullet rather than illustrating it: the bullet
+% was an arrow chain typeset as prose (repository -> files -> classes -> locations), which
+% is a diagram pretending to be a sentence. Drawn as a funnel, the narrowing is seen rather
+% than asserted, and the slide title stops being a claim the audience has to take on trust.
+%
+% The boundary is the reason the figure is worth its space. It carries the one result here
+% that an audience cannot guess and that a sharp listener will otherwise raise as an
+% objection ("but D4C says fault localisation is unnecessary"): localisation flips sign at
+% the function boundary. Above it, it IS the task -- SBFL ranks functions, +3 points. Below
+% it, it fights the model's infilling prior -- D4C un-ranks lines and beats perfect-FL
+% systems by 10%. Two results that look opposed, measuring opposite sides of one boundary.
+% This is a full paragraph in the report (Sec. Fault Localisation) and one glance here.
+%
+% Boundary rule is deliberately BLACK. It is not an axis position and not a feedback edge,
+% so it must not borrow oracleblue, proxyamber or feedbackred -- that would teach a colour
+% code the figure does not mean.
 \begin{frame}{Planning is localisation, not design}
   \small
-  \begin{itemize}
-    \item \textbf{Where it sits} --- input: an issue. Output: \emph{a place to edit}.
-      \smallskip
-    \item \textbf{What a ``plan'' is} --- a \emph{narrowing}: repository $\to$ files
-      $\to$ classes/functions $\to$ edit locations.
-      \smallskip
-    \item \textbf{What shape it takes} --- a chain, a backtracking tree, or a merging
-      graph.
-      \smallskip
-    \item \textbf{What it contributes} --- \oracle{grounding}, not deliberation.
-  \end{itemize}
+  \textbf{Where it sits} --- input: an issue. Output: \emph{a place to edit}. A ``plan''
+  here is a \emph{narrowing}, and what it contributes is \oracle{grounding} --- files and
+  symbols that can be \emph{checked} --- not deliberation.
+  \smallskip
+
+  \begin{center}
+  \resizebox{0.92\textwidth}{!}{%
+  \begin{tikzpicture}[
+    lvl/.style={draw, rounded corners=2pt, fill=TUMBlue!12, font=\footnotesize,
+                align=center, text width=1.8cm},
+    arr/.style={-{Stealth[length=2mm]}, very thick},
+    note/.style={font=\scriptsize, align=center, text width=7.2cm, anchor=north},
+  ]
+    \node[lvl, minimum height=2.0cm]  (repo)  at (0,0)   {Repository};
+    \node[lvl, minimum height=1.3cm]  (files) at (2.7,0) {Files};
+    \node[lvl, minimum height=0.75cm] (fns)   at (5.4,0) {Classes,\\functions};
+    \node[lvl, minimum height=0.4cm]  (lines) at (9.2,0) {Lines};
+
+    \draw[arr] (repo)  -- (files);
+    \draw[arr] (files) -- (fns);
+    \draw[arr] (fns)   -- (lines);
+
+    \draw[ultra thick, black!80] (7.3,-1.15) -- (7.3,1.25);
+    \node[font=\scriptsize\bfseries, align=center] at (7.3,1.72)
+      {the function\\boundary};
+
+    \node[note] at (2.9,-1.5)
+      {\textbf{Above it, localisation \emph{is} the task.} Which function, among tens of
+       thousands? SBFL \emph{ranks} functions: $+3$
+       points~\cite{zhang2024autocoderover}.};
+    \node[note] at (11.4,-1.5)
+      {\textbf{Below it, a constraint the model does not need.} D4C \emph{un-ranks} lines
+       --- and beats perfect-localisation systems by $10\,\%$~\cite{xu2024d4c}.};
+  \end{tikzpicture}}
+  \end{center}
+  \vfill
   \begin{center}
     Planning is not reasoning about \emph{how} to write the code.\\
     It is reasoning about \emph{where} the code is.
   \end{center}
-  \vfill
 \end{frame}
 
 
@@ -260,26 +300,58 @@
 % and what comes back. The temptation is to say here that execution is the only stage
 % that can contradict the model -- that is the whole of Act II, and saying it now spends
 % the punchline eight slides early. Name the machinery; let slide 11 name its privilege.
+% The figure's whole job is the vertical rule. "The only stage whose output the model did
+% not write" is a claim about a BOUNDARY, and a boundary is the one thing prose is worst at
+% and a diagram is best at. Drawing it here plants the Act II hinge silently: the audience
+% sees the asymmetry eight slides before it is named, which is exactly the order this slide
+% wants (name the machinery; let slide 11 name its privilege). Say nothing about why the
+% right-hand side is special -- the picture is already saying it.
+%
+% The return arrow is feedbackred ON PURPOSE, and this is the one place a palette reuse is
+% correct rather than sloppy: it is the SAME edge as the pipeline figure's execution ->
+% refinement feedback arrow, zoomed in. Same colour, same meaning. The boundary rule stays
+% black for the reason given on slide 5.
 \begin{frame}{Execution: the code meets the environment}
   \small
-  \begin{itemize}
-    \item \textbf{Where it sits} --- input: a patch. Output: \emph{evidence}.
-      \smallskip
-    \item \textbf{What actually runs} --- the repository, checked out at the parent
-      commit, inside a container~\cite{wang2024openhands}. The agent runs the test
-      suite, the interpreter, the linter.
-      \smallskip
-    \item \textbf{What comes back} --- failing tests, tracebacks, a rejected edit.
-      Not a score: \emph{a symptom}, which still has to be read.
-      \smallskip
-    \item \textbf{Why it is the expensive stage} --- every observation costs a
-      container round-trip, and the transcript grows with each one.
-  \end{itemize}
+  \textbf{Where it sits} --- input: a patch. Output: \emph{evidence}. It is also the
+  expensive stage: every observation costs a container round-trip, and the transcript
+  grows with each one.
+  \smallskip
+
   \begin{center}
-    The only stage whose output the model did not write.\\
-    {\footnotesize\itshape Everything in Act II turns on that sentence.}
+  \resizebox{0.95\textwidth}{!}{%
+  \begin{tikzpicture}[
+    box/.style={draw, rounded corners=3pt, font=\footnotesize, align=center},
+    arr/.style={-{Stealth[length=2.4mm]}, very thick},
+    fb/.style={-{Stealth[length=2.4mm]}, very thick, feedbackred},
+  ]
+    \node[box, fill=TUMBlue!12, minimum width=3.4cm, minimum height=1.7cm] (agent)
+      at (0,0) {\textbf{Agent}\\{\scriptsize a language model}};
+    \node[box, fill=black!6, minimum width=5.0cm, minimum height=1.7cm] (env)
+      at (10.2,0) {\textbf{a container}\\{\scriptsize the repo @ the parent commit}\\
+                   {\scriptsize pytest $\cdot$ python $\cdot$ linter}};
+
+    % The rule sits just outside the container, so both arrow labels stay clear of it: the
+    % boundary is the point of the figure and nothing may be drawn on top of it.
+    \draw[ultra thick, black!80] (6.6,-1.5) -- (6.6,1.5);
+
+    \draw[arr] ([yshift=0.5cm]agent.east) --
+      node[above, pos=0.28, font=\scriptsize] {a patch} ([yshift=0.5cm]env.west);
+    \draw[fb] ([yshift=-0.5cm]env.west) --
+      node[below, pos=0.72, font=\scriptsize, text=feedbackred, align=center]
+      {failing tests, a traceback,\\a rejected edit} ([yshift=-0.5cm]agent.east);
+
+    \node[font=\scriptsize, align=center]          at (0,2.1)
+      {everything on this side,\\the model wrote};
+    \node[font=\scriptsize\bfseries, align=center] at (10.2,2.1)
+      {nothing on this side did};
+  \end{tikzpicture}}
   \end{center}
   \vfill
+  \begin{center}
+    What comes back is not a score. It is \emph{a symptom} --- and it still has to be
+    \emph{read}.
+  \end{center}
 \end{frame}
 
 
@@ -305,8 +377,7 @@
   \end{itemize}
   \vfill
   \begin{center}
-    \large Agents improve their own code. \\[0.2em]
-    {\small\itshape \ldots{}or so this reads.}
+    Agents improve their own code.
   \end{center}
   \vfill
 \end{frame}
@@ -487,6 +558,75 @@
 
 
 % --------------------------------------------------------------- slide 12 ---
+% The axis slide defines three positions and proves none of them. That was this deck's
+% largest quality defect: the talk's own contribution, asserted. This slide is the proof --
+% and it cost nothing to find, because BOTH experiments were already in the report, and both
+% were cut from the conclusion for exactly one reason (see the conclusion's comment): "no
+% claim resting only on a citation nobody in the room saw evidence for." They have a slide
+% now, so they are admissible again.
+%
+% What earns them a slide TOGETHER is that they move the same variable in opposite
+% directions. CRITIC adds an external signal and the gain appears. Olausson removes the
+% excuse that the loop itself was doing the work -- hold the token budget fixed, compare
+% against simply drawing more i.i.d. samples -- and the gain disappears, except the part
+% that came from feedback. Neither is a taxonomy. Each is a controlled experiment on the
+% axis's one variable, and between them they close it from both sides.
+%
+% DOMAIN HONESTY -- this stays ON the slide, it is not a footnote to skip. CRITIC is QA and
+% maths, not code. Olausson IS code (HumanEval, APPS). This is precisely why the report says
+% "on code, the load is carried by Olausson", and it is the same courtesy the deck already
+% extends to Huang. An audience that catches you quietly generalising a reasoning result to
+% code has stopped believing the rest of the talk.
+\begin{frame}{Same model, same prompt --- one variable}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Add a tool $\Rightarrow$ the gain appears}
+        \footnotesize
+        \textbf{CRITIC}~\cite{gou2024critic}. Hold model and prompt fixed. Toggle one thing:
+        may the critic use an \emph{external tool}?
+        \smallskip
+
+        \selfc{Critique alone:} $-0.03$ / $+2.33$ F1 --- at or \emph{below} its own first
+        answer.
+        \smallskip
+
+        \oracle{The same critique, through a tool:} $+7.7$ F1.
+        \smallskip
+
+        {\scriptsize\itshape QA and maths --- not code.}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Match the budget $\Rightarrow$ it vanishes}
+        \footnotesize
+        \textbf{Olausson et al.}~\cite{olausson2024selfrepair}, \emph{on code}. A repair loop
+        spends tokens that could have drawn more \emph{independent} samples.
+        \smallskip
+
+        At equal cost, best-of-$k$ i.i.d.\ \selfc{erases much of the gain.}
+        \smallskip
+
+        Swap the self-critique for an \oracle{experienced human's} --- same loop, same
+        model --- and $\mathbf{1.58\times}$ more repairs pass.
+        \smallskip
+
+        {\scriptsize\itshape The gain came from the \emph{feedback}, not the iteration.}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \pause
+  \begin{center}
+    \footnotesize
+    One \emph{adds} an external signal and the gain appears. One \emph{holds the budget
+    fixed} and the gain disappears.\\
+    {\small Both move the same knob --- and \textbf{it is not the model.}}
+  \end{center}
+\end{frame}
+
+
+% --------------------------------------------------------------- slide 12 ---
 % The opening line is the slide's licence to exist. Without it this is a benchmark
 % critique dropped into the middle of a control-theory argument, and the audience
 % spends the whole slide not knowing why. The bridge is that SWE-bench's grading tests
@@ -644,10 +784,13 @@
 
 % --------------------------------------------------------------- slide 14 ---
 % Every bullet here must be traceable to something the deck actually showed --- no
-% claim resting only on a citation nobody in the room saw evidence for. The Olausson
-% budget-normalisation point and the CRITIC tool-use point were both cut for exactly
-% that reason: neither appeared as data on any slide, only as a name-drop, so neither
-% belongs in a conclusion that is supposed to be read off the evidence just presented.
+% claim resting only on a citation nobody in the room saw evidence for.
+%
+% The Olausson budget-normalisation point and the CRITIC tool-use point were once cut for
+% exactly that reason: neither appeared as data on any slide, only as a name-drop. They are
+% back, because they now have one -- "Same model, same prompt, one variable" is that slide,
+% and it exists precisely so this conclusion can lean on them honestly. The rule did not
+% bend; the evidence moved onto the deck to meet it.
 %
 % Bullet 3's CodeScout claim was breaking that rule -- "lifted all nine cells" rested on
 % a paper whose treatment condition appears on no slide. It is kept, but only because it
@@ -663,35 +806,27 @@
 \begin{frame}{Conclusion --- three things the numbers showed}
   \small
   \begin{enumerate}
-    \item \textbf{The wrapper carries the score --- but no wrapper carries it twice.}\\
+    \item \textbf{The wrapper carries the score}\\
       {\footnotesize The scaffold alone moved \textbf{11--17 points}, and the winning
       column changed row by row. What the wrapper \emph{feeds} the generator ---
       interface, context, localisation --- does the work.}
     \pause
 
-    \item \textbf{Refinement pays exactly as much as its signal can contradict it.}\\
-      {\footnotesize \oracle{Execution} grounds the gains. A \proxy{trained critic} is
-      a real gain (60.6 $\to$ 66.4\,\%), but it is still a model --- it cannot
-      \emph{surprise} the generator. \selfc{Self-critique} alone: no reliable gain,
-      and it can degrade~\cite{huang2024selfcorrect}.}
+    \item \textbf{Refinement pays exactly as much as its signal can contradict it}\\
+      {\footnotesize \oracle{Execution} grounds the gains. A \proxy{trained critic} is a
+      real gain (60.6 $\to$ 66.4\,\%), but it is still a model --- it cannot
+      \emph{surprise} the generator. \selfc{Self-critique} alone adds nothing you can rely
+      on --- hold the model and the loop fixed, swap only \emph{who writes the critique},
+      and a \oracle{human} is worth $1.58\times$~\cite{olausson2024selfrepair}.}
     \pause
 
-    \item \textbf{The two stages nothing contradicts are where the numbers are
-      softest.}\\
-      {\footnotesize \textbf{Intent} and \textbf{validation} have no gate --- OpenAI's
-      own screen flagged \textbf{38.3\,\%} and \textbf{61.1\,\%} of real issues --- and
-      the benchmark hid it: the same weights drop $\geq$\,20 points on Pro. Yet the one
-      paper that \emph{instrumented} intent lifted \emph{all nine} cells of the grid on
-      slide~3~\cite{suri2026codescout} --- its own control condition. The stage nobody
-      instruments still pays out.}
+    \item \textbf{The two stages nothing contradicts are where the numbers are softest}\\
+      {\footnotesize \textbf{Intent} and \textbf{validation} have no gate --- OpenAI's own
+      screen flagged \textbf{38.3\,\%} and \textbf{61.1\,\%} --- and the benchmark hid it:
+      the same weights drop $\geq$\,20 points on Pro. Yet the one paper that
+      \emph{instrumented} intent lifted \emph{all nine} cells of the grid on
+      slide~3~\cite{suri2026codescout}. The stage nobody instruments still pays out.}
   \end{enumerate}
-  \vfill
-  \pause
-  \begin{center}
-    \footnotesize Impressive $\to$ dependable turns on letting \oracle{the
-    environment say no} --- because on this evidence, \selfc{the model will not say
-    it to itself.}
-  \end{center}
 \end{frame}
 
 
