@@ -265,7 +265,7 @@ examine how they are evaluated (\S\ref{sec:e2e-eval}).
       & AST APIs (SBFL optional) & 19.0\% & 12.4\% & \$0.43 \\
     OpenHands~\cite{wang2024openhands} & OTA + CaA & Claude 3.5 Sonnet
       & Docker sandbox + delegation & 26.0\% & --$^{\dagger}$ & \$1.10 \\
-    Devin~\cite{cognition2024devin} & OTA + Brain/DevBox & undisclosed
+    Devin~\cite{cognition2024devin} & OTA + Brain/Devbox & undisclosed
       & Persistent knowledge store & -- & 13.9\%$^{\ddagger}$ & --$^{\ddagger}$ \\
     \bottomrule
     \multicolumn{7}{@{}p{\textwidth}@{}}{\scriptsize $^{\dagger}$Not evaluated on Full; the authors cite compute cost. \quad $^{\ddagger}$Devin is closed-source: the backbone model and per-instance cost are undisclosed, and the resolve rate is self-reported on a random 25\% subset of Full. No peer-reviewed paper exists and the result has not been independently reproduced.}
@@ -372,7 +372,7 @@ model~\cite{openhands2025verified}.
 
 \paragraph{Devin (Cognition)~\cite{cognition2024devin}.}
 Devin is a proprietary cloud-hosted agent separating a \emph{Brain} (reasoning)
-from a \emph{DevBox} (execution VM with shell, IDE, and browser), with a
+from a \emph{Devbox} (execution VM with shell, code editor, and browser), with a
 persistent knowledge store for cross-session memory. It is the one system surveyed
 here with no accompanying paper: the only primary source is a launch blog post
 reporting 13.86\% resolved on SWE-bench. That is an order of magnitude above the
@@ -1044,8 +1044,8 @@ lines by suspiciousness derived from test coverage (Ochiai, Tarantula, DStar). B
 even oracle-provided bug locations do not guarantee correct repairs.
 D4C~\cite{xu2024d4c} argues that LLMs should repair entire functions rather than
 isolated hunks, aligning the task with their infilling pre-training objective: on
-Defects4J it repairs 180 single-function bugs with 10 samples each, outperforming
-systems with perfect fault localisation by 10\%.
+Defects4J it repairs 180 of the 437 single-function bugs with 10 samples each,
+outperforming systems with perfect fault localisation by 10\%.
 
 \paragraph{Reconciling FL-free repair with localisation-first agents.}
 Read beside \S\ref{sec:planning}, D4C appears to contradict the systems surveyed
