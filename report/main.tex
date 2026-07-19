@@ -71,15 +71,20 @@
 
 \begin{abstract}
   Large language models have moved from autocompleting single functions to
-  resolving real software issues on their own. This report surveys the agents that
-  do so through a single lens: a five-stage \emph{agent pipeline} of intent
-  capture, planning, code generation, execution, and refinement. We read three
-  lines of work against that pipeline. First, end-to-end agents (SWE-agent,
-  Agentless, AutoCodeRover, OpenHands, Devin) and the patterns they share. Second,
-  planning and search, where we argue that planning contributes \emph{grounding}
-  rather than deliberation. Third, execution feedback, whose mechanisms we sort by
-  what closes their loop: an authoritative oracle, a learned or generated proxy, or
-  the generator's own critique. We close on evaluation realism and cost.
+  resolving real software issues on their own. What made that possible is not
+  generation alone but the machinery around it, so this report surveys these
+  agents through a single lens: a five-stage agent pipeline of intent capture,
+  planning, code generation, execution, and refinement. Reading three research
+  fronts against that pipeline lets us put one question to every system. At each
+  stage, what can tell the model it is wrong? We begin with end-to-end agents
+  (SWE-agent, Agentless, AutoCodeRover, OpenHands, Devin), whose shared patterns
+  expose planning and refinement as the stages doing the corrective work, and then
+  examine each in turn. In planning and search we argue that planning contributes
+  grounding rather than deliberation; in execution feedback we sort refinement
+  mechanisms by what closes their loop, whether an authoritative oracle, a learned
+  or generated proxy, or the generator's own critique. Since that sorting is only
+  as meaningful as the benchmarks behind it, we close on evaluation realism and
+  cost.
 \end{abstract}
 
 \section{Introduction}
@@ -117,10 +122,10 @@ add is an organisational metaphor, not a way of grounding a patch. Multi-agent
 SWE-Search~\cite{antoniades2024swesearch} do stay in scope, since they produce
 code changes; we treat them as variants of the search strategies of
 \S\ref{sec:planning} rather than as a separate architectural family.
-The report makes three contributions. It offers the agent pipeline as a shared
-vocabulary for these systems (\S\ref{sec:pipeline}). It surveys the three fronts
-against that pipeline (\S\ref{sec:e2e}--\S\ref{sec:refinement}). And it
-consolidates what the fronts share and where they are jointly stuck
+The report makes three contributions: the agent pipeline as a shared vocabulary
+for these systems (\S\ref{sec:pipeline}); a reading of the three fronts against
+that pipeline (\S\ref{sec:e2e}--\S\ref{sec:refinement}); and a consolidation of
+what the fronts share and where they are jointly stuck
 (\S\ref{sec:discussion}), drawing on 2025--2026 evidence about benchmark
 contamination and cost that postdates most existing surveys.
 
@@ -130,14 +135,16 @@ contamination and cost that postdates most existing surveys.
 \subsection{Five Stages}
 
 Papers on autonomous coding agents describe their systems in their own terms:
-phases, modules, roles, loops. Underneath, nearly all do the same five things.
-Naming those stages gives us a frame for comparing systems that otherwise share
-no vocabulary. The pipeline is a lens on existing architectures, not a new one.
-Its value is that it lets us ask one question of every system at once: at each
-stage, what can tell the model it is wrong? The five stages loosely resemble the
-classical waterfall phases, but the loop breaks the resemblance. An agent runs
-through all five in seconds and repeats them many times per task, and the cycle is
-closed by a test runner rather than a review meeting. The closer analogue is the
+phases, modules, roles, loops. Underneath, nearly all do the same five things:
+capture an intent, plan, generate code, execute it, and refine
+(Figure~\ref{fig:pipeline}). Naming those stages gives us a frame for comparing
+systems that otherwise share no vocabulary. The pipeline is a lens on existing
+architectures, not a new architecture. Its value is that it lets us ask one
+question of every system at once: at each stage, what can tell the model it is
+wrong? The five stages loosely resemble the classical waterfall phases, but the
+loop breaks the resemblance. An agent runs through all five in minutes and
+repeats them many times per task, and the cycle is closed by a test runner
+rather than a review meeting. The closer analogue is the
 developer's inner loop of edit, run, and debug, with planning and localisation
 folded in.
 
@@ -187,14 +194,10 @@ folded in.
   \label{fig:pipeline}
 \end{figure}
 
-The agent pipeline (Figure~\ref{fig:pipeline}) consists of five
-stages forming a loop: Intent Capture \textrightarrow{} Planning
-\textrightarrow{} Code Generation \textrightarrow{} Execution
-\textrightarrow{} Refinement. Execution feedback drives refinement, which may
-trigger re-planning or re-generation. Adjacent stages exchange structured
-artefacts: natural-language intent and repository context flow into plans and
-candidate patches; generated code is run against test oracles; failures and
-traces feed back into replanning or repair.
+Adjacent stages exchange structured artefacts: natural-language intent and
+repository context flow into plans and candidate patches, generated code runs
+against test oracles, and failures and traces feed back into replanning or
+regeneration.
 
 \subsection{Mapping to Survey Topics}
 
@@ -202,10 +205,10 @@ What makes the five-stage division load-bearing for the argument, rather than fo
 the table of contents, is what each stage \emph{does}. Read as a control system:
 intent capture is the uncontrolled input, generation is the plant, execution is
 the oracle, and planning and refinement are the control layer that ties the plant
-to the oracle. The pipeline is therefore a map of where oracles are and are not.
-The two stages with none behind them, intent capture and validation whose oracle
-is a weak test suite, turn out to be exactly the two places the field is stuck
-(\S\ref{sec:discussion}).
+to the oracle. The pipeline is therefore a map of where oracles are and are not. The two stages
+without one behind them, intent capture (no oracle at all) and validation (an
+oracle weak enough to be gamed), turn out to be exactly the two places the field
+is stuck (\S\ref{sec:discussion}).
 
 Each of the three main sections covers one or more stages.
 \S\ref{sec:e2e} treats the full pipeline as an integrated system, including the
@@ -275,7 +278,7 @@ examine how they are evaluated (\S\ref{sec:e2e-eval}).
 \subsection{Architecture and Orchestration}
 \label{sec:e2e-arch}
 
-Despite surface-level diversity, autonomous SE agents converge on three patterns,
+For all their surface diversity, autonomous SE agents converge on three patterns,
 governing how they perceive the environment, what actions they may take, and how
 they manage repository-scale context.
 
@@ -291,8 +294,8 @@ Yang et al.~\cite{yang2024sweagent} argue that LLMs are a ``new category of end
 users'' and need a purpose-built \emph{agent--computer interface} (ACI) rather
 than raw shell access. SWE-agent's ACI has four parts: a windowed file viewer
 (100~lines), a linter-guarded \texttt{edit} command, summarised search results,
-and a compressed observation history. Their ablations show each part earns its
-place. On Lite, removing the linter costs 3~percentage points, switching to
+and a compressed observation history. Their ablations show none of the four is
+decorative. On Lite, removing the linter costs 3~percentage points, switching to
 iterative search costs 6~pp, and showing full files instead of a 100-line window
 costs 5.3~pp. The opposite design is \emph{code-as-action}: OpenHands adopts the
 CodeAct paradigm~\cite{wang2024codeact} and folds every action into executable
@@ -301,7 +304,7 @@ model a larger action space to navigate.
 
 \paragraph{Context management.}
 Repository-level tasks easily exceed LLM context windows, and each system
-mitigates differently. SWE-agent collapses observations older than five turns.
+mitigates this differently. SWE-agent collapses observations older than five turns.
 AutoCodeRover~\cite{zhang2024autocoderover} parses the codebase into an AST and
 exposes search APIs that expand context coarse-to-fine, \texttt{search\_class}
 returning a class skeleton of signatures and \texttt{search\_method\_in\_class}
@@ -312,8 +315,7 @@ retrieves candidate files by embedding before prompting.
 \subsection{Representative Systems}
 \label{sec:e2e-systems}
 
-We survey five prominent systems that span the design space.
-Table~\ref{tab:e2e-systems} provides a comparative overview.
+Table~\ref{tab:e2e-systems} compares the five systems; we take each in turn.
 
 \paragraph{SWE-agent~\cite{yang2024sweagent}.}
 SWE-agent wraps a GPT-4 Turbo backbone in a custom ACI with specialised file
@@ -417,7 +419,7 @@ patch (pass@1).
 
 \paragraph{Terminology and comparability.}
 ``SWE-bench'' denotes a family of task sets rather than a single benchmark
-(Table~\ref{tab:swebench-splits}). Two distinctions warrant emphasis. Verified is
+(Table~\ref{tab:swebench-splits}). Two distinctions matter. First, Verified is
 the most carefully \emph{curated} split, not the most demanding one: human
 screening removed underspecified issues and unfair tests, so its resolve rates run
 systematically higher than Full's or Lite's, and scores are not comparable across
@@ -458,10 +460,10 @@ zero~\cite{jimenez2024swebench}: the models could write plausible patches, but h
 no way to find the right file or check their own work. The first agentic scaffolds
 (SWE-agent, AutoCodeRover, Devin) moved the frontier by an order of magnitude
 within months, without any change to the underlying model. All they added were
-tools, a repository to navigate, and tests to run against. The 2024 scaffolding
-race that followed showed how much of that gain came from scaffolding rather than
-from reasoning capacity: a deliberately simple localise-then-repair pipeline such
-as Agentless stayed competitive with far more elaborate agentic loops.
+tools, a repository to navigate, and tests to run against. The scaffolding race
+of 2024 then showed how little of the gain required elaborate reasoning
+machinery: a deliberately simple localise-then-repair pipeline such as Agentless
+stayed competitive with far more sophisticated agentic loops.
 
 A headline resolve rate hides where that progress actually landed.
 Figure~\ref{fig:swebench-trajectory} therefore splits Verified by the difficulty
@@ -580,8 +582,8 @@ The union sharpens this. Pooled across all nine systems, some agent solves 95.4\
 of easy and 84.3\% of medium instances, but only 42.2\% of hard ones, and just
 9 of the 25 hard multi-file issues~\cite{ganhotra2025difficulty}. The remaining
 easy and medium headroom is therefore largely an ensembling problem: different
-scaffolds already solve different instances, which is why the inference-time
-scaling of \S\ref{sec:discussion} pays off. The hard tier is not an ensembling
+scaffolds already solve different instances, and that overlap structure is what
+the inference-time scaling of \S\ref{sec:discussion} exploits. The hard tier is not an ensembling
 problem, since more than half of it defeats every system at once. Whether that
 reflects a capability ceiling or a retrieval blind spot common to all nine is a
 question the union cannot settle, and \S\ref{sec:open} takes it up.
@@ -593,7 +595,7 @@ resolves 33.6\% with a Claude~3.5~Sonnet backbone in June and 23.2\% with GPT-4o
 six weeks later, so scaffolding is not the only thing that moves these curves.
 Second, contamination sits on top of everything. Half the issues predate 2020 and
 come from repositories that are staple training data~\cite{epoch2025swebench},
-while Lite and Full now receive few submissions at all~\cite{dissecting2025}.
+while Lite and Full now receive hardly any submissions~\cite{dissecting2025}.
 \S\ref{sec:eval-landscape} quantifies the resulting gap against Pro.
 
 Pro and Multilingual (Table~\ref{tab:swebench-splits}) answer the contamination
@@ -638,7 +640,7 @@ sampled from.
 Every other stage regulates on an external signal: planning against repository
 structure, generation against a parser and a linter, execution against a test
 runner, refinement against the resulting failures. Intent capture, as the
-surveyed systems implement it, has none. None of the five systems of
+surveyed systems implement it, has none. None of the five systems in
 \S\ref{sec:e2e-systems} asks a clarifying question when the issue text is
 ambiguous; each commits to a reading and proceeds. OpenHands and Devin admit
 human interjection, but the initiative is the human's. In control terms the stage
@@ -739,8 +741,8 @@ half-finished patch worth, before any test has run? The difficulty is cost, not
 impossibility. SWE-Search~\cite{antoniades2024swesearch} builds such an evaluator,
 a hybrid LLM value function that scores partial trajectories inside a Monte Carlo
 tree search, and gains 23\% relative. But it must invoke a language model at every
-node, which is why it has not displaced the cheaper pipelines of
-\S\ref{sec:e2e-systems}.
+node, and that expense is what has kept it from displacing the cheaper pipelines
+of \S\ref{sec:e2e-systems}.
 
 Repository-level agents add a more concrete representation:
 \emph{localisation plans}. Agentless breaks issue resolution into files, classes
@@ -776,8 +778,9 @@ vote can buy.
 AlphaCode generated up to millions of candidates for competitive programming,
 filtered and clustered them by execution results, then submitted a small diverse
 set. CodeT generates both programs and tests, and keeps the code that agrees with
-the generated tests. The key insight is that the right solution is often somewhere
-in the model's sample distribution even when the top-ranked output is wrong. The
+the generated tests. Both exploit the fact that the right solution is often
+somewhere in the model's sample distribution even when the top-ranked output is
+wrong. The
 limitation is that the objective can be self-referential: if the generated tests
 are weak, selection optimises for the model's own misunderstanding.
 Execution-guided search is strongest when the ranking signal is an external
@@ -845,8 +848,8 @@ human) is ground truth. It can surprise the model, and refinement against it
 reliably improves code. A \emph{learned or generated proxy} (a trained critic,
 model-generated tests, an LLM judge) sits one step removed. It carries real
 information, because ground truth went into it at training or generation time, and
-that is why it works. But at inference it is a model, not an oracle, so it cannot
-surprise anything. Its ceiling is how faithful the proxy is, which is the same
+that is why it works. But at inference it is a model, not an oracle, and no
+information it did not inherit can enter the loop through it. Its ceiling is how faithful the proxy is, which is the same
 bound \S\ref{sec:planning} derived for sample-and-rank. Finally,
 \emph{same-distribution self-critique} draws the critic from the very distribution
 that produced the error. The loop closes onto itself, and the control is only
@@ -854,7 +857,7 @@ apparent.
 
 Table~\ref{tab:loop-closure} sorts the mechanisms on this axis, and
 \S\ref{sec:refinement-limits} gives the evidence that this is the axis that
-matters. The split earns its keep immediately. The two most-cited positive results
+matters. The split pays off immediately. The two most-cited positive results
 below, Reflexion's HumanEval headline and OpenHands's inference-time scaling, both
 sit in the middle column, and reading them as oracle-closed overstates what they
 show.
@@ -876,8 +879,8 @@ under test produces itself.
 The three positions differ in cost as well as in authority. An oracle demands
 infrastructure and may be slow. Self-critique is fast and needs no setup, but an
 agent that could reliably tell its wrong code from its right code just by looking
-would have written the right code in the first place. The proxy's failure is the
-specific one: a true oracle is wrong only if the test suite is wrong, whereas a
+would have written the right code in the first place. The proxy's failure mode is the
+correlated one: a true oracle is wrong only if the test suite is wrong, whereas a
 proxy is wrong exactly where the model was wrong to begin with, which is where it
 is needed most.
 
@@ -1001,8 +1004,8 @@ model fixed, self-critique that may consult an external tool corrects reliably,
 while self-critique that may not yields little or nothing. The variable that moves
 the outcome is neither the model nor the prompt. It is the presence of something
 outside the model in the loop, which is the axis of Table~\ref{tab:loop-closure}
-isolated experimentally. CRITIC's own limit is instructive: a tool helps only for
-errors it can detect, the same coverage bound that weak test suites impose in
+isolated experimentally. CRITIC has a limit of its own: a tool helps only with
+errors it can detect, the coverage bound that weak test suites impose in
 \S\ref{sec:convergence}.
 
 \paragraph{What this implies.}
@@ -1037,7 +1040,7 @@ localisation, patch generation, and validation. Agents challenge this structure.
 RepairAgent~\cite{bouzenia2025repairagent} shows that the observe--think--act loop
 transfers wholesale: driven by a finite-state machine over a small tool set, it
 localises, edits, and tests without a separate localisation phase, repairing
-164~Defects4J bugs of which 39 had resisted every prior technique.
+164~Defects4J bugs, of which 39 had resisted every prior technique.
 
 Pre-LLM APR relies on \emph{spectrum-based fault localisation} (SBFL), ranking
 lines by suspiciousness derived from test coverage (Ochiai, Tarantula, DStar). But
@@ -1047,7 +1050,7 @@ isolated hunks, aligning the task with their infilling pre-training objective: o
 Defects4J it repairs 180 of the 437 single-function bugs with 10 samples each,
 outperforming systems with perfect fault localisation by 10\%.
 
-\paragraph{Reconciling FL-free repair with localisation-first agents.}
+\paragraph{Reconciling localisation-free repair with localisation-first agents.}
 Read beside \S\ref{sec:planning}, D4C appears to contradict the systems surveyed
 there. Agentless and AutoCodeRover treat localisation as the core of the problem,
 while D4C reports that it is unnecessary and even harmful. Both are right, because
@@ -1142,9 +1145,9 @@ And \emph{planning acts on generation} rather than preceding it
 works, works by putting something outside the model in a position to contradict
 it: a test runner, a compiler, an AST index, a human. Planning earns its place by
 grounding hypotheses in repository structure that can be checked. Refinement earns
-its place when a signal the generator did not produce closes the loop, and yields
-only small and unreliable gains when none does, gains that on reasoning tasks turn
-outright negative (\S\ref{sec:refinement-limits}). Read this way, the pipeline is
+its place when a signal the generator did not produce closes the loop; when none
+does, the gains are small and fragile, and on reasoning tasks turn outright
+negative (\S\ref{sec:refinement-limits}). Read this way, the pipeline is
 not five stages of reasoning. It is a scaffold for arranging confrontations
 between a generative model and an environment that can say no. Its two weakest
 points are exactly the two places where nothing can: intent capture, whose
@@ -1170,8 +1173,8 @@ seen from either end.
 The field has moved from single-shot prompting to agentic scaffolds, from flat
 chain-of-thought to structured search and localisation, and most recently to
 \emph{inference-time scaling}, where trajectories are sampled and reranked by a
-critic. The consistent finding across \S\ref{sec:e2e} is that \emph{scaffold and interface
-matter as much as the backbone model}. That finding is time-stamped rather than
+critic. The consistent finding throughout \S\ref{sec:e2e} is that \emph{scaffold and
+interface matter as much as the backbone model}. That finding is time-stamped rather than
 timeless. A newer line of work moves the scaffold's competence into the weights,
 by reinforcement learning over software-evolution data~\cite{wei2025swerl} or by
 training agent and verifier together in an executable
@@ -1207,7 +1210,7 @@ repositories, and resists memorisation with copyleft and held-out proprietary
 code; at release, top systems scored $\sim$23\% against 70\%+ on Verified.
 SWE-bench Multilingual~\cite{swebench2025multilingual} extends the format to 300
 tasks across 9 languages. Figure~\ref{fig:verified-vs-pro} makes the divergence
-concrete: models at or above 80\% on Verified fall to the mid-40s or high-50s on
+concrete: models at or near 80\% on Verified fall to the mid-40s or high-50s on
 Pro, with Claude Opus~4.5 scoring 80.9\% against 45.9\% under Scale's standardised
 harness~\cite{deng2025swebenchpro,agentmarketcap2026gap}. Two confounds stop us
 reading the \emph{size} of each drop as a measurement of memorisation, and we flag
@@ -1217,8 +1220,8 @@ Scale's standardised evaluation. Consistency then requires us to decline the
 quantity the figure invites us to quote. The width of the band \emph{is} the
 per-model spread we have just said cannot be read, and its upper end belongs to
 the one model measured most strictly. What survives is a floor and a direction.
-Every model drops by at least twenty points, and no mechanism that would explain a
-drop that size is flattering. The signal was strong enough that OpenAI stopped
+Every model drops by roughly twenty points or more, and no mechanism that would
+explain a drop that size is flattering. The signal was strong enough that OpenAI stopped
 reporting Verified in early 2026, citing near-universal contamination (models
 reproduce gold patches from the task ID alone) and flawed residual
 tests~\cite{openai2026swebench}.
@@ -1271,9 +1274,9 @@ an order-of-magnitude spread in cost.
     \legend{SWE-bench Verified, SWE-bench Pro}
     \end{axis}
   \end{tikzpicture}
-  \caption{The Verified--Pro gap. The \emph{same} model weights score at least
-    twenty points lower on the harder, contamination-resistant SWE-bench Pro than
-    on the saturated, widely-scraped Verified. Only that \emph{floor} should be
+  \caption{The Verified--Pro gap. The \emph{same} model weights drop by roughly
+    twenty points or more on the harder, contamination-resistant SWE-bench Pro,
+    relative to the saturated, widely-scraped Verified. Only that \emph{floor} should be
     read here. Neither the per-model differences nor the width of the band should
     be: on Pro only Opus~4.5 is scored under Scale's standardised SEAL harness,
     the rest self-report with custom scaffolding, so the model under the strictest
@@ -1313,9 +1316,9 @@ The surveyed systems therefore treat context as a managed resource rather than a
 passive log: hierarchical repository skeletons with embedding retrieval
 (Agentless), AST search returning a class skeleton before any full method body
 (AutoCodeRover), and observation compression of older turns (SWE-agent). The
-current direction is to make context management \emph{active}, summarising,
-pruning, and re-retrieving as a deliberate agent
-action~\cite{contextastool2025}. Context quality, not model capability alone,
+current direction is to make context management \emph{active}: summarising,
+pruning, and re-retrieving become deliberate agent
+actions~\cite{contextastool2025}. Context quality, not model capability alone,
 frequently determines whether the correct patch is even reachable: an agent cannot
 fix what it never places in context.
 
@@ -1404,10 +1407,11 @@ instantiate its stages. End-to-end systems (\S\ref{sec:e2e}) converge on an
 observe--think--act loop over a purpose-built agent--computer interface, with
 repository-scale context managed by retrieval, AST search, or compression; that
 Agentless rivals interactive agents at lower cost shows autonomy is a design
-choice, not a prerequisite. Planning (\S\ref{sec:planning}) contributes not
-deliberation but \emph{grounding}, which is why the least deliberative system
-remains competitive. Execution feedback (\S\ref{sec:refinement}) shows that
-running the code, not generating it, supplies most of the reliability.
+choice, not a prerequisite. Planning (\S\ref{sec:planning}) explains why: its real
+contribution is \emph{grounding} rather than deliberation, and Agentless simply
+builds the grounding in. Execution feedback (\S\ref{sec:refinement}) supplies
+most of the reliability, because a test run delivers a verdict the model cannot
+anticipate.
 
 The pipeline framing makes the central coupling visible, and sharpens it into
 something testable. Planning and refinement keep generation tethered to external
@@ -1416,23 +1420,23 @@ Between the oracles that can contradict the model and the self-critique that
 cannot lies the proxy: a trained critic or a generated test, which carries real
 information yet is bounded by its own fidelity (\S\ref{sec:refinement-limits}).
 Much of what the field reports as successful self-improvement lives in that middle
-band. Read this way, the pipeline's two weaknesses are the two stages with no
+band. On that reading, the pipeline's two weaknesses are the two stages with no
 oracle behind them: intent capture, whose only oracle is a human nobody queries
-(\S\ref{sec:intent}), and validation, whose oracle is weak enough to be gamed
-(\S\ref{sec:eval-landscape}). The question at the frontier has changed
+(\S\ref{sec:intent}), and validation, whose oracle a patch can satisfy without
+being right (\S\ref{sec:eval-landscape}). The question at the frontier has changed
 accordingly, from ``can an agent resolve real issues?'' to ``at what cost, and how
 far can the result be trusted?''
 
-Each promising direction amounts to supplying an oracle where one is missing.
-Contamination-resistant benchmarks, reported with cost and difficulty
-stratification, and benchmarks that score the pipeline's intermediate stages
-rather than only its final patch. A decision, by the ablation of \S\ref{sec:open},
-on whether long-horizon reasoning is a training problem or a retrieval one. And
-the adoption at repository scale of the interactive intent capture that already
-works at function level. Agentic code generation has clearly crossed from
+Each promising direction amounts to supplying an oracle where one is missing:
+contamination-resistant benchmarks, reported with cost and difficulty
+stratification, that score the pipeline's intermediate stages rather than only
+its final patch; a decision, by the ablation of \S\ref{sec:open}, on whether
+long-horizon reasoning is a training problem or a retrieval one; and the adoption
+at repository scale of the interactive intent capture that already works at
+function level. Agentic code generation has clearly crossed from
 autocomplete to autonomous issue resolution. Whether it crosses from impressive to
 dependable will be decided by whether we learn to let the environment say no to
-the model as reliably as a reader once did, because on the evidence of this report
+the model as reliably as a human reviewer once did, because on the evidence of this report
 the model will not say it to itself.
 
 \bibliographystyle{plain}
