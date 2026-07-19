@@ -20,3 +20,36 @@
   note={${\sim}$100 lines of Python for the agent class; reports $>$74\% on
     SWE-bench Verified. Accessed: 2026-07-12}
 }
+
+% Measured (uniform-harness) SWE-bench Pro numbers, quoted on the numbers slide and
+% the conclusion. Scale AI built Pro, so this is the citable source; vendor
+% self-reports run 70-80% but mix harnesses and are verified by nobody -- the deck
+% deliberately never quotes them.
+@misc{scale2026pro,
+  title={{SWE}-bench {Pro} Public Leaderboard},
+  author={{Scale AI}},
+  year={2026},
+  howpublished={\url{https://labs.scale.com/leaderboard/swe_bench_pro_public}},
+  note={Top measured entries, July 2026: Muse Spark 1.1 at 61.5\%, GPT-5.4 at
+    59.1\% (mini-swe-agent harness). Accessed: 2026-07-19}
+}
+
+% wei2025verification and dehghani2021lottery were removed with the deck's critique
+% half (2026-07-19 restructure); recoverable from git history.
+
+% The Pro audit. OpenAI retired Verified in Feb 2026 and told the field to use Pro
+% (openai2026swebench, in report/references.bib); five months later it audits Pro and
+% retracts that recommendation. Corroborated 2026-07-14 against OpenAI's own X post
+% (x.com/OpenAI/status/2074972179385720836) and Techmeme (techmeme.com/260708/p41):
+% an automated pipeline flagged 200 of 731 public tasks (27.4%), five human engineers
+% flagged 249 (34.1%) -- hence "~30%", which is the figure OpenAI itself leads with.
+%
+% openai.com 403s automated fetchers. The FACTS above are safe to state; a QUOTATION
+% MARK needs the page opened in a browser first.
+@misc{openai2026pro,
+  title={Separating Signal from Noise in Coding Evaluations},
+  author={{OpenAI}},
+  year={2026},
+  howpublished={\url{https://openai.com/index/separating-signal-from-noise-coding-evaluations/}},
+  note={8 July 2026. Accessed: 2026-07-14}
+}

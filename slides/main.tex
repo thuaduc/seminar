@@ -1,4 +1,4 @@
-%% Agentic AI for Code Generation --- seminar talk (15 minutes).
+%% Agentic AI for Code Generation --- seminar talk (20 minutes).
 %%
 %% Companion deck to report/main.tex. Uses the same TUM template (tum/ is shared
 %% via TEXINPUTS, see latexmkrc) and the same references.bib, so citations here
@@ -8,17 +8,68 @@
 %%
 %% What to SAY lives in script.md, not in this file -- the deck is the visual, the
 %% script is the delivery, and they are edited for different reasons.
+%%
+%% ---------------------------------------------------------------------------
+%% THE SHAPE: ONE LINEAR STORY, NO ACTS.  (Restructured 2026-07-19.)
+%%
+%% This deck used to run in four acts on Wei's "asymmetry of verification", with a
+%% turn at slide 12 and a benchmark-audit landing. All of that was deliberately CUT
+%% -- the law slide, the "came in the box" table, the checker axis, the Olausson
+%% experiment, the jagged edge, and the Feb/Jul-2026 timeline are all recoverable
+%% from git history. What remains is a straight survey talk:
+%%
+%% RUNNING ORDER -- 11 numbered frames.
+%%
+%%   1        title
+%%   2        what agentic AI for code generation is     (definition by contrast)
+%%   3        how we got here                            (eras + the 2% -> 70% hook)
+%%   4        the pipeline: the report's five-stage lens
+%%   5-7      the three stages: plan (localisation), execute, refine
+%%   8        SWE-bench: what a resolve rate is          (splits = a spoken aside)
+%%   9        the numbers: the climb, told on the surveyed systems + Pro headroom
+%%   10       [PROVISIONAL COOL POINT] no scaffold wins twice -- pending a
+%%            dedicated brainstorm; may be replaced. Do not polish it yet.
+%%   11       conclusion
+%%
+%% TWO SLIDES OF INTRODUCTION, BY DESIGN. Slide 2 says what the object of study IS
+%% (by contrast with autocomplete and one-shot -- the two things everyone in the room
+%% has used). Slide 3 says how it CAME ABOUT (eras), and carries the one hook number
+%% pair: under 2 % (2023, Full) -> over 70 % (2026, Verified). The pair is on two
+%% different rulers and the slide must keep saying so.
+%%
+%% CONCEPTS BEFORE MEASUREMENT. Slides 4-7 carry NO percentages -- deliberately.
+%% SWE-bench is what a percentage in this talk means, and it is not defined until
+%% slide 8, so a resolve rate before then is a number the audience cannot read.
+%% The stage slides therefore make qualitative claims with directions ("ranking
+%% functions helps"; "un-ranking lines beats perfect localisation") and leave the
+%% magnitudes to the speaker. Slide 3's hook pair is the sole, flagged exception.
+%% If you add a percentage to slides 4-7, you have broken this.
+%%
+%% THE NUMBERS SLIDE (9) USES ONLY SURVEYED SYSTEMS. The climb is told through the
+%% systems the report actually covers -- RAG baseline, SWE-agent, AutoCodeRover,
+%% Agentless, OpenHands (+critic) -- not through leaderboard entries the talk never
+%% discusses. Splits differ per point, every point is tagged with its split, and the
+%% footnote ("read the climb, not the deltas") is not optional.
+%%
+%% NO SECTION DIVIDERS, AND `sectionpage' IS OFF. Do not re-add \section here
+%% without also re-adding `sectionpage' -- and do not re-add `sectionpage' without
+%% meaning to spend a slide and ten seconds on it.
+%%
+%% NO HARD-CODED SLIDE NUMBERS IN BODY TEXT. The conclusion used to cite "the grid on
+%% slide N" and the number went stale the first time the deck was reordered. Name the
+%% slide, do not number it.
+%% ---------------------------------------------------------------------------
 
 \documentclass[
   aspectratio=169,
   font=times,      % match the report's body font
-  sectionpage,     % the two acts get a TUM section divider
 ]{tumbeamer}
 
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
-\usetikzlibrary{arrows.meta, positioning, fit}
+\usetikzlibrary{arrows.meta, positioning, fit, decorations.pathreplacing}
 
 % 'TUM more space' buys back the vertical room the default frametitle spends, and
 % the headline strip is dropped on content pages: the TUM logo is already in the
@@ -45,23 +96,28 @@
 }
 \makeatother
 
-% The three positions of the loop-closure axis. Colour is load-bearing here: the
-% same three colours recur on the axis slide, the re-reading slide, and the
-% closing slide, so the audience can track a mechanism across the talk.
+% LEGACY CHECKER PALETTE -- BACKUP SLIDES ONLY.
 %
-% These are for BODY TEXT ONLY. Never use them in a block title: beamer sets
-% block titles in white on TUM blue, so \oracle there is blue-on-blue.
-\definecolor{oracleblue}{HTML}{0065BD}   % TUM blue   -- authoritative oracle
-\definecolor{proxyamber}{HTML}{E37222}   % TUM orange -- learned/generated proxy
-\definecolor{selfgrey}{HTML}{808080}     % grey       -- same-distribution self-critique
+%   blue  -- the checker is real       (a test runner, a compiler, a human)
+%   amber -- we made the checker up    (a trained critic, a generated test)
+%   grey  -- there is no checker       (the model judging itself)
+%
+% This colour code belonged to the cut critique half of the talk (the "how real is
+% the checker?" axis). The numbered slides no longer teach it, so it MUST NOT appear
+% on any of them -- an untaught colour code reads as decoration at best and as a
+% wrong hint at worst. It survives only on the backup refinement table, where the
+% speaker can gloss it live in Q&A ("blue = real checker, amber = made-up, grey =
+% none").
+%
+% Never use these in a block title: beamer sets block titles in white on TUM blue,
+% so \oracle there is blue-on-blue. Body text and table cells only.
+\definecolor{oracleblue}{HTML}{0065BD}   % TUM blue   -- the checker is real
+\definecolor{proxyamber}{HTML}{E37222}   % TUM orange -- we made the checker up
+\definecolor{selfgrey}{HTML}{6E6E6E}     % grey       -- there is no checker
 
 \newcommand{\oracle}[1]{\textcolor{oracleblue}{\textbf{#1}}}
 \newcommand{\proxy}[1]{\textcolor{proxyamber}{\textbf{#1}}}
 \newcommand{\selfc}[1]{\textcolor{selfgrey}{\textbf{#1}}}
-
-% A tag pinned to the right margin, naming which position on the axis a result
-% actually occupies. Used on the re-reading slide. (Not \tag: amsmath owns that.)
-\newcommand{\axistag}[1]{\hfill{\footnotesize #1}}
 
 % Pipeline-figure edge colours. Deliberately OUTSIDE the axis palette above: the
 % figure's two backward edges are not axis positions, and reusing oracle blue or
@@ -70,6 +126,13 @@
 % once the figure was scaled down.
 \definecolor{feedbackred}{HTML}{C4071B}  % real feedback: execution -> refinement -> back
 \definecolor{newtaskgrey}{HTML}{595959}  % the NON-feedback edge into intent capture
+
+% Bar-chart colours for the Verified-vs-Pro comparison (backup slide only). ALSO
+% outside the legacy palette: the two bars are two BENCHMARKS, not two checker
+% positions. Two tones of one hue, because the chart's claim is "same weights,
+% two conditions".
+\definecolor{splitverified}{HTML}{8FAFC9}  % the saturated, widely-scraped split
+\definecolor{splitpro}{HTML}{2E4A62}       % the fresher, harder, contamination-resistant one
 
 \title{Agentic AI for Code Generation}
 \subtitle{Seminar Report --- SS26}
@@ -84,112 +147,159 @@
 
 
 % ============================================================================
-\section{What works}
+% Introduction. Two slides: what the object of study IS, and how it CAME ABOUT.
 % ============================================================================
 
 % ---------------------------------------------------------------- slide 2 ---
-% Every number in this talk is a SWE-bench resolve rate, so the vocabulary is paid
-% for once, before the first measurement is shown.
+% THE DEFINITIONAL SLIDE. It answers, in the audience's first thirty seconds, the
+% question they actually have: what IS agentic AI for code generation? Nothing later
+% in the deck has a subject until this lands, and an earlier draft skipped it -- it
+% asserted a property of these systems ("the model runs the code") before saying what
+% the systems were, which is a claim delivered to people who do not yet know what it
+% is a claim ABOUT.
 %
-% The slide also plants the talk's ending: the test filter is what gives SWE-bench a
-% grading oracle, the issue filter is what gives it an intent, and those are exactly
-% the two stages Act II attacks. That plant is SPOKEN, not shown -- see script.md.
-% A slide that says "remember these two things" telegraphs the payoff and spends the
-% audience's attention on a callback they cannot use yet.
-\begin{frame}{What SWE-bench measures}
+% The definition is given by CONTRAST, because that is the only way to make "agentic"
+% mean something. Autocomplete and one-shot synthesis are the two things everyone in
+% the room has already used, and in both of them the human closes the loop: you run
+% the code, you read the error, you re-prompt. An agent closes its own. That is the
+% entire content of the word, and drawing it as a progression means the audience
+% derives the definition instead of being handed it.
+%
+% DO NOT DEFINE THE FIELD AS "SWE-bench". The trigger is wherever the developer
+% already is -- an issue, a PR comment, a Slack thread, a ticket, a terminal -- and
+% the output is a code change. Issue resolution is how the field is MEASURED, which
+% is a different fact -- SPOKEN (script.md 2), not shown.
+%
+% ONE FIGURE, ONE LINE. The 2% -> 70% pair and the "measured on GitHub issues"
+% aside both left this slide; the figure and the five-word takeaway are the slide.
+\begin{frame}{What is agentic AI for code generation?}
   \small
-  \begin{columns}[T]
-    \begin{column}{0.53\textwidth}
-      \textbf{One instance}~\cite{jimenez2024swebench} = a real merged pull
-      request that
-      \begin{enumerate}
-        \item closes a linked GitHub issue, \emph{and}
-        \item modifies the test suite.
-      \end{enumerate}
-      \medskip
+  \begin{center}
+  \resizebox{0.98\textwidth}{!}{%
+  \begin{tikzpicture}[
+    stagebox/.style={draw, rounded corners=3pt, align=center, font=\footnotesize,
+                     minimum height=1.9cm},
+    arr/.style={-{Stealth[length=2.4mm]}, very thick, black!55},
+    brace/.style={decorate, decoration={brace, amplitude=5pt, mirror},
+                  thick, black!60},
+  ]
+    \node[stagebox, fill=black!5,     draw=black!45, text width=3.5cm] (ac) at (0,0)
+      {\textbf{Autocomplete}\\[2pt]
+       {\scriptsize completes the line\\ you are typing}};
+    \node[stagebox, fill=black!5,     draw=black!45, text width=3.9cm] (os) at (4.6,0)
+      {\textbf{One-shot generation}\\[2pt]
+       {\scriptsize a whole function,\\ from a docstring}};
+    \node[stagebox, fill=TUMBlue!15, draw=TUMBlue, very thick, text width=5.6cm]
+      (ag) at (10.4,0)
+      {\textbf{An agent}\\[2pt]
+       {\scriptsize plans $\cdot$ edits files $\cdot$ runs the tests\\
+        $\cdot$ reads the traceback $\cdot$ tries again}};
 
-      \textbf{The agent sees} the repository \emph{before} the merge, plus the
-      issue text. It returns a patch.
-      \medskip
+    \draw[arr] (ac) -- (os);
+    \draw[arr] (os) -- (ag);
 
-      \textbf{The patch is graded} by running tests:
-      \begin{itemize}
-        \item \emph{fail-to-pass} must flip,
-        \item \emph{pass-to-pass} must not regress.
-      \end{itemize}
-      \medskip
+    \draw[brace] (-1.85,-1.15) -- (6.65,-1.15);
+    \draw[brace] (7.5,-1.15) -- (13.3,-1.15);
 
-      \oracle{Resolve rate} = both hold, on the first patch (pass@1).
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \footnotesize
-      % NB: inside a column, \textwidth IS the column width -- not the slide's.
-      \setlength{\tabcolsep}{3pt}
-      \renewcommand{\arraystretch}{0.88}
-      \scriptsize
-      \begin{tabular}{@{}llp{0.50\textwidth}@{}}
-        \toprule
-        \textbf{Split} & \textbf{Size} & \textbf{Kept only} \\
-        \midrule
-        Full     & 2{,}294 & every scraped PR that touches tests \\
-        Lite     & 300     & single-file patches; some issues leak the fix \\
-        Verified & 500     & human-screened: clear issues, fair tests \\
-        Pro      & 1{,}865 & multi-file, long-horizon; held-out repos \\
-        \bottomrule
-      \end{tabular}
-      \footnotesize
-      \medskip
+    \node[font=\scriptsize, align=center, text width=8.0cm, anchor=north]
+      at (2.4,-1.65)
+      {\textbf{The human closes the loop.}};
+    \node[font=\scriptsize, align=center, text width=6.0cm, anchor=north]
+      at (10.4,-1.65)
+      {\textbf{The system closes its own loop.}};
+  \end{tikzpicture}}
+  \end{center}
+  \vfill
 
-      \alert{Rates are not comparable across splits.} Verified is the most
-      \emph{curated} split, not the hardest.
-    \end{column}
-  \end{columns}
+  \begin{center}
+    \textbf{Prose in; a patch out.}
+  \end{center}
+  \vfill
 \end{frame}
 
 
 % ---------------------------------------------------------------- slide 3 ---
-% Now that resolve rate is defined, the first measurement. Every row holds the
-% model and the benchmark fixed and varies only the scaffold -- the only structure
-% that can attribute anything to the scaffold at all.
-\begin{frame}{No scaffold wins twice}
+% THE PROGRESSION SLIDE -- second half of the introduction. Slide 2 said what the
+% object of study IS; this one says how it came about, as three eras on one time
+% axis, ending in the hook: under 2 % (2023) -> over 70 % (2026).
+%
+% THE HOOK PAIR IS A TRAP, AND THE SLIDE SETS IT ON PURPOSE. Under 2 % is the
+% original paper's *full* test set; over 70 % is *Verified*. Different rulers --
+% which is why the italic caveat line under the pair is NOT optional, and why the
+% ruler itself (SWE-bench, its splits) gets its own slide before any more numbers
+% appear. Read honestly, the pair *is* the motivation: something enormous happened
+% in three years. What happened is the talk.
+%
+% ERAS, NOT SYSTEMS. This timeline carries product-shaped milestones the audience
+% already knows (Copilot, ChatGPT) plus the two hook numbers. The per-system numbers
+% -- SWE-agent 18, Agentless 32, and so on -- belong to the numbers slide AFTER
+% SWE-bench is defined. Do not pull them forward; the audience has no ruler yet.
+\begin{frame}{Three years, three eras}
   \small
   \begin{center}
-  \setlength{\tabcolsep}{6pt}
-  \begin{tabular}{@{}lcccc@{}}
-    \toprule
-    & \textbf{SWE-agent} & \textbf{OpenHands} & \textbf{mini-SWE-agent}
-      & \textbf{spread} \\
-    & {\scriptsize custom ACI} & {\scriptsize code-as-action}
-      & {\scriptsize \raisebox{0pt}[0pt][0pt]{$\sim$}100 lines of Python}
-      & \\
-    \midrule
-    GPT-5-mini        & 38.8 & 38.6 & \textbf{51.8} & $13.2$ \\
-    Qwen3 Coder 480B  & 36.6 & \textbf{54.0} & 40.2 & $17.4$ \\
-    DeepSeek R1       & \textbf{22.6} & 18.0 & 11.0 & $11.6$ \\
-    \bottomrule
-  \end{tabular}
+  \resizebox{0.97\textwidth}{!}{%
+  \begin{tikzpicture}[
+    era/.style={align=center, font=\footnotesize, anchor=south, text width=3.0cm},
+    yr/.style={font=\scriptsize\bfseries, anchor=north, inner sep=3pt},
+    dot/.style={circle, fill=TUMBlue, inner sep=1.8pt},
+  ]
+    \draw[-{Stealth[length=3mm]}, ultra thick, black!70] (-0.6,0) -- (14.2,0);
+
+    \node[dot] (a) at (0.5,0) {};
+    \node[yr] at (0.5,-0.12) {2021};
+    \node[era] at (0.5,0.25)
+      {\textbf{Autocomplete}\\{\scriptsize Copilot}};
+
+    \node[dot] (b) at (3.8,0) {};
+    \node[yr] at (3.8,-0.12) {2022};
+    \node[era] at (3.8,0.25)
+      {\textbf{One-shot generation}\\{\scriptsize ChatGPT}};
+
+    \node[dot] (c) at (7.1,0) {};
+    \node[yr] at (7.1,-0.12) {2023};
+    \node[era] at (7.1,0.25)
+      {\textbf{The task gets real}\\{\scriptsize SWE-bench}};
+
+    \node[dot] (d) at (10.4,0) {};
+    \node[yr] at (10.4,-0.12) {2024};
+    \node[era] at (10.4,0.25)
+      {\textbf{The agents arrive}\\{\scriptsize SWE-agent, Devin, OpenHands}};
+
+    \node[dot] (e) at (13.3,0) {};
+    \node[yr] at (13.3,-0.12) {2026};
+    \node[era] at (13.3,0.25)
+      {\textbf{Autonomy at scale}};
+  \end{tikzpicture}}
   \end{center}
-  {\footnotesize Resolve rate (pass@1) on SWE-bench Verified, April
-   2026~\cite{suri2026codescout,miniswegent2026}.}
   \vfill
-  \pause
-  \begin{itemize}
-    \item Same model, same benchmark: the scaffold alone is worth
-      \textbf{11--17 points}.
-    \item \alert{No scaffold wins twice.} The best scaffold \emph{depends on the
-      model} --- and for GPT-5-mini the winner is the 100-line one.
-  \end{itemize}
-  \vfill
+
+  \begin{center}
+    {\usebeamerfont{framesubtitle}%
+     under 2\,\%\quad\raisebox{0.1ex}{$\longrightarrow$}\quad
+     \textcolor{TUMBlue}{over 70\,\%}}\\[0.2em]
+    {\footnotesize of real GitHub issues resolved
+     autonomously~\cite{jimenez2024swebench,swebench_leaderboard}}\\[0.35em]
+    {\scriptsize\itshape (two different rulers --- defined in a few slides)}
+  \end{center}
 \end{frame}
 
 
 % ---------------------------------------------------------------- slide 4 ---
+% The report's lens, drawn: five stages every surveyed system fills in some form.
+%
+% THE CONTROL-SYSTEM GLOSS IS GONE, AND SO IS THE LAW GLOSS. The slide once closed
+% on "intent is the uncontrolled input, generation is the plant..." (four pieces of
+% undefined control-theory vocabulary) and later on "only one of them runs the code"
+% (the cut critique's setup line). The closing line is now a plain statement of what
+% the figure is FOR: a common vocabulary to compare systems in.
+%
+% The dotted edge ("new task, not feedback") is the figure's own honest detail --
+% intent capture is the only box nothing returns to. The speaker may point at it;
+% nothing later in this deck depends on it any more.
 \begin{frame}{The agent pipeline}
   \begin{center}
-  % 0.72 rather than 0.60: the figure is the whole slide now, and \resizebox shrinks
-  % line widths along with everything else -- scaling it down was half of why the
-  % arrows were hard to read.
-  \resizebox{0.72\textwidth}{!}{%
+  % 0.66 rather than 0.72: the closing line below shares the slide.
+  \resizebox{0.66\textwidth}{!}{%
   \begin{tikzpicture}[
     stage/.style={draw, rounded corners=3pt, fill=TUMBlue!12, font=\small,
                   align=center, minimum height=0.9cm, minimum width=2.4cm},
@@ -224,39 +334,43 @@
   \end{tikzpicture}%
   }
   \end{center}
+  \vfill
+  \begin{center}
+    \small
+    Five stages --- \textbf{one vocabulary for every system in this talk.}
+  \end{center}
+  \vfill
 \end{frame}
 
 
 % ---------------------------------------------------------------- slide 5 ---
 % Slides 5-7 walk the three stages the talk actually argues about, in pipeline order:
-% plan -> execute -> refine. They come BEFORE the systems table on purpose. The stages
-% are the vocabulary; the table is a claim expressed in it, and a table of five systems
-% means nothing to an audience that cannot yet say what a "plan" is here. Generation is
-% deliberately not given its own slide: it is the plant, not the control layer, and the
-% interface slide (9) is where what it can actually DO gets defined.
-% The figure REPLACES the "what a plan is" bullet rather than illustrating it: the bullet
-% was an arrow chain typeset as prose (repository -> files -> classes -> locations), which
-% is a diagram pretending to be a sentence. Drawn as a funnel, the narrowing is seen rather
-% than asserted, and the slide title stops being a claim the audience has to take on trust.
+% plan -> execute -> refine. They come BEFORE SWE-bench on purpose: the stages are
+% the vocabulary the later numbers are read in. Generation is deliberately not given
+% its own slide -- what a generator can DO is a property of its action interface,
+% and that detail lives in the backup material now.
 %
-% The boundary is the reason the figure is worth its space. It carries the one result here
-% that an audience cannot guess and that a sharp listener will otherwise raise as an
-% objection ("but D4C says fault localisation is unnecessary"): localisation flips sign at
-% the function boundary. Above it, it IS the task -- SBFL ranks functions, +3 points. Below
-% it, it fights the model's infilling prior -- D4C un-ranks lines and beats perfect-FL
-% systems by 10%. Two results that look opposed, measuring opposite sides of one boundary.
-% This is a full paragraph in the report (Sec. Fault Localisation) and one glance here.
+% NO NUMBERS ON THIS SLIDE. Both results here used to carry a resolve-rate delta (SBFL
+% +3 points; D4C beats perfect localisation by 10 %), and both are now stated as
+% DIRECTIONS instead -- "ranking functions helps", "un-ranking lines beats perfect
+% localisation". Nothing about the argument is lost, because the argument was never the
+% magnitude: it is that localisation FLIPS SIGN at the function boundary. That is a
+% qualitative claim and it survives intact. The magnitudes belong to the speaker (see
+% script.md) and to the backup slide that holds them.
 %
-% Boundary rule is deliberately BLACK. It is not an axis position and not a feedback edge,
-% so it must not borrow oracleblue, proxyamber or feedbackred -- that would teach a colour
-% code the figure does not mean.
+% The boundary is why the figure is worth its space. It carries the one result an
+% audience cannot guess and that a sharp listener will otherwise raise as an objection
+% ("but D4C says fault localisation is unnecessary"): localisation flips sign at the
+% function boundary. Above it, it IS the task -- SBFL ranks functions and it helps.
+% Below it, it fights the model's infilling prior -- D4C un-ranks lines and beats
+% systems handed perfect localisation. Two results that look opposed, measuring opposite
+% sides of one boundary. A full paragraph in the report; one glance here.
+%
+% Boundary rule is deliberately BLACK. It is not an axis position and not a feedback
+% edge, so it must not borrow oracleblue, proxyamber or feedbackred -- that would teach
+% a colour code the figure does not mean.
 \begin{frame}{Planning is localisation, not design}
   \small
-  \textbf{Where it sits} --- input: an issue. Output: \emph{a place to edit}. A ``plan''
-  here is a \emph{narrowing}, and what it contributes is \oracle{grounding} --- files and
-  symbols that can be \emph{checked} --- not deliberation.
-  \smallskip
-
   \begin{center}
   \resizebox{0.92\textwidth}{!}{%
   \begin{tikzpicture}[
@@ -278,34 +392,33 @@
     \node[font=\scriptsize\bfseries, align=center] at (7.3,1.72)
       {the function\\boundary};
 
+    % The gloss that anchors the metaphor: the notes below say "above/below" (a
+    % granularity hierarchy), but the funnel runs left/right on the page. These two
+    % words are the bridge -- above the boundary = the coarser side.
+    \node[font=\scriptsize\itshape, text=black!55] at (0,1.4)   {coarser};
+    \node[font=\scriptsize\itshape, text=black!55] at (9.2,1.4) {finer};
+
     \node[note] at (2.9,-1.5)
-      {\textbf{Above it, localisation \emph{is} the task.} Which function, among tens of
-       thousands? SBFL \emph{ranks} functions: $+3$
-       points~\cite{zhang2024autocoderover}.};
+      {\textbf{Above it, localisation \emph{is} the task} ---
+       ranking functions \emph{helps}~\cite{zhang2024autocoderover}.};
     \node[note] at (11.4,-1.5)
-      {\textbf{Below it, a constraint the model does not need.} D4C \emph{un-ranks} lines
-       --- and beats perfect-localisation systems by $10\,\%$~\cite{xu2024d4c}.};
+      {\textbf{Below it, it hurts} --- \emph{no} line pointer beats
+       \emph{perfect} localisation~\cite{xu2024d4c}.};
   \end{tikzpicture}}
   \end{center}
   \vfill
   \begin{center}
-    Planning is not reasoning about \emph{how} to write the code.\\
-    It is reasoning about \emph{where} the code is.
+    Reasoning about \emph{where} the code is --- not \emph{how} to write it.
   \end{center}
 \end{frame}
 
 
 % ---------------------------------------------------------------- slide 6 ---
-% The stage that was missing from the walk. It is kept strictly DESCRIPTIVE: what runs,
-% and what comes back. The temptation is to say here that execution is the only stage
-% that can contradict the model -- that is the whole of Act II, and saying it now spends
-% the punchline eight slides early. Name the machinery; let slide 11 name its privilege.
-% The figure's whole job is the vertical rule. "The only stage whose output the model did
-% not write" is a claim about a BOUNDARY, and a boundary is the one thing prose is worst at
-% and a diagram is best at. Drawing it here plants the Act II hinge silently: the audience
-% sees the asymmetry eight slides before it is named, which is exactly the order this slide
-% wants (name the machinery; let slide 11 name its privilege). Say nothing about why the
-% right-hand side is special -- the picture is already saying it.
+% Kept strictly DESCRIPTIVE: what runs, and what comes back.
+%
+% The figure's whole job is the vertical rule -- the model on one side, a real
+% machine on the other. A boundary is the one thing prose is worst at and a diagram
+% is best at; the audience sees the asymmetry without it being argued.
 %
 % The return arrow is feedbackred ON PURPOSE, and this is the one place a palette reuse is
 % correct rather than sloppy: it is the SAME edge as the pipeline figure's execution ->
@@ -313,11 +426,6 @@
 % black for the reason given on slide 5.
 \begin{frame}{Execution: the code meets the environment}
   \small
-  \textbf{Where it sits} --- input: a patch. Output: \emph{evidence}. It is also the
-  expensive stage: every observation costs a container round-trip, and the transcript
-  grows with each one.
-  \smallskip
-
   \begin{center}
   \resizebox{0.95\textwidth}{!}{%
   \begin{tikzpicture}[
@@ -349,31 +457,27 @@
   \end{center}
   \vfill
   \begin{center}
-    What comes back is not a score. It is \emph{a symptom} --- and it still has to be
-    \emph{read}.
+    Not a score --- \emph{a symptom}, still to be read.
   \end{center}
 \end{frame}
 
 
 % ---------------------------------------------------------------- slide 7 ---
-% Deliberately thin. Refinement's SUBSTANCE is Act II -- the axis slide sorts these same
-% mechanisms and is where the thinking happens. This slide's only job is to name the
-% stage, show that the loop pays, and set up the "...or so this reads" turn. Reflexion
-% was cut (its headline is on HumanEval, a different benchmark from every other number
-% here); the per-mechanism detail lives on the backup slide.
+% Deliberately thin: name the stage, list what people actually do, move on. The
+% mechanisms are real and published; the magnitudes live on the numbers slide
+% (OpenHands + critic, 60.6 -> 66.4 on Verified) and in the backup refinement table.
+% No figure here, deliberately -- planning and execution got one, and a third
+% diagram in three slides would bury both.
 \begin{frame}{Refinement: what to do with the signal}
   \small
-  \textbf{Where it sits} --- input: whatever execution returned. Output: a
-  \emph{decision} --- repair the patch, re-plan, or stop.
-  \medskip
-
+  \vfill
   \begin{itemize}
-    \item \textbf{Repair from the trace}~\cite{jiang2023selfevolve} --- the traceback
-      goes straight back into the prompt.
-    \item \textbf{Explain your own code}~\cite{chen2024selfdebug} --- discrepancies
-      surface. Up to $+12$\,\%, but only where tests exist.
+    \item \textbf{Repair from the trace}~\cite{jiang2023selfevolve}
+      \bigskip
+    \item \textbf{Explain your own code}~\cite{chen2024selfdebug} --- \emph{only where
+      tests exist}
+      \bigskip
     \item \textbf{Sample $N$, rerank with a trained critic}~\cite{openhands2025verified}
-      --- OpenHands on Verified: 60.6\,\% $\to$ \textbf{66.4\,\%}.
   \end{itemize}
   \vfill
   \begin{center}
@@ -384,454 +488,189 @@
 
 
 % ---------------------------------------------------------------- slide 8 ---
-% Why Lite and not Full: Agentless and OpenHands were never RUN on Full (their
-% authors cite compute cost), and Agentless is the row the argument needs. Lite is
-% simply the only split all of these papers share -- so the Full column is carried
-% explicitly, gaps and all, rather than quietly omitted. The table is then demoted:
-% it is a map of the design space, and the matched-backbone comparison underneath is
-% what actually carries the Agentless claim.
+% THE RULER. Every number in this talk is a resolve rate, and this slide is where
+% that vocabulary is paid for -- immediately before the numbers slide that needs it.
 %
-% This now lands AFTER the stage walk, which is what makes the Agentless row legible:
-% the audience has just been told a plan is a narrowing, so "a fixed pipeline leads"
-% reads as a claim about localisation rather than as a curiosity.
-\begin{frame}{A map of the design space, not a ranking}
+% THE SPLITS TABLE WAS DEMOTED TO A LIST. The full four-row table (sizes, filters,
+% caveats) cost half the slide and most of it was spoken anyway. What the audience
+% must retain is one fact -- rates on different splits are not comparable -- and
+% four names. The details (Lite leaks, Verified's screening, Pro's held-out repos)
+% are the speaker's (script.md 8).
+\begin{frame}{What SWE-bench measures}
   \small
-  \setlength{\tabcolsep}{5pt}
-  \begin{tabular}{@{}llccc@{}}
-    \toprule
-    \textbf{System} & \textbf{Architecture} & \textbf{Backbone}
-      & \textbf{Lite} & \textbf{Full} \\
-     &  & & {\scriptsize\itshape pass@1} & {\scriptsize\itshape pass@1} \\
-    \midrule
-    SWE-agent~\cite{yang2024sweagent}       & OTA loop + ACI
-      & GPT-4 Turbo & 18.0\,\% & 12.5\,\% \\
-    Agentless~\cite{xia2024agentless}       & \emph{Fixed pipeline}
-      & GPT-4o & \textbf{32.0\,\%} & --$^{\dagger}$ \\
-    AutoCodeRover~\cite{zhang2024autocoderover} & OTA loop + AST search
-      & GPT-4 & 19.0\,\% & 12.4\,\% \\
-    OpenHands~\cite{wang2024openhands}      & OTA loop + code-as-action
-      & Sonnet 3.5 & 26.0\,\% & --$^{\dagger}$ \\
-    Devin~\cite{cognition2024devin}         & OTA loop + Brain/DevBox
-      & undisclosed & -- & 13.9\,\%$^{\ddagger}$ \\
-    \bottomrule
-  \end{tabular}
-  \\
-  {\scriptsize \textsc{ota} = observe--think--act loop; \textsc{aci} = agent--computer
-   interface (both defined next slide).
-   \quad $^{\dagger}$Never run on Full --- the authors cite compute cost.
-   \quad $^{\ddagger}$Self-reported on a random 25\,\% subset.}
+  \begin{columns}[T]
+    \begin{column}{0.53\textwidth}
+      \textbf{One instance}~\cite{jimenez2024swebench} = a real merged PR:
+      closed an issue $+$ touched the tests.
+      \medskip
+
+      \textbf{The agent sees} the repo before the merge $+$ the issue;
+      \textbf{returns} a patch.
+      \medskip
+
+      \textbf{Graded by running the tests} --- the bug fixed, nothing broken.
+      \medskip
+
+      \textbf{Resolve rate} = both, on the first patch.\\
+      \emph{Every number from here on is this one.}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \footnotesize
+      \textbf{One benchmark, four splits:}
+      \medskip
+
+      \begin{itemize}
+        \item \textbf{Full} --- 2{,}294, every scraped PR
+        \item \textbf{Lite} --- 300, single-file patches
+        \item \textbf{Verified} --- 500, human-screened
+        \item \textbf{Pro} --- 1{,}865, held-out repos
+      \end{itemize}
+      \medskip
+
+      \alert{Rates are not comparable across splits.} Verified is the most
+      \emph{curated} split, not the hardest.
+    \end{column}
+  \end{columns}
 \end{frame}
 
 
 % ---------------------------------------------------------------- slide 9 ---
-% Each bullet must be a DESCRIPTION of something every system has, not advice on how
-% to build one -- the title asks what they share, so the bullets answer that. The
-% ablation numbers are evidence that the shared component is load-bearing, not a
-% recommendation to the audience.
+% THE NUMBERS, told on the systems the report actually surveys -- not on leaderboard
+% entries the talk never discusses. One scatter over time; every point tagged with
+% its split, because the points sit on THREE different rulers (Full / Lite /
+% Verified) and a connecting line would assert a comparability that does not exist.
+% Hence: marks only, no line, and the footnote caveat is not optional.
 %
-% This is also where GENERATION gets its content: the stage walk skipped it because the
-% interesting question is not "the model writes code" but what it is allowed to do --
-% and that is the action interface, defined here.
-\begin{frame}{Interface and context move scores as much as the model}
+% THE PRO POINT IS HOLLOW AND SET APART on purpose: it is the same era as the ">70
+% Verified" point, measured on the harder, held-out split, under a uniform harness
+% (Scale's own leaderboard, mini-swe-agent, July 2026). It is the honest ceiling --
+% the deck quotes MEASURED Pro numbers (~55-60), never the vendor self-reports
+% (70-80), which mix harnesses and are verified by nobody.
+%
+% Dates are placement, not data: x positions are release months to one decimal of a
+% year, good enough for a timeline read at 4 metres.
+\begin{frame}{Three years, in numbers}
   \small
-  \begin{enumerate}
-    \item \textbf{They all run an observe--think--act loop}~\cite{yao2023react} ---
-      observe, reason, act via a tool call.
-    \item \textbf{They all manage context explicitly} --- no repository fits in the
-      window, so each must choose what to read: repo skeleton $+$ embeddings
-      (Agentless), coarse-to-fine AST search (AutoCodeRover), observation compression
-      (SWE-agent).
-    \item \textbf{They all build a purpose-built action interface} --- none hands the
-      model a raw shell. The agent only ever sees what its commands print back. Two
-      opposite bets~\cite{yang2024sweagent}:
-  \end{enumerate}
-  \smallskip
-
   \begin{center}
-  {\footnotesize
-  \setlength{\tabcolsep}{6pt}
-  \renewcommand{\arraystretch}{1.05}
-  \begin{tabular}{@{}lll@{}}
-    \toprule
-    & \textbf{SWE-agent} & \textbf{OpenHands} \\
-    \midrule
-    \textbf{The bet} & Constrain the action space & Give it a general one \\
-    \textbf{Reading} & 100-line file window       & Python $+$ bash, \\
-    \textbf{Editing} & Linter may \emph{reject} the edit & in a Docker sandbox \\
-    \midrule
-    \textbf{Ablated} & \multicolumn{2}{l}{Remove one part of SWE-agent's interface:
-      $-3$ to $-6$\,pp (Lite)} \\
-    \bottomrule
-  \end{tabular}}
+  \begin{tikzpicture}
+    \begin{axis}[
+      width=0.92\textwidth, height=5.6cm,
+      xmin=2023.5, xmax=2027.1, ymin=0, ymax=97,
+      xtick={2024,2025,2026},
+      xticklabels={2024,2025,2026},
+      ytick={0,20,40,60,80},
+      ylabel={\% resolved (pass@1)},
+      ylabel style={font=\scriptsize},
+      tick label style={font=\scriptsize},
+      axis lines=left,
+      grid=major, grid style={dashed, gray!25},
+      clip=false,
+    ]
+      \addplot[only marks, mark=*, mark size=2.2pt, color=TUMBlue] coordinates {
+        (2023.8,2) (2024.25,18) (2024.45,19) (2024.6,32) (2024.85,26)
+        (2025.5,66.4) (2026.4,74)};
+      \addplot[only marks, mark=o, very thick, mark size=2.8pt, color=black!65]
+        coordinates {(2026.6,60)};
+
+      \node[font=\tiny, align=center, anchor=south] at (axis cs:2023.8,4)
+        {RAG $+$ GPT-4\\$<$2 $\cdot$ Full};
+      \node[font=\tiny, align=center, anchor=south east] at (axis cs:2024.2,20)
+        {SWE-agent\\18.0 $\cdot$ Lite};
+      \node[font=\tiny, align=center, anchor=north] at (axis cs:2024.45,16)
+        {AutoCodeRover\\19.0 $\cdot$ Lite};
+      \node[font=\tiny, align=center, anchor=south] at (axis cs:2024.6,34)
+        {Agentless\\32.0 $\cdot$ Lite};
+      \node[font=\tiny, align=center, anchor=west] at (axis cs:2024.95,26)
+        {OpenHands\\26.0 $\cdot$ Lite};
+      \node[font=\tiny, align=center, anchor=south] at (axis cs:2025.5,68.5)
+        {OpenHands $+$ trained critic\\66.4 $\cdot$ Verified};
+      \node[font=\tiny, align=center, anchor=south] at (axis cs:2026.4,76)
+        {leaders\\$>$70 $\cdot$ Verified};
+      \node[font=\tiny, align=center, anchor=north] at (axis cs:2026.6,57)
+        {measured on \textbf{Pro}\\$\approx$55--60};
+    \end{axis}
+  \end{tikzpicture}
   \end{center}
   \vfill
   \begin{center}
-    \small\itshape Interface and context strategy move resolve rates as much as
-    the backbone does.
+    {\scriptsize Splits are \alert{not comparable} --- read the \emph{climb}, not
+     the deltas.~\cite{jimenez2024swebench,yang2024sweagent,zhang2024autocoderover,%
+     xia2024agentless,wang2024openhands,openhands2025verified,swebench_leaderboard,%
+     scale2026pro}}
   \end{center}
 \end{frame}
 
-
-% ============================================================================
-\section{What the numbers hide}
-% ============================================================================
 
 % --------------------------------------------------------------- slide 10 ---
-\begin{frame}{The question this talk asks}
-  \vfill\vfill
+% [PROVISIONAL COOL POINT -- pending a dedicated brainstorm; may be replaced.]
+% The scaffold grid: every row holds the model and the benchmark fixed and varies
+% only the scaffold -- the only structure that can attribute anything to the
+% scaffold at all.
+\begin{frame}{No scaffold wins twice}
+  \small
   \begin{center}
-    {\usebeamerfont{frametitle}\textcolor{TUMBlue}{At each stage,\\[0.3em]
-     what can tell the model it is wrong?}}
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    & \textbf{SWE-agent} & \textbf{OpenHands} & \textbf{mini-SWE-agent}
+      & \textbf{spread} \\
+    & {\scriptsize custom ACI} & {\scriptsize code-as-action}
+      & {\scriptsize \raisebox{0pt}[0pt][0pt]{$\sim$}100 lines of Python}
+      & \\
+    \midrule
+    GPT-5-mini        & 38.8 & 38.6 & \textbf{51.8} & $13.2$ \\
+    Qwen3 Coder 480B  & 36.6 & \textbf{54.0} & 40.2 & $17.4$ \\
+    DeepSeek R1       & \textbf{22.6} & 18.0 & 11.0 & $11.6$ \\
+    \bottomrule
+  \end{tabular}
   \end{center}
+  {\footnotesize Resolve rate (pass@1) on SWE-bench Verified, April
+   2026~\cite{suri2026codescout,miniswegent2026}.
+   \textsc{aci} = agent--computer interface: the command set the model is handed.}
   \vfill
   \pause
-  \begin{center}
-    \small Read as a control system: intent is the uncontrolled input,
-    generation is the plant, \\ execution is the oracle, planning and refinement
-    are the control layer.
-  \end{center}
-  \vfill\vfill
+  \begin{itemize}
+    \item Same model, same benchmark: the scaffold alone is worth
+      \textbf{11--17 points}.
+    \item \alert{No scaffold wins twice} --- the best scaffold \emph{depends on the
+      model}.
+  \end{itemize}
+  \vfill
 \end{frame}
+
+
+% ============================================================================
+% The critique half of the deck (the turn, the checker axis, the Olausson
+% experiment, the jagged edge, the benchmark-audit timeline) was cut in the
+% 2026-07-19 restructure. Recoverable from git history.
+% ============================================================================
 
 
 % --------------------------------------------------------------- slide 11 ---
-% NB: the frame body must not begin with a brace group --- beamer would read it as
-% a frame subtitle and typeset it as a blue bold heading.
-%
-% The title is slide 10's question, restated: this slide IS the answer, and saying so
-% in the title spares the audience the work of noticing. The previous title ("Only one
-% signal can surprise the model") asserted the punchline using a word the slide never
-% defined -- "surprise" is information-theoretic here (a signal the model could not have
-% produced itself), and an audience meeting it cold reads it as hand-waving. The word is
-% still worth having, because it is the ONLY word under which the three-way split holds:
-% a trained critic *can* contradict the generator (that is why reranking pays), it just
-% cannot bring in information from outside. So the term is now introduced by apposition
-% in the oracle block, where the plain phrasing defines it -- and the conclusion slide,
-% which leans on "cannot surprise", stays anchored.
-\begin{frame}{What can tell the model it is wrong? Three answers}
-  \small
-  \begin{columns}[T]
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Authoritative oracle}
-        \footnotesize
-        Test runner, compiler, human. \oracle{Ground truth.}
-        \medskip
-
-        It can tell the model something it did not already believe --- it can
-        \oracle{surprise} it.
-      \end{block}
-    \end{column}
-    \begin{column}{0.32\textwidth}
-      \onslide<2->{
-      \begin{block}{Learned / generated proxy}
-        \footnotesize
-        Trained critic, generated tests, LLM judge.
-        \medskip
-
-        Carries real information --- but never more than it was fitted with. A
-        generated test \emph{runs} for real; the model still wrote the answer key.
-        \proxy{Ceiling: its own fidelity.}
-      \end{block}}
-    \end{column}
-    \begin{column}{0.32\textwidth}
-      \onslide<3->{
-      \begin{block}{Same-distribution self-critique}
-        \footnotesize
-        The model judging itself.
-        \medskip
-
-        \selfc{No information from outside the model} --- the critic is drawn from
-        the distribution that produced the error~\cite{huang2024selfcorrect}.
-      \end{block}}
-    \end{column}
-  \end{columns}
+% [PROVISIONAL until the cool point is settled.] Three lines, no builds, no
+% colour beyond the one blue number: the jump -> the loop -> the headroom. The
+% middle line re-states the definitional slide's punchline on purpose: it is the
+% one sentence the audience should leave with. The scaffold finding is SPOKEN
+% (script.md 11), not shown -- it belongs to the cool-point slide, which may
+% change.
+\begin{frame}{Conclusion}
   \vfill
-  \onslide<4->{
-  \begin{center}
-    \small
-    An agent that could tell its wrong code from its right code by inspection
-    would have written the right code in the first place.\\[0.2em]
-    {\footnotesize\itshape It can \emph{reorganise} what the model believes.
-     It cannot \emph{add} to it.}
-  \end{center}}
-\end{frame}
-
-
-% --------------------------------------------------------------- slide 12 ---
-% The axis slide defines three positions and proves none of them. That was this deck's
-% largest quality defect: the talk's own contribution, asserted. This slide is the proof --
-% and it cost nothing to find, because BOTH experiments were already in the report, and both
-% were cut from the conclusion for exactly one reason (see the conclusion's comment): "no
-% claim resting only on a citation nobody in the room saw evidence for." They have a slide
-% now, so they are admissible again.
-%
-% What earns them a slide TOGETHER is that they move the same variable in opposite
-% directions. CRITIC adds an external signal and the gain appears. Olausson removes the
-% excuse that the loop itself was doing the work -- hold the token budget fixed, compare
-% against simply drawing more i.i.d. samples -- and the gain disappears, except the part
-% that came from feedback. Neither is a taxonomy. Each is a controlled experiment on the
-% axis's one variable, and between them they close it from both sides.
-%
-% DOMAIN HONESTY -- this stays ON the slide, it is not a footnote to skip. CRITIC is QA and
-% maths, not code. Olausson IS code (HumanEval, APPS). This is precisely why the report says
-% "on code, the load is carried by Olausson", and it is the same courtesy the deck already
-% extends to Huang. An audience that catches you quietly generalising a reasoning result to
-% code has stopped believing the rest of the talk.
-\begin{frame}{Same model, same prompt --- one variable}
-  \small
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Add a tool $\Rightarrow$ the gain appears}
-        \footnotesize
-        \textbf{CRITIC}~\cite{gou2024critic}. Hold model and prompt fixed. Toggle one thing:
-        may the critic use an \emph{external tool}?
-        \smallskip
-
-        \selfc{Critique alone:} $-0.03$ / $+2.33$ F1 --- at or \emph{below} its own first
-        answer.
-        \smallskip
-
-        \oracle{The same critique, through a tool:} $+7.7$ F1.
-        \smallskip
-
-        {\scriptsize\itshape QA and maths --- not code.}
-      \end{block}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Match the budget $\Rightarrow$ it vanishes}
-        \footnotesize
-        \textbf{Olausson et al.}~\cite{olausson2024selfrepair}, \emph{on code}. A repair loop
-        spends tokens that could have drawn more \emph{independent} samples.
-        \smallskip
-
-        At equal cost, best-of-$k$ i.i.d.\ \selfc{erases much of the gain.}
-        \smallskip
-
-        Swap the self-critique for an \oracle{experienced human's} --- same loop, same
-        model --- and $\mathbf{1.58\times}$ more repairs pass.
-        \smallskip
-
-        {\scriptsize\itshape The gain came from the \emph{feedback}, not the iteration.}
-      \end{block}
-    \end{column}
-  \end{columns}
+  \begin{itemize}
+    \item In three years: under 2\,\% $\to$
+      \textcolor{TUMBlue}{\textbf{over 70\,\%}}.
+      \bigskip
+    \item \textbf{What changed is the loop} --- the system runs its own code,
+      and reads what comes back.
+      \bigskip
+    \item On the harder, held-out split: $\approx$60\,\%~\cite{scale2026pro}.
+      \emph{The climb is not over.}
+  \end{itemize}
   \vfill
-  \pause
-  \begin{center}
-    \footnotesize
-    One \emph{adds} an external signal and the gain appears. One \emph{holds the budget
-    fixed} and the gain disappears.\\
-    {\small Both move the same knob --- and \textbf{it is not the model.}}
-  \end{center}
-\end{frame}
-
-
-% --------------------------------------------------------------- slide 12 ---
-% The opening line is the slide's licence to exist. Without it this is a benchmark
-% critique dropped into the middle of a control-theory argument, and the audience
-% spends the whole slide not knowing why. The bridge is that SWE-bench's grading tests
-% are an instance of the axis just defined -- they are the oracle, for the agent AND for
-% us -- so a weak grader is a weak oracle, and every gain in Act I was measured against
-% it. That sentence used to be the LAST thing said here; it has to be the first.
-%
-% Body must not begin with a brace group (beamer reads it as a frame subtitle), so the
-% line opens on \small, not on {\small ...}.
-\begin{frame}{The benchmark can be gamed}
-  \small
-  The grading tests \emph{are} the oracle.
-  \alert{A weak oracle makes optimising against it \emph{overfitting}.}
-  \smallskip
-
-  \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \centering
-      \begin{tikzpicture}
-        \begin{axis}[
-          width=\textwidth, height=4.2cm,
-          ybar, bar width=6pt, enlarge x limits=0.18,
-          ymin=0, ymax=100, ylabel={\% Resolved},
-          symbolic x coords={Opus 4.5, GPT-5.2, GPT-5.3, GLM-5.1},
-          xtick=data,
-          x tick label style={font=\scriptsize, rotate=18, anchor=east},
-          yticklabel style={font=\scriptsize},
-          ylabel style={font=\scriptsize},
-          legend style={font=\tiny, at={(0.5,1.02)}, anchor=south,
-                        legend columns=2, draw=none, fill=none,
-                        /tikz/every even column/.append style={column sep=5pt}},
-          grid=major, grid style={dashed, gray!30},
-          nodes near coords, point meta=explicit symbolic,
-          every node near coord/.append style={font=\scriptsize, rotate=90,
-                                               anchor=west},
-        ]
-        \addplot[fill=oracleblue, draw=oracleblue] coordinates {
-          (Opus 4.5,80.9) [80.9] (GPT-5.2,80.0) [80.0]
-          (GPT-5.3,85)   [85]   (GLM-5.1,78)   [78]};
-        \addplot[fill=proxyamber, draw=proxyamber] coordinates {
-          (Opus 4.5,45.9) [45.9] (GPT-5.2,56.4) [56.4]
-          (GPT-5.3,56.8) [56.8] (GLM-5.1,58.4) [58.4]};
-        \legend{Verified, Pro}
-        \end{axis}
-      \end{tikzpicture}
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \footnotesize
-      \vspace{0.2cm}
-      The \emph{same weights} drop $\geq$\,20 points on the contamination-resistant
-      SWE-bench Pro~\cite{deng2025swebenchpro}.
-      \medskip
-      \pause
-
-      \alert{Read only the floor.} Pro is harder \emph{as well as} fresher, and the
-      column mixes harnesses.
-      \medskip
-      \pause
-      \begin{itemize}
-        \item \textbf{91\,\%} of Verified is work a developer finishes \emph{within
-          the hour}~\cite{ganhotra2025difficulty}.
-        \item OpenAI dropped Verified in early 2026: models reproduce gold patches
-          \emph{from the task ID alone}~\cite{openai2026swebench}.
-        \item ``Reward hacking is swamping model intelligence
-          gains''~\cite{cursor2025rewardhacking}.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-
-% --------------------------------------------------------------- slide 13 ---
-% This slide IS the thesis, and it used to be the only slide in Act II with no evidence
-% on it: two blocks of assertion and three citations. The numbers below fix that, and
-% they cost no new research -- they were already being SPOKEN, once, back on slide 2.
-%
-% The title no longer asserts a false symmetry. The two stages are not symmetric: intent
-% has no oracle at all, validation has one with holes -- so "the two stages nothing can
-% check" was contradicted by the right-hand block's own first line ("the oracle exists"),
-% and "nothing can say no" was false of a test suite, which says no to everything it
-% covers. What IS exactly true of both is the phrase the right block already used: a
-% wrong guess is never contradicted. That is the shared property; the title now names it.
-%
-% PROVENANCE OF THE TWO FIGURES -- verified 2026-07-14 against OpenAI, "Introducing
-% SWE-bench Verified" (openai.com/index/introducing-swe-bench-verified/). Verbatim:
-%
-%   "We see that 38.3% of samples were flagged for underspecified problem statements,
-%    and 61.1% were flagged for unit tests that may unfairly mark valid solutions as
-%    incorrect."
-%   "Overall, our annotation process resulted in 68.3% of SWE-bench samples being
-%    filtered out due to underspecification, unfair unit tests, or other issues."
-%   "Each annotation criterion has a label ranging [0, 1, 2, 3] in increasing severity.
-%    Labels 0 and 1 are minor; labels 2 and 3 are severe and indicate that the sample is
-%    inadequate in some way and should be discarded."  (93 devs, 1,699 samples.)
-%
-% CRITICAL: the post does NOT say whether "flagged" means severity >=1 or >=2. The
-% DISCARD threshold is >=2, but the 38.3/61.1 headline figures are not pinned to it. So
-% the slide uses OpenAI's own verb -- "flagged" -- and OpenAI's own hedge -- "may unfairly
-% mark a valid solution incorrect". Do not tighten these into "too underspecified to
-% determine the patch" or "would reject a valid fix": those assert the severe reading, and
-% the source will not back it if anyone asks at what threshold.
-%
-% Note the two figures measure OPPOSITE oracle failures, and the right block must not
-% blur them: 61.1% is the suite rejecting a VALID fix (too strict, and visible). The claim
-% the thesis needs is the suite accepting an INVALID one (too lenient, and invisible --
-% catching it would need the better oracle we do not have). The 61.1% earns the weaker,
-% safer premise -- the suite is not a trustworthy account of "correct" -- and the block
-% then argues from there.
-\begin{frame}{Where a wrong guess is never contradicted}
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Intent capture}
-        \footnotesize
-        OpenAI's screen of 1{,}699 real issues \alert{flagged 38.3\,\%} as
-        \emph{underspecified}~\cite{openai2024verified}.
-        \medskip
-
-        No surveyed system asks a clarifying question. Each commits to a reading.
-        \textbf{Open loop.}
-        \medskip
-
-        The mechanism exists --- TiCoder, ClarifyGPT, and an underspecified SWE-bench
-        where the agent that \emph{asks}
-        wins~\cite{lahiri2022ticoder,mu2024clarifygpt,vijayvargiya2026ambiguity}.
-      \end{block}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Test-based validation}
-        \footnotesize
-        The same screen \alert{flagged 61.1\,\%} for tests that \emph{may unfairly mark a
-        valid solution incorrect}~\cite{openai2024verified}.
-        \medskip
-
-        That is the failure we can \emph{see}. The one we cannot: a wrong guess about an
-        \emph{untested} invariant is never contradicted --- it scores as success.
-        \medskip
-
-        And augmenting the \proxy{proxy} inherits the generator's own misreading, exactly
-        where the new tests were needed.
-      \end{block}
-    \end{column}
-  \end{columns}
-  \vfill
-  \pause
-  \begin{center}
-    \small
-    Both benchmarks \textbf{hand-solve these two stages} before the agent starts:
-    Verified \emph{discards} \textbf{68.3\,\%} of what it
-    screened~\cite{openai2024verified}; Pro pays experts to \emph{rewrite} every
-    issue~\cite{deng2025swebenchpro}.\\[0.2em]
-    {\footnotesize\itshape No agent does either. Nothing ever asked it to.}
-  \end{center}
-\end{frame}
-
-
-% --------------------------------------------------------------- slide 14 ---
-% Every bullet here must be traceable to something the deck actually showed --- no
-% claim resting only on a citation nobody in the room saw evidence for.
-%
-% The Olausson budget-normalisation point and the CRITIC tool-use point were once cut for
-% exactly that reason: neither appeared as data on any slide, only as a name-drop. They are
-% back, because they now have one -- "Same model, same prompt, one variable" is that slide,
-% and it exists precisely so this conclusion can lean on them honestly. The rule did not
-% bend; the evidence moved onto the deck to meet it.
-%
-% Bullet 3's CodeScout claim was breaking that rule -- "lifted all nine cells" rested on
-% a paper whose treatment condition appears on no slide. It is kept, but only because it
-% is now anchored: the grid on slide 3 IS that paper's control condition, so the cells it
-% lifted are cells the audience has seen. Saying "slide 3" out loud is what discharges
-% the rule. The honest remaining gap is that the audience sees the control and hears the
-% treatment; if the per-cell deltas are ever worth the space, they belong on slide 3.
-%
-% Bullet 2 no longer says self-critique "adds nothing". Huang et al. is a REASONING-task
-% result and reports no reliable gain plus possible degradation; "adds nothing" is a
-% strengthening the deck cannot cash. The slide now states the finding, and the speaker
-% owns the generalisation to code -- which is the talk's claim, not Huang's.
-\begin{frame}{Conclusion --- three things the numbers showed}
-  \small
-  \begin{enumerate}
-    \item \textbf{The wrapper carries the score}\\
-      {\footnotesize The scaffold alone moved \textbf{11--17 points}, and the winning
-      column changed row by row. What the wrapper \emph{feeds} the generator ---
-      interface, context, localisation --- does the work.}
-    \pause
-
-    \item \textbf{Refinement pays exactly as much as its signal can contradict it}\\
-      {\footnotesize \oracle{Execution} grounds the gains. A \proxy{trained critic} is a
-      real gain (60.6 $\to$ 66.4\,\%), but it is still a model --- it cannot
-      \emph{surprise} the generator. \selfc{Self-critique} alone adds nothing you can rely
-      on --- hold the model and the loop fixed, swap only \emph{who writes the critique},
-      and a \oracle{human} is worth $1.58\times$~\cite{olausson2024selfrepair}.}
-    \pause
-
-    \item \textbf{The two stages nothing contradicts are where the numbers are softest}\\
-      {\footnotesize \textbf{Intent} and \textbf{validation} have no gate --- OpenAI's own
-      screen flagged \textbf{38.3\,\%} and \textbf{61.1\,\%} --- and the benchmark hid it:
-      the same weights drop $\geq$\,20 points on Pro. Yet the one paper that
-      \emph{instrumented} intent lifted \emph{all nine} cells of the grid on
-      slide~3~\cite{suri2026codescout}. The stage nobody instruments still pays out.}
-  \end{enumerate}
 \end{frame}
 
 
 % ============================================================================
-% Backup slides --- for Q&A, not counted in the 15 minutes.
+% Backup slides --- for Q&A, not counted in the 20 minutes.
 % ============================================================================
 
 \appendix
@@ -936,6 +775,90 @@
    function, $+23\,\%$ relative) --- and must invoke a model at every node.}
 \end{frame}
 
+% Holds the two numbers cut from the stage walk (slides 5 and 7), so they are one
+% keystroke away if anyone asks for the magnitudes rather than the directions.
+\begin{frame}[noframenumbering]{Backup: the numbers behind the stage walk}
+  \small
+  \begin{itemize}
+    \item \textbf{Planning, above the function boundary}~\cite{zhang2024autocoderover}.
+      AutoCodeRover adds spectrum-based fault localisation to rank \emph{functions}:
+      \oracle{$+3$ points} on SWE-bench Lite.
+      \medskip
+    \item \textbf{Planning, below it}~\cite{xu2024d4c}. D4C hands the model the failing
+      test and the \emph{whole function}, and gives it \emph{no line-level pointer at
+      all} --- beating systems given perfect localisation by \textbf{10\,\%}. Below the
+      function boundary, a pointer fights the model's infilling prior.
+      \medskip
+    \item \textbf{Refinement, with an explanation}~\cite{chen2024selfdebug}. Self-debug:
+      up to \proxy{$+12\,\%$} --- but only where a test suite exists to run against.
+      \medskip
+    \item \textbf{Refinement, with a trained critic}~\cite{openhands2025verified}.
+      OpenHands on Verified, best-of-$N$ reranked: 60.6 $\to$ \oracle{66.4\,\%}. (On the
+      deck: the numbers timeline.)
+  \end{itemize}
+\end{frame}
+
+% Benchmark detail the numbered deck no longer carries -- all of it real, all of it
+% in the report, all of it Q&A ammunition. THE CHART NEEDS ITS CAVEATS SAID ALOUD:
+% "read only the floor", "Pro is harder as well as fresher", "the column mixes
+% harnesses". Use it only with time to caveat it properly.
+\begin{frame}[noframenumbering]{Backup: the benchmark, in more detail}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[
+          width=\textwidth, height=4.2cm,
+          ybar, bar width=5pt, enlarge x limits=0.18,
+          ymin=0, ymax=100, ylabel={\% Resolved},
+          symbolic x coords={Opus 4.5, GPT-5.2, GPT-5.3, GLM-5.1},
+          xtick=data,
+          x tick label style={font=\scriptsize, rotate=18, anchor=east},
+          yticklabel style={font=\scriptsize},
+          ylabel style={font=\scriptsize},
+          legend style={font=\tiny, at={(0.5,1.02)}, anchor=south,
+                        legend columns=2, draw=none, fill=none,
+                        /tikz/every even column/.append style={column sep=5pt}},
+          grid=major, grid style={dashed, gray!30},
+          nodes near coords, point meta=explicit symbolic,
+          every node near coord/.append style={font=\tiny, rotate=90, anchor=west},
+        ]
+        % NOT the axis palette: these are two BENCHMARKS, not two axis positions.
+        \addplot[fill=splitverified, draw=splitverified] coordinates {
+          (Opus 4.5,80.9) [80.9] (GPT-5.2,80.0) [80.0]
+          (GPT-5.3,85)   [85]   (GLM-5.1,78)   [78]};
+        \addplot[fill=splitpro, draw=splitpro] coordinates {
+          (Opus 4.5,45.9) [45.9] (GPT-5.2,56.4) [56.4]
+          (GPT-5.3,56.8) [56.8] (GLM-5.1,58.4) [58.4]};
+        \legend{Verified, Pro}
+        \end{axis}
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \footnotesize
+      The \emph{same weights} drop $\approx$\,20--35 points on the contamination-resistant
+      SWE-bench Pro~\cite{deng2025swebenchpro}.
+      \medskip
+
+      \alert{Read only the floor.} Pro is harder \emph{as well as} fresher, and the
+      column mixes harnesses --- so the drop \emph{size} is not a measurement of
+      memorisation.
+      \medskip
+
+      \textbf{91\,\%} of Verified is work a developer finishes \emph{within the
+      hour}~\cite{ganhotra2025difficulty}. A system can gain points while solving no
+      additional hard task.
+      \medskip
+
+      \textbf{July 2026: the ruler itself is under audit.} OpenAI flags
+      $\sim$30\,\% of Pro's public tasks as broken and retracts its February
+      recommendation to use it~\cite{openai2026pro}. Quote \emph{measured} Pro
+      numbers, with that caveat attached.
+    \end{column}
+  \end{columns}
+\end{frame}
+
 \begin{frame}[noframenumbering]{Backup: context and cost}
   \small
   \begin{itemize}
@@ -961,12 +884,12 @@
   \end{itemize}
 \end{frame}
 
-% The bibliography is already minimal: BibTeX prints only the entries actually cited
-% (32 of the 51 in the shared references.bib). What made it sprawl over eight pages
-% was beamer's default bibliography formatting, not the entry count:
+% The bibliography is already minimal: BibTeX prints only the entries actually cited.
+% What made it sprawl over eight pages was beamer's default bibliography formatting,
+% not the entry count:
 %   - the default bibliography item is an ICON, which forces a wide hanging indent;
 %   - beamer sets \itemsep between entries as if they were bullets.
-% Text-numbered items, no icon, and zero itemsep pack the same 32 entries into ~3.
+% Text-numbered items, no icon, and zero itemsep pack them into ~3.
 \setbeamertemplate{bibliography item}[text]
 \setbeamerfont{bibliography item}{size=\tiny}
 \setbeamerfont{bibliography entry author}{size=\tiny}
