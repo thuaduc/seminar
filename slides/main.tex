@@ -27,8 +27,7 @@
 %%   5-7      the three stages: plan (localisation), execute, refine
 %%   8        SWE-bench: what a resolve rate is          (splits = a spoken aside)
 %%   9        the numbers: the climb, told on the surveyed systems + Pro headroom
-%%   10       [PROVISIONAL COOL POINT] no scaffold wins twice -- pending a
-%%            dedicated brainstorm; may be replaced. Do not polish it yet.
+%%   10       what the climb hides: the difficulty-stratified trajectory
 %%   11       conclusion
 %%
 %% TWO SLIDES OF INTRODUCTION, BY DESIGN. Slide 2 says what the object of study IS
@@ -105,9 +104,8 @@
 % This colour code belonged to the cut critique half of the talk (the "how real is
 % the checker?" axis). The numbered slides no longer teach it, so it MUST NOT appear
 % on any of them -- an untaught colour code reads as decoration at best and as a
-% wrong hint at worst. It survives only on the backup refinement table, where the
-% speaker can gloss it live in Q&A ("blue = real checker, amber = made-up, grey =
-% none").
+% wrong hint at worst. It survives only on the backup refinement table, which
+% carries its own printed legend (oracle / proxy / self) so the table reads cold.
 %
 % Never use these in a block title: beamer sets block titles in white on TUM blue,
 % so \oracle there is blue-on-blue. Body text and table cells only.
@@ -212,7 +210,7 @@
   \vfill
 
   \begin{center}
-    \textbf{Prose in; a patch out.}
+    \textbf{Plain language in --- a code change out.}
   \end{center}
   \vfill
 \end{frame}
@@ -602,40 +600,84 @@
 
 
 % --------------------------------------------------------------- slide 10 ---
-% [PROVISIONAL COOL POINT -- pending a dedicated brainstorm; may be replaced.]
-% The scaffold grid: every row holds the model and the benchmark fixed and varies
-% only the scaffold -- the only structure that can attribute anything to the
-% scaffold at all.
-\begin{frame}{No scaffold wins twice}
+% THE INSIGHT SLIDE. The same climb as the previous slide, split by the difficulty
+% its human annotators assigned -- and the split says what the headline cannot:
+% easy rose x2.9 and is near ceiling, medium x6.2 and is where all recent movement
+% comes from, and HARD climbed to ~20 % by late 2024 and then STOPPED (last three
+% systems: 24.4, 24.4, 20.0). Even pooled, all nine systems together solve only
+% 42.2 % of hard instances.
+%
+% ADAPTED FROM THE REPORT'S OWN FIGURE (report/main.tex, fig:swebench-trajectory);
+% data coordinates copied verbatim, single source ganhotra2025difficulty (nine
+% leaderboard systems, Apr 2024 - Mar 2025). Two simplifications at slide scale:
+% the easy-union dashed line is dropped (one union line makes the point; two make
+% a puzzle), and the July'24 dip annotation is dropped -- the dip is a weaker
+% backbone resubmission, and the SPEAKER explains it if asked (script.md 10).
+% The curves connect submissions in date order; they are NOT a running frontier.
+\begin{frame}{What the climb hides}
   \small
   \begin{center}
-  \setlength{\tabcolsep}{6pt}
-  \begin{tabular}{@{}lcccc@{}}
-    \toprule
-    & \textbf{SWE-agent} & \textbf{OpenHands} & \textbf{mini-SWE-agent}
-      & \textbf{spread} \\
-    & {\scriptsize custom ACI} & {\scriptsize code-as-action}
-      & {\scriptsize \raisebox{0pt}[0pt][0pt]{$\sim$}100 lines of Python}
-      & \\
-    \midrule
-    GPT-5-mini        & 38.8 & 38.6 & \textbf{51.8} & $13.2$ \\
-    Qwen3 Coder 480B  & 36.6 & \textbf{54.0} & 40.2 & $17.4$ \\
-    DeepSeek R1       & \textbf{22.6} & 18.0 & 11.0 & $11.6$ \\
-    \bottomrule
-  \end{tabular}
+  \begin{tikzpicture}
+    \begin{axis}[
+      % 5.6cm, not 6.0: at 6.0 the frame is ~4pt overfull once the footnote and
+      % takeaway line are counted.
+      width=0.88\textwidth, height=5.6cm,
+      ymin=0, ymax=100, ytick={0,20,40,60,80,100},
+      xmin=2024.16, xmax=2025.30,
+      xtick={2024.25, 2024.5, 2024.75, 2025.0, 2025.25},
+      xticklabels={Apr\,'24, Jul\,'24, Oct\,'24, Jan\,'25, Apr\,'25},
+      ylabel={\% resolved (Verified)},
+      tick label style={font=\scriptsize},
+      ylabel style={font=\scriptsize},
+      grid=major, grid style={dashed, gray!25},
+      legend style={font=\tiny, at={(0.5,1.03)}, anchor=south,
+                    legend columns=4, draw=none, fill=none,
+                    /tikz/every even column/.append style={column sep=6pt}},
+      every axis plot/.append style={thick, mark size=1.6pt},
+    ]
+      \addplot[green!50!black, mark=*] coordinates {
+        (2024.251,27.3) (2024.467,47.9) (2024.571,36.6) (2024.918,70.6)
+        (2024.918,72.2) (2024.975,74.7) (2025.044,77.3) (2025.099,81.4)
+        (2025.203,80.4)
+      };
+      \addlegendentry{Easy, $<$15\,min}
+
+      \addplot[black, mark=square*] coordinates {
+        (2024.251,18.2) (2024.467,33.6) (2024.571,23.2) (2024.918,50.8)
+        (2024.918,55.0) (2024.975,57.2) (2025.044,64.6) (2025.099,63.4)
+        (2025.203,65.4)
+      };
+      \addlegendentry{Overall}
+
+      \addplot[blue!65!black, mark=triangle*] coordinates {
+        (2024.251,10.0) (2024.467,28.0) (2024.571,16.9) (2024.918,42.5)
+        (2024.918,49.4) (2024.975,50.6) (2025.044,62.1) (2025.099,56.7)
+        (2025.203,62.1)
+      };
+      \addlegendentry{Medium, 15\,min--1\,h}
+
+      \addplot[red!70!black, mark=diamond*] coordinates {
+        (2024.251,0.0) (2024.467,4.4) (2024.571,2.2) (2024.918,13.3)
+        (2024.918,13.3) (2024.975,20.0) (2025.044,24.4) (2025.099,24.4)
+        (2025.203,20.0)
+      };
+      \addlegendentry{Hard, $\geq$1\,h}
+
+      % Union over all nine systems (same source): instances solved by at least one.
+      \draw[dashed, gray!65] (axis cs:2024.16,42.22) -- (axis cs:2025.30,42.22);
+      \node[font=\tiny, text=gray!40!black, anchor=east, fill=white, inner sep=1pt]
+        at (axis cs:2025.28,46.5) {union of all nine systems: hard 42.2\,\%};
+    \end{axis}
+  \end{tikzpicture}
   \end{center}
-  {\footnotesize Resolve rate (pass@1) on SWE-bench Verified, April
-   2026~\cite{suri2026codescout,miniswegent2026}.
-   \textsc{aci} = agent--computer interface: the command set the model is handed.}
+  {\scriptsize Nine systems with published per-tier results; tiers $=$
+   annotator-estimated fix time ($n = 194/261/45$ of
+   500)~\cite{ganhotra2025difficulty,openai2024verified}.}
   \vfill
   \pause
-  \begin{itemize}
-    \item Same model, same benchmark: the scaffold alone is worth
-      \textbf{11--17 points}.
-    \item \alert{No scaffold wins twice} --- the best scaffold \emph{depends on the
-      model}.
-  \end{itemize}
-  \vfill
+  \begin{center}
+    \textbf{A system can gain ten points --- and solve no additional hard task.}
+  \end{center}
 \end{frame}
 
 
@@ -647,12 +689,11 @@
 
 
 % --------------------------------------------------------------- slide 11 ---
-% [PROVISIONAL until the cool point is settled.] Three lines, no builds, no
-% colour beyond the one blue number: the jump -> the loop -> the headroom. The
-% middle line re-states the definitional slide's punchline on purpose: it is the
-% one sentence the audience should leave with. The scaffold finding is SPOKEN
-% (script.md 11), not shown -- it belongs to the cool-point slide, which may
-% change.
+% Three bullets, one argument: the jump -> the loop -> where the climb stopped.
+% The middle line re-states the definitional slide's punchline on purpose: it is
+% the one sentence the audience should leave with. The third bullet is the
+% insight slide's finding, restated; the Pro ~60 % headroom number is SPOKEN
+% (script.md 11), not shown.
 \begin{frame}{Conclusion}
   \vfill
   \begin{itemize}
@@ -662,8 +703,8 @@
     \item \textbf{What changed is the loop} --- the system runs its own code,
       and reads what comes back.
       \bigskip
-    \item On the harder, held-out split: $\approx$60\,\%~\cite{scale2026pro}.
-      \emph{The climb is not over.}
+    \item The climb was mostly the easy strata --- \textbf{hard tasks stalled
+      near 20\,\%}~\cite{ganhotra2025difficulty}. \emph{The climb is not over.}
   \end{itemize}
   \vfill
 \end{frame}
@@ -675,49 +716,32 @@
 
 \appendix
 
-\begin{frame}[noframenumbering]{Backup: every refinement mechanism, sorted}
-  \scriptsize
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{@{}p{0.23\textwidth}p{0.07\textwidth}p{0.31\textwidth}p{0.29\textwidth}@{}}
-    \toprule
-    \textbf{Mechanism} & \textbf{Closed by} & \textbf{Signal}
-      & \textbf{Characteristic failure} \\
-    \midrule
-    Self-Refine~\cite{madaan2023selfrefine}
-      & \selfc{S} & Model critiques own output
-      & Plateaus; nothing can contradict the generator \\
-    Self-debug, no tests~\cite{chen2024selfdebug}
-      & \selfc{S} & Self-generated explanation
-      & Explains the bug as intended behaviour \\
-    Self-debug, with tests~\cite{chen2024selfdebug}
-      & \oracle{O}$+$\selfc{S} & Test verdict $+$ model diagnosis
-      & Bounded by test coverage \\
-    Reflexion~\cite{shinn2023reflexion}
-      & \oracle{O} or \proxy{P} & Task reward where one exists; on HumanEval,
-        self-generated tests
-      & Filed as external, but its code result rests on a proxy \\
-    SelfEvolve~\cite{jiang2023selfevolve}
-      & \oracle{O} & Interpreter errors, traces
-      & Silent (non-crashing) semantic bugs \\
-    D4C~\cite{xu2024d4c}
-      & \oracle{O} & Failing tests $+$ full function
-      & Plausible-but-incorrect patches \\
-    CRITIC~\cite{gou2024critic}
-      & \oracle{O} & Self-critique routed \emph{through} an external tool
-      & Needs a tool covering the error class \\
-    Agentless validate~\cite{xia2024agentless}
-      & \oracle{O}$+$\proxy{P} & Regression tests $+$ generated reproduction tests
-      & The proxy half inherits the model's misreading \\
-    Best-of-$N$ $+$ critic~\cite{openhands2025verified}
-      & \oracle{O}$+$\proxy{P} & Executed rollouts ranked by a trained critic
-      & Critic is a distilled proxy; cost scales with $N$ \\
-    \bottomrule
-  \end{tabular}
+% Holds the two numbers cut from the stage walk (slides 5 and 7), so they are one
+% keystroke away if anyone asks for the magnitudes rather than the directions.
+\begin{frame}[noframenumbering]{Backup: the numbers behind the stage walk}
+  \small
+  \begin{itemize}
+    \item \textbf{Planning, above the function boundary}~\cite{zhang2024autocoderover}.
+      AutoCodeRover adds spectrum-based fault localisation to rank \emph{functions}:
+      \textbf{$+3$ points} on SWE-bench Lite.
+      \medskip
+    \item \textbf{Planning, below it}~\cite{xu2024d4c}. D4C hands the model the failing
+      test and the \emph{whole function}, and gives it \emph{no line-level pointer at
+      all} --- beating systems given perfect localisation by \textbf{10\,\%}. Below the
+      function boundary, a pointer fights the model's infilling prior.
+      \medskip
+    \item \textbf{Refinement, with an explanation}~\cite{chen2024selfdebug}. Self-debug:
+      up to \textbf{$+12\,\%$} --- but only where a test suite exists to run against.
+      \medskip
+    \item \textbf{Refinement, with a trained critic}~\cite{openhands2025verified}.
+      OpenHands on Verified, best-of-$N$ reranked: 60.6 $\to$ \textbf{66.4\,\%}. (On the
+      deck: the numbers timeline.)
+  \end{itemize}
 \end{frame}
 
 % This figure is tall, not wide: constrain it by height, or it pushes the caption
 % through the footline.
-\begin{frame}[noframenumbering]{Backup: how plans are shaped}
+\begin{frame}[noframenumbering]{Backup: how are plans shaped?}
   \centering
   \resizebox{!}{0.62\textheight}{%
   \begin{tikzpicture}[
@@ -775,34 +799,96 @@
    function, $+23\,\%$ relative) --- and must invoke a model at every node.}
 \end{frame}
 
-% Holds the two numbers cut from the stage walk (slides 5 and 7), so they are one
-% keystroke away if anyone asks for the magnitudes rather than the directions.
-\begin{frame}[noframenumbering]{Backup: the numbers behind the stage walk}
+% The one place the legacy checker palette survives -- and the legend line under
+% the table is what makes it legible cold, since the numbered deck no longer
+% teaches the colour code.
+\begin{frame}[noframenumbering]{Backup: how do agents refine?}
+  \scriptsize
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}p{0.20\textwidth}p{0.13\textwidth}p{0.28\textwidth}p{0.28\textwidth}@{}}
+    \toprule
+    \textbf{Mechanism} & \textbf{Closed by} & \textbf{Signal}
+      & \textbf{Characteristic failure} \\
+    \midrule
+    Self-Refine~\cite{madaan2023selfrefine}
+      & \selfc{self} & Model critiques own output
+      & Plateaus; nothing can contradict the generator \\
+    Self-debug, no tests~\cite{chen2024selfdebug}
+      & \selfc{self} & Self-generated explanation
+      & Explains the bug as intended behaviour \\
+    Self-debug, with tests~\cite{chen2024selfdebug}
+      & \oracle{oracle}$+$\selfc{self} & Test verdict $+$ model diagnosis
+      & Bounded by test coverage \\
+    Reflexion~\cite{shinn2023reflexion}
+      & \oracle{oracle} / \proxy{proxy} & Task reward where one exists; on
+        HumanEval, self-generated tests
+      & Filed as external, but its code result rests on a proxy \\
+    SelfEvolve~\cite{jiang2023selfevolve}
+      & \oracle{oracle} & Interpreter errors, traces
+      & Silent (non-crashing) semantic bugs \\
+    D4C~\cite{xu2024d4c}
+      & \oracle{oracle} & Failing tests $+$ full function
+      & Plausible-but-incorrect patches \\
+    CRITIC~\cite{gou2024critic}
+      & \oracle{oracle} & Self-critique routed \emph{through} an external tool
+      & Needs a tool covering the error class \\
+    Agentless validate~\cite{xia2024agentless}
+      & \oracle{oracle}$+$\proxy{proxy} & Regression tests $+$ generated
+        reproduction tests
+      & The proxy half inherits the model's misreading \\
+    Best-of-$N$ $+$ critic~\cite{openhands2025verified}
+      & \oracle{oracle}$+$\proxy{proxy} & Executed rollouts ranked by a trained
+        critic
+      & Critic is a distilled proxy; cost scales with $N$ \\
+    \bottomrule
+  \end{tabular}
+  \medskip
+
+  {\tiny \oracle{oracle} $=$ a real checker --- it runs the code.\quad
+   \proxy{proxy} $=$ a made-up checker --- trained or generated.\quad
+   \selfc{self} $=$ the model judging itself.}
+\end{frame}
+
+% The scaffold grid -- was the numbered cool point until the stratified-trajectory
+% slide replaced it (2026-07-19). Every row holds the model and the benchmark
+% fixed and varies only the scaffold; strong Q&A material for "does the wrapper
+% matter?" and "which scaffold should we use?" (answer: depends on the model).
+\begin{frame}[noframenumbering]{Backup: does the scaffold matter?}
   \small
+  \begin{center}
+  \setlength{\tabcolsep}{6pt}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    & \textbf{SWE-agent} & \textbf{OpenHands} & \textbf{mini-SWE-agent}
+      & \textbf{spread} \\
+    & {\scriptsize custom ACI} & {\scriptsize code-as-action}
+      & {\scriptsize \raisebox{0pt}[0pt][0pt]{$\sim$}100 lines of Python}
+      & \\
+    \midrule
+    GPT-5-mini        & 38.8 & 38.6 & \textbf{51.8} & $13.2$ \\
+    Qwen3 Coder 480B  & 36.6 & \textbf{54.0} & 40.2 & $17.4$ \\
+    DeepSeek R1       & \textbf{22.6} & 18.0 & 11.0 & $11.6$ \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  {\footnotesize Resolve rate (pass@1) on SWE-bench Verified, April
+   2026~\cite{suri2026codescout,miniswegent2026}.
+   \textsc{aci} = agent--computer interface: the command set the model is handed.}
+  \vfill
   \begin{itemize}
-    \item \textbf{Planning, above the function boundary}~\cite{zhang2024autocoderover}.
-      AutoCodeRover adds spectrum-based fault localisation to rank \emph{functions}:
-      \oracle{$+3$ points} on SWE-bench Lite.
-      \medskip
-    \item \textbf{Planning, below it}~\cite{xu2024d4c}. D4C hands the model the failing
-      test and the \emph{whole function}, and gives it \emph{no line-level pointer at
-      all} --- beating systems given perfect localisation by \textbf{10\,\%}. Below the
-      function boundary, a pointer fights the model's infilling prior.
-      \medskip
-    \item \textbf{Refinement, with an explanation}~\cite{chen2024selfdebug}. Self-debug:
-      up to \proxy{$+12\,\%$} --- but only where a test suite exists to run against.
-      \medskip
-    \item \textbf{Refinement, with a trained critic}~\cite{openhands2025verified}.
-      OpenHands on Verified, best-of-$N$ reranked: 60.6 $\to$ \oracle{66.4\,\%}. (On the
-      deck: the numbers timeline.)
+    \item Same model, same benchmark: the scaffold alone is worth
+      \textbf{11--17 points}.
+    \item \alert{No scaffold wins twice} --- the best scaffold \emph{depends on the
+      model}.
   \end{itemize}
+  \vfill
 \end{frame}
 
 % Benchmark detail the numbered deck no longer carries -- all of it real, all of it
 % in the report, all of it Q&A ammunition. THE CHART NEEDS ITS CAVEATS SAID ALOUD:
 % "read only the floor", "Pro is harder as well as fresher", "the column mixes
 % harnesses". Use it only with time to caveat it properly.
-\begin{frame}[noframenumbering]{Backup: the benchmark, in more detail}
+\begin{frame}[noframenumbering]{Backup: is the 70\,\% real?}
   \small
   \begin{columns}[T]
     \begin{column}{0.52\textwidth}
@@ -859,7 +945,7 @@
   \end{columns}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Backup: context and cost}
+\begin{frame}[noframenumbering]{Backup: what does running an agent cost?}
   \small
   \begin{itemize}
     \item \textbf{Longer windows do not dissolve the bottleneck.} Retaining full

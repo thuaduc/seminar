@@ -5,16 +5,16 @@
 **The story:** in three years, AI that writes code went from completing the line you are
 typing to autonomously resolving real GitHub issues — under 2 % in 2023, over 70 % in 2026.
 This talk says what an agent *is*, walks the five-stage pipeline every surveyed system fills
-in, defines the one number everything is measured by, and then reads the climb off the systems
-the report actually surveys.
+in, defines the one number everything is measured by, reads the climb off the systems the
+report actually surveys — **and then shows what the climb hides: split by difficulty, the
+hard tier stalled near 20 % in late 2024 and has not moved.** That stratification is the
+talk's one insight, and everything before it exists so the audience can read it.
 
 > **RESTRUCTURED 2026-07-19.** The four-act "asymmetry of verification" version of this talk —
 > the law, the turn, the checker axis, Olausson, the jagged edge, the benchmark audit — was
 > deliberately cut. This script matches the new 11-slide linear deck. The old script is in git
-> history.
->
-> **Slide 10 (the scaffold grid) is a PROVISIONAL cool point** — a dedicated brainstorm is
-> pending and it may be replaced. Do not over-rehearse it, and expect this file to change.
+> history. The cool-point question is settled: slide 10 is the difficulty-stratified
+> trajectory; the scaffold grid moved to backup.
 
 ---
 
@@ -56,13 +56,13 @@ it is why the deck says "measured" and attaches a caveat.
 | 7   | Refinement: what to do with the signal                 | 0:40    |
 | 8   | What SWE-bench measures                                | 1:05    |
 | 9   | **Three years, in numbers** *(figure)*                 | 1:30    |
-| 10  | No scaffold wins twice *(provisional)*                 | 0:57    |
+| 10  | **What the climb hides** *(figure)*                    | 1:15    |
 | 11  | Conclusion                                             | 0:50    |
 
-**Estimated total: ~10:25 at 140 wpm** — with real delivery 10–15 % slower, budget
-**11:30–12:00**. **The deck is now well under the 20-minute ceiling.** That is deliberate
-slack: the pending cool-point brainstorm can spend it, and until then the spare minutes belong
-to slower delivery and Q&A. Do not pad the existing slides to fill time.
+**Estimated total: ~10:45 at 140 wpm** — with real delivery 10–15 % slower, budget
+**12:00–12:30**. **The deck is well under the 20-minute ceiling.** That is deliberate slack:
+it belongs to slower delivery, pauses on the two figure slides at the end, and Q&A. Do not
+pad the existing slides to fill time.
 
 ---
 
@@ -92,8 +92,8 @@ different things in three years, and only the third one needs any of this talk."
   again. **That** — not the code writing — is what "agentic" is doing. Land it flat; it is the
   sentence the conclusion comes back to.
 - **The task arrives wherever the developer already is.** A GitHub issue. A pull-request
-  comment. A Slack thread. A ticket. A line in the terminal. **Prose in; a patch out.**
-  *(The bold line is all the slide keeps — the list is yours.)*
+  comment. A Slack thread. A ticket. A line in the terminal. **Plain language in — a code
+  change out.** *(The bold line is all the slide keeps — the list is yours.)*
 - **The measurement aside — yours alone now, it is no longer on the slide:** measured, almost
   always, on one narrow slice of that — resolving GitHub issues. *That is how the field is
   measured, not what it is.* Six words now; the ruler slide cashes them.
@@ -277,22 +277,42 @@ freely; it is why every Pro number here says "measured" and carries a caveat.
 
 ## 9 → 10
 
-*"One more measurement — my favourite one. Hold the model still, hold the benchmark still, and
-change only the wrapper around the model. Somebody did."*
+*"That's the climb. Now let me split it by how hard the tasks actually are — because the
+average hides the only part that matters."*
 
-## 10 — No scaffold wins twice  *(provisional — pending the cool-point brainstorm)*
+## 10 — What the climb hides
 
-- Three scaffolds × three models. Every row holds the **model and the benchmark fixed** and
-  changes only the scaffold. That is the only way to attribute anything to the scaffold.
-- **First reading:** the scaffold alone is worth **11–17 points**. Same order as a model
-  generation.
-- **Second reading, the real one:** the winning column changes row by row. mini-SWE-agent — a
-  hundred lines of Python — is *best* for GPT-5-mini and *worst* for DeepSeek R1 (11.0 vs
-  SWE-agent's 22.6).
-- There is no "best scaffold." Scaffold and model **interact**. Naming a winner tells you
-  nothing until you name the model.
-- Caveat, unprompted: budgets are **not** normalised across scaffolds (dollar cap vs step cap).
-  This isolates the scaffold, not the budget.
+**The insight slide. This is what the whole talk has been setting up — give it its time.**
+Same benchmark as the last slide (Verified), nine leaderboard systems over one year, but now
+split by the difficulty the human annotators assigned: how long would a developer need —
+under 15 minutes, 15 minutes to an hour, over an hour.
+
+**Walk it top to bottom, with your hand:**
+
+- **The black line is what the leaderboard shows you** — the overall score, climbing steadily.
+  Every headline number you have ever seen about these agents is a point on a line like this.
+- **The green line — easy tasks, under 15 minutes.** From 27 to 80 %: a factor of 2.9. It is
+  near its ceiling now.
+- **The blue line — medium.** From 10 to 62 %: a factor of **6.2**. This is where almost all
+  recent movement in the overall score comes from.
+- **The red line — hard tasks, over an hour. Slow down here.** It climbed from zero to about
+  20 % by the end of 2024 — **and then it stopped.** The last three systems: 24.4, 24.4, 20.0.
+- **The dashed line — the union.** Pool *all nine systems*: some agent solves 95 % of easy and
+  84 % of medium instances — but only **42 % of hard ones**, and just 9 of the 25 hard
+  multi-file issues. More than half the hard tier defeats *every* system at once.
+- **The takeaway — read it off the slide, then be quiet for a beat:** *a system can gain ten
+  points — and solve no additional hard task.* The headline number is a poor proxy for
+  progress on exactly the tasks that matter most.
+
+**Caveats you own (say if asked, don't volunteer):**
+
+- The **July '24 dip** in every curve is SWE-agent resubmitted with a weaker backbone — the
+  curves connect submissions in date order; they are *not* a running frontier.
+- The hard tier is **n = 45**, so each hard instance is worth ~2.2 points — the stall is
+  three systems in a row, not one noisy point, but don't over-read decimals.
+- Per-instance results **stopped being published mid-2025**, so this series cannot be
+  extended to today — which is itself a finding about the field's reporting.
+- Easy + medium are 91 % of Verified — the composition is why the headline tracks them.
 
 ## 10 → 11
 
@@ -306,30 +326,46 @@ change only the wrapper around the model. Somebody did."*
   type; read it.
 - **Beat 2 — what changed.** Not just bigger models: **the loop.** The system plans, edits,
   runs its own code, reads the result, and tries again. *(This is the definitional slide's
-  sentence, coming home.)* And its wrapper matters as much as its model — you saw the grid:
-  11–17 points, no scaffold wins twice. *(Spoken only; the slide does not repeat the grid.)*
-- **Beat 3 — the outlook.** On the held-out, harder split, the measured leaders sit near 60 %.
-  **The climb is not over.**
+  sentence, coming home.)*
+- **Beat 3 — where the climb stopped.** It was mostly the easy strata: hard tasks stalled
+  near 20 % and have not moved. *(Spoken aside, if it fits: and on the harder, held-out Pro
+  split, even measured leaders sit near 60 %.)* **The climb is not over.**
 
 ---
 
 ## Q&A pocket
 
+The six backup slides mirror the talk's order and are titled by the question they answer:
+*the numbers behind the stage walk* → *how are plans shaped?* → *how do agents refine?* →
+*does the scaffold matter?* → *is the 70 % real?* → *what does running an agent cost?*
+
 - **"Is the 70 % real?"** — Partly. Verified is the most curated split; the same weights
-  measured on Pro land ≈20–35 points lower (backup chart — say its three caveats: read only the
-  floor, Pro is harder as well as fresher, the column mixes harnesses).
+  measured on Pro land ≈20–35 points lower (the *"is the 70 % real?"* backup — say its three
+  caveats: read only the floor, Pro is harder as well as fresher, the column mixes harnesses).
 - **"Can we trust Pro then?"** — OpenAI's July-2026 audit flagged ~30 % of its public tasks and
-  retracted its February recommendation of it (backup benchmark slide). Benchmarking moves
-  faster than auditing; quote measured numbers, attach caveats.
+  retracted its February recommendation of it (same backup slide). Benchmarking moves faster
+  than auditing; quote measured numbers, attach caveats.
 - **"Why no multi-agent systems?"** — Scope: single-agent, repository-level. Role-play
   frameworks (ChatDev, MetaGPT) are out; multi-agent *search* (SWE-Search) is treated as a
-  planning variant — backup plan-shapes slide.
+  planning variant — the *"how are plans shaped?"* backup.
+- **"Why did the hard tier stall — can't the models do it, or can't they find it?"** — Open,
+  and the report says so (§6.4): a capability ceiling and a shared retrieval blind spot look
+  identical from the union. The cheapest experiment to separate them — hand the agent the
+  gold file set so localisation is oracular — has, as far as the report is aware, never been
+  run.
+- **"Does the scaffold matter?"** — The backup of that name: same model, same benchmark, the
+  scaffold alone is worth 11–17 points — and no scaffold wins twice; the best one depends on
+  the model. (Budgets not normalised across scaffolds — it isolates the scaffold, not the
+  cost.)
 - **"Why is Agentless ahead of the agents in your chart?"** — Different backbones on that
   split; but its authors also ran the agentic baselines on the same GPT-4o backbone and the gap
   held. The honest claim: hard-coded narrowing beats searched-for narrowing on this
   distribution.
-- **"Do the agents refine or just retry?"** — Backup refinement table: every surveyed
-  mechanism, what closes its loop, and its characteristic failure.
-- **Cost questions** — backup context-and-cost slide: quadratic token growth in turns, resolve
-  rate decoupling from compute, and the METR RCT (developers 19 % slower while believing
-  20 % faster).
+- **"Do the agents refine or just retry?"** — The *"how do agents refine?"* backup: every
+  surveyed mechanism, what closes its loop, and its characteristic failure — with the
+  oracle / proxy / self legend printed under the table, so you can read the colours cold.
+- **Cost questions** — the *"what does running an agent cost?"* backup: quadratic token growth
+  in turns, resolve rate decoupling from compute, and the METR RCT (developers 19 % slower
+  while believing 20 % faster).
+- **Magnitude questions on the stage walk** (SBFL +3, D4C +10 %, self-debug +12 %, critic
+  60.6→66.4) — the first backup slide, *the numbers behind the stage walk*.
