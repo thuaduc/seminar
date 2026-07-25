@@ -1,0 +1,47 @@
+% Sources cited by the talk but not by the report. Kept separate so that
+% report/references.bib stays orphan-free (every entry there is cited by the
+% report, per the project's bibliography rule).
+%
+% The previous deck's entries are archived at archive/slides-extra.bib.
+%
+% All five entries below were verified against the publisher record before being
+% added (2026-07-24) -- not written from memory.
+%
+% Why these are here and not in the report: the report NAMES these datasets
+% (HumanEval, MBPP, Defects4J) without citing them, because it always cites them
+% through the systems evaluated on them. The talk defines the tasks directly, on
+% the "three code-generation tasks" frame, so it needs the primary sources.
+
+% ---------------------------------------------------------------------------
+% Task/benchmark definitions, cited on the task-formulation and metrics frames.
+
+% Also the source for the pass-at-k metric and its unbiased estimator, quoted on
+% the metrics frame. Author list is truncated: the paper has ~58 authors.
+% (Do not write that metric with an at-sign anywhere outside an entry: BibTeX
+% reads a bare at-sign as the start of a new entry, even inside a comment.)
+@article{chen2021humaneval,
+  title={Evaluating Large Language Models Trained on Code},
+  author={Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming and
+    Pinto, Henrique Ponde de Oliveira and Kaplan, Jared and others},
+  journal={arXiv preprint arXiv:2107.03374},
+  year={2021}
+}
+
+% REMOVED 2026-07-24 with the "Three code-generation tasks" frame, which was the
+% only place the talk named them: austin2021mbpp (MBPP, arXiv:2108.07732) and
+% just2014defects4j (Defects4J, ISSTA 2014, pp. 437-440). Both were verified
+% against the publisher record; recover from git history rather than retyping if
+% the function-level or program-repair formulations come back.
+%
+% chen2021humaneval stays: it is still cited on the metrics frame as the source
+% of the pass-at-k estimator, independently of HumanEval-the-dataset.
+
+% ---------------------------------------------------------------------------
+% REMOVED 2026-07-24: legoues2012genprog (GenProg, TSE 2012) and
+% jones2005tarantula (Tarantula, ASE 2005). They carried the "Classical" column
+% of the "Three eras" frame, which was cut; keeping them here would leave two
+% orphans, and this project's rule is that every entry is cited.
+%
+% Both were verified against the publisher record before being added, so if the
+% pre-LLM comparison is ever restored, recover them from git history rather than
+% retyping them.
