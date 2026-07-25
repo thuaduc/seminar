@@ -1026,8 +1026,8 @@
   Best published result per system.}
 
   \medskip
-  \scriptsize
-  \begin{tabular}{@{}L{0.22\textwidth}L{0.24\textwidth}rl@{}}
+  \small
+  \begin{tabular}{@{}L{0.30\textwidth}L{0.30\textwidth}rl@{}}
     \toprule
     \textbf{System} & \textbf{Backbone} & \textbf{\% Resolved} & \textbf{Date} \\
     \midrule
@@ -1042,7 +1042,7 @@
     Agentless-1.5
       & Claude 3.5 Sonnet & 50.8\,\% & 2024-12 \\
     Devin
-      & undisclosed       & 45.8\,\% & self-reported \\
+      & undisclosed       & 13.9\,\%$^*$ & 2024-03 \\
     Agentless-1.5
       & GPT-4o            & 38.8\,\% & 2024-10 \\
     AutoCodeRover
@@ -1051,6 +1051,11 @@
       & GPT-4o            & 23.2\,\% & 2024-07 \\
     \bottomrule
   \end{tabular}
+
+  \smallskip
+  {\scriptsize $^*$25\,\% of SWE-bench Full, not Verified.
+  Cognition stopped reporting benchmark numbers in
+  2024~\cite{cognition2024devin}.}
 \end{frame}
 
 % ============================================================================
