@@ -236,10 +236,10 @@ Hold on to that middle column from the refinement tables.
 
 Five systems side by side — how each handles orchestration, interface, planning, and refinement.
 
-## SWE-bench Verified leaderboard
+## Surveyed systems on SWE-bench Verified
 
-Latest numbers from the SWE-bench website, all run with mini-SWE-agent v2 for apples-to-apples comparison. 
-February 2026.
+Best published result for each of the five surveyed systems on Verified, pulled from swebench.com. 
+Devin is not listed — closed-source, self-reported, never reproduced.
 
 ## SWE-bench
 

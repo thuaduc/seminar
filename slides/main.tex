@@ -1021,24 +1021,34 @@
   \end{tabular}
 \end{frame}
 
-\begin{frame}{SWE-bench Verified leaderboard (mini-SWE-agent, Feb 2026)}
+\begin{frame}{Surveyed systems on SWE-bench Verified}
+  {\scriptsize Source: \url{https://swebench.com}, ``All agents'' view.
+  Best published result per system.}
+
+  \medskip
   \scriptsize
-  \begin{tabular}{@{}L{0.45\textwidth}rl@{}}
+  \begin{tabular}{@{}L{0.22\textwidth}L{0.24\textwidth}rl@{}}
     \toprule
-    \textbf{Model} & \textbf{\% Resolved} & \textbf{Avg.\ Cost} \\
+    \textbf{System} & \textbf{Backbone} & \textbf{\% Resolved} & \textbf{Date} \\
     \midrule
-    Claude 4.5 Opus (high reasoning)   & 76.8\,\% & \$0.75 \\
-    Gemini 3 Flash (high reasoning)    & 75.8\,\% & \$0.36 \\
-    MiniMax M2.5 (high reasoning)      & 75.8\,\% & \$0.07 \\
-    Claude Opus 4.6                    & 75.6\,\% & \$0.55 \\
-    GPT-5-2 Codex                      & 72.8\,\% & \$0.45 \\
-    GLM-5 (high reasoning)             & 72.8\,\% & \$0.53 \\
-    Claude 4.5 Sonnet (high reasoning) & 71.4\,\% & \$0.66 \\
-    Kimi K2.5 (high reasoning)         & 70.8\,\% & \$0.15 \\
-    DeepSeek V3.2 (high reasoning)     & 70.0\,\% & \$0.45 \\
-    Gemini 3 Pro                       & 69.6\,\% & \$0.96 \\
-    Claude 4.5 Haiku (high reasoning)  & 66.6\,\% & \$0.33 \\
-    GPT-5 Mini                         & 56.2\,\% & \$0.05 \\
+    SAGE (OpenHands)
+      & Claude 4.5 Opus   & 73.8\,\% & 2025-11 \\
+    OpenHands
+      & GPT-5             & 71.8\,\% & 2025-08 \\
+    SWE-agent
+      & Claude 4 Sonnet   & 66.6\,\% & 2025-05 \\
+    AutoCodeRover-v2.1
+      & Claude 3.5 Sonnet & 51.6\,\% & 2025-01 \\
+    Agentless-1.5
+      & Claude 3.5 Sonnet & 50.8\,\% & 2024-12 \\
+    Devin
+      & undisclosed       & 45.8\,\% & self-reported \\
+    Agentless-1.5
+      & GPT-4o            & 38.8\,\% & 2024-10 \\
+    AutoCodeRover
+      & GPT-4o            & 38.4\,\% & 2024-06 \\
+    SWE-agent
+      & GPT-4o            & 23.2\,\% & 2024-07 \\
     \bottomrule
   \end{tabular}
 \end{frame}
