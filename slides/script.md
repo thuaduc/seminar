@@ -10,8 +10,8 @@ Agentic: you state an intent, the system edits files, runs tests, reads failures
 
 ## Real progress
 
-April 2024, first agentic scaffolds: eighteen percent. M
-arch 2025: sixty-five. 
+April 2024, first agentic scaffolds: eighteen percent. 
+March 2025: sixty-five. 
 April 2026: eighty-one.
 
 Massive improvement in two years. 
@@ -36,6 +36,27 @@ Three properties.
 - Autonomous — it decides what to do next. 
 - Grounded in execution — it runs tests, reads errors, acts on them. 
 - Repository-scale — it works across files in a real codebase, not on isolated functions.
+
+## The agent loop
+
+Nearly all systems do the same five things.
+
+- Intent capture — the agent reads the issue or specification. 
+- This is where it decides what is being asked. 
+- It happens once, at the start, and is never revisited.
+
+- Planning — the agent decides where in the codebase to act. 
+- Which files, which functions. 
+- What is the problem and how to solve it.
+
+- Code generation — the agent writes or edits source code. 
+- A patch, a new function, a refactored block.
+
+- Execution — the agent runs what it wrote. 
+- Tests, linters, the program itself. 
+
+- Refinement — the agent reads the execution result and decides what to change. 
+- It either regenerates the patch or replans from an earlier point.
 
 ## How the loop is controlled
 
@@ -100,28 +121,6 @@ ACI ablation, same model, on Lite:
 
 Context is managed, not logged. 
 - Compress old observations, search the syntax tree coarse to fine, retrieve by embedding over a skeleton.
-
-## The agent loop
-
-Nearly all systems do the same five things.
-
-- Intent capture — the agent reads the issue or specification. 
-- This is where it decides what is being asked. 
-- It happens once, at the start, and is never revisited.
-
-- Planning — the agent decides where in the codebase to act. 
-- Which files, which functions. 
-- Not how to write the patch, but where the problem lives.
-
-- Code generation — the agent writes or edits source code. 
-- A patch, a new function, a refactored block.
-
-- Execution — the agent runs what it wrote. 
-- Tests, linters, the program itself. 
-- This is where the environment can say no.
-
-- Refinement — the agent reads the execution result and decides what to change. 
-- It either regenerates the patch or replans from an earlier point.
 
 ## Agentic techniques: per-stage
 
