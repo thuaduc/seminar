@@ -277,9 +277,6 @@
       % message -- and that needs no second row.
     \end{tikzpicture}
   \end{center}
-
-  \smallskip
-  Not a better model --- a model \textbf{inside a loop that can run things}.
 \end{frame}
 
 % -------------------------------------------------------------- frame 3 ---
@@ -538,8 +535,7 @@
 % The Frames column goes through \ref on purpose. It was hardcoded (8 / 9 / 11-17 /
 % 18-20) and correct only by luck: this deck renumbered five times on 2026-07-24.
 \begin{frame}{How the loop is controlled}
-  The five stages say \textbf{what} an agent does. Two more questions decide
-  \textbf{how}:
+  The five stages say \textbf{what} an agent does. Two aspects:
 
   \bigskip
   \begin{itemize}
@@ -551,7 +547,7 @@
   \end{itemize}
 
   \bigskip
-  These are not stages. They cut \emph{across} every stage --- they decide
+  They cut \emph{across} every stage --- they decide
   whether the loop runs at all, and what it has access to.
 \end{frame}
 
@@ -566,7 +562,7 @@
 % That numbering is the only thing tying frames 8-20 back to the taxonomy on
 % frame 7. If a title loses its number the map is broken and the taxonomy frame
 % goes back to being twelve unexplained terms.
-\begin{frame}{Orchestration: how control flows}
+\begin{frame}{Orchestration}
   \label{fr:orch}
   \begin{tabular}{@{}L{0.22\textwidth}L{0.46\textwidth}L{0.22\textwidth}@{}}
     \toprule
@@ -586,11 +582,6 @@
     \bottomrule
   \end{tabular}
 
-  \bigskip
-  \begin{block}{}
-    \centering This is the choice that decides \textbf{who is in control} --- the
-    model, or the scaffold.
-  \end{block}
 \end{frame}
 
 % -------------------------------------------------------------- frame 8 ---
@@ -692,8 +683,8 @@
 
 \begin{frame}{Plan: finding the right code}
   \label{fr:planning}
-  Planning here is barely about \emph{how} to write code. It is about
-  \textbf{where the code is} --- and what evidence would confirm that guess.
+  Planning is about \textbf{where the code is} --- which file, which function
+  --- and what evidence would confirm that guess.
 
   \bigskip
   \begin{itemize}
@@ -712,7 +703,7 @@
 % branching is not what makes it work, the value function is. Do not cut it to
 % save a line -- frame 15's "ranking is only as good as its signal" is the same
 % claim one level up, and it lands only if this one was made.
-\begin{frame}{Plan shape}
+\begin{frame}{Plan: shape}
   \begin{center}
   \begin{tikzpicture}[
     node distance=0.8cm and 1.2cm,
