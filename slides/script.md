@@ -15,9 +15,9 @@ March 2025: sixty-five.
 April 2026: eighty-one.
 
 Massive improvement in two years. 
-For most of that period the models were not trained to be agents. 
-The gain came from the model, but not only the model: 
-- the scaffolding — the system around it
+Two key contributions to this improvement:
+- model
+- agentic system
 
 
 ## What this talk shows
@@ -123,6 +123,7 @@ ACI ablation, same model, on Lite:
 Context is managed, not logged. 
 - Compress old observations, search the syntax tree coarse to fine, retrieve by embedding over a skeleton.
 
+
 ## Agentic techniques: per-stage
 
 Four dimensions. 
@@ -142,16 +143,28 @@ Add fault localisation to AutoCodeRover:
 - nothing changed about patch generation.
 
 ## Plan shape
+    
+How the agent organises its reasoning before writing code.
 
-- Chain of thought — one linear path, a wrong first step gets elaborated. 
-- Tree of thoughts — expand, score, prune. 
-- Graph of thoughts — merge branches, revisit states.
+- Chain of thought — the model thinks step by step in one straight line. 
+- If the first step is wrong, every step after it builds on that mistake. 
+- There is no way to go back.
 
-The scorer is the load-bearing part, not the branching. 
-What is a half-finished patch worth before any test has run?
+- Tree of thoughts — instead of one path, the model generates several options at each step. 
+- A scorer picks the most promising branch and drops the rest. 
+- This is where it starts to look like search.
 
-SWE-Search builds an LLM value function inside MCTS — twenty-three percent relative improvement. 
-But it calls a model at every node, which is why cheap pipelines still win.
+- Graph of thoughts — like a tree, but branches can merge back together. 
+- The model can revisit an earlier state or combine ideas from two different paths.
+
+The key question is: what scores each branch? 
+- A half-finished patch has not been tested yet. 
+- There is no compiler output, no test result — nothing external to judge it. 
+- So the scorer is usually the model itself, guessing whether the path looks right.
+
+SWE-Search builds an LLM value function inside Monte Carlo tree search — twenty-three percent relative improvement. 
+But it calls a model at every node, which makes it expensive. 
+That is why cheap fixed pipelines still win on cost.
 
 ## Plan: localisation
 
