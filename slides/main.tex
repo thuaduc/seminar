@@ -464,6 +464,47 @@
   \end{itemize}
 \end{frame}
 
+
+\begin{frame}{The agent loop}
+  \label{fr:stages}
+  \begin{center}
+    \begin{tikzpicture}[
+      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+                    font=\small, align=center, minimum height=0.8cm,
+                    minimum width=2.2cm},
+      note/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
+      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+      feedback/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
+      newtask/.style={-{Stealth[length=1.4mm]}, thin, dotted, TUMGray},
+      fblab/.style={font=\tiny, text=TUMOrange, align=center, inner sep=1.5pt,
+                    fill=white},
+      ntlab/.style={font=\tiny, text=TUMGrayDark, align=center, inner sep=1.5pt,
+                    fill=white},
+    ]
+      \node[stage] (intent) at (0,0)      {Intent\\capture};
+      \node[stage] (plan)   at (3.3,0)    {Planning};
+      \node[stage] (gen)    at (6.6,0)    {Code\\generation};
+      \node[stage] (exec)   at (6.6,-1.9) {Execution};
+      \node[stage] (refine) at (3.3,-1.9) {Refinement};
+
+      \draw[arr] (intent) -- (plan);
+      \draw[arr] (plan) -- (gen);
+      \draw[arr] (gen) -- (exec);
+      \draw[arr] (exec) -- (refine);
+
+      \draw[newtask] (refine.west) to[out=180, in=270]
+        node[ntlab, pos=0.55] {new task,\\not feedback} (intent.south);
+
+      \draw[feedback] (refine.north) -- node[fblab, right] {replan} (plan.south);
+      \draw[feedback] (refine.north east) -- node[fblab, pos=0.5] {regenerate}
+        (gen.south west);
+
+      \node[note, above=0.15cm of intent] {NL issue or spec};
+      \node[note, below=0.15cm of exec] {test failures, traces};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
 % -------------------------------------------------------------- frame 7 ---
 % THE TAXONOMY FRAME, requested explicitly. Four branches, two levels, exemplars
 % at the leaves. Content basis is the taxonomy figure cut from the report
@@ -598,46 +639,6 @@
   \end{tabular}
 \end{frame}
 
-
-\begin{frame}{The agent loop}
-  \label{fr:stages}
-  \begin{center}
-    \begin{tikzpicture}[
-      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
-                    font=\small, align=center, minimum height=0.8cm,
-                    minimum width=2.2cm},
-      note/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
-      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
-      feedback/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
-      newtask/.style={-{Stealth[length=1.4mm]}, thin, dotted, TUMGray},
-      fblab/.style={font=\tiny, text=TUMOrange, align=center, inner sep=1.5pt,
-                    fill=white},
-      ntlab/.style={font=\tiny, text=TUMGrayDark, align=center, inner sep=1.5pt,
-                    fill=white},
-    ]
-      \node[stage] (intent) at (0,0)      {Intent\\capture};
-      \node[stage] (plan)   at (3.3,0)    {Planning};
-      \node[stage] (gen)    at (6.6,0)    {Code\\generation};
-      \node[stage] (exec)   at (6.6,-1.9) {Execution};
-      \node[stage] (refine) at (3.3,-1.9) {Refinement};
-
-      \draw[arr] (intent) -- (plan);
-      \draw[arr] (plan) -- (gen);
-      \draw[arr] (gen) -- (exec);
-      \draw[arr] (exec) -- (refine);
-
-      \draw[newtask] (refine.west) to[out=180, in=270]
-        node[ntlab, pos=0.55] {new task,\\not feedback} (intent.south);
-
-      \draw[feedback] (refine.north) -- node[fblab, right] {replan} (plan.south);
-      \draw[feedback] (refine.north east) -- node[fblab, pos=0.5] {regenerate}
-        (gen.south west);
-
-      \node[note, above=0.15cm of intent] {NL issue or spec};
-      \node[note, below=0.15cm of exec] {test failures, traces};
-    \end{tikzpicture}
-  \end{center}
-\end{frame}
 
 % ------------------------------------------------------------- frame 10 ---
 % BRANCH 3, SIX FRAMES. Expanded 2026-07-24 from two: the planning/search half of
