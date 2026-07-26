@@ -12,12 +12,12 @@ Agentic: you state an intent, the system edits files, runs tests, reads failures
 
 April 2024, first agentic scaffolds: eighteen percent. 
 March 2025: sixty-five. 
-April 2026: eighty-one.
+April 2026: eighty-one. 
 
-Massive improvement in two years. 
-Two key contributions to this improvement:
-- model
-- agentic system
+Massive improvement in two years, and the models were not trained to be agents.
+
+Same weights, but SWE-bench Pro — a harder, held-out benchmark — knocks about thirty-five points off that number. 
+Real progress, not a solved problem.
 
 
 ## What this talk shows
@@ -27,7 +27,18 @@ Three questions.
 - How do we measure them? 
 - What are the challenges?
 
+## A few terms, up front
+
+Five words you'll keep hearing — quick definitions before I use them. 
+Scaffold: the non-model code around it — tools, prompts, control flow. 
+AST: a parsed structure of the code — classes, functions, calls, not raw text. 
+Harness: the environment a result is run and graded in. 
+Oracle: something outside the model that can check it — a test suite, a compiler, a human. 
+Critic: a separate model, trained to score candidate outputs.
+
 ## What is an agentic coding system?
+
+*Part one — how they work.* One loop, five stages. At every stage I ask the same question, and it is the spine of the whole talk: what can tell the model it is wrong?
 
 A system that takes a natural-language request and autonomously produces a working code change. 
 It navigates files, edits, executes, and revises without step-by-step human guidance.
@@ -61,7 +72,7 @@ Nearly all systems do the same five things.
 ## How the loop is controlled
 
 - Orchestration — who decides what happens next? 
-- The model, a hard-coded script, or a search algorithm?
+- The model, or a hard-coded script?
 
 - Interface and context — what can the agent see and do? 
 - A purpose-built command set, or a raw sandbox?
@@ -70,26 +81,36 @@ These are not stages.
 They cut across every stage — they decide whether the loop runs at all and what it has access to.
 
 
-## Orchestration: how control flows
+## Orchestration
 
-The agentic loop. 
-- The model observes the environment — file contents, test output, error traces. 
-- It reasons about what it sees. 
-- Then it acts through a tool call, and the cycle repeats until the model decides it is done.
+Two ways to run the same five stages — the difference is who picks the next step.
 
-The fixed pipeline. 
-- The developer writes the sequence in advance: step one, find the faulty file; step two, narrow to the function; step three, generate a patch; step four, run the tests. 
-- The model does each step, but it never decides what comes next — the scaffold does. 
-- If the patch fails the tests, the system does not go back and try again. 
-- It just moves on or stops.
+The agentic loop: the model decides. 
+The fixed pipeline: the scaffold decides. 
 
-Tree search. 
-- Multiple trajectories are explored in parallel, each scored and pruned by a value function. 
-- It is the agentic loop with backtracking — when a path looks bad, it abandons it and tries another.
+An example of each next.
 
-This is the choice that decides who is in control — the model, the scaffold, or a search algorithm.
+## Orchestration: agentic loop
 
-## What the agent sees and does
+The model is in control — this is the ReAct loop: Thought, Action, Observation. 
+- Thought — it reasons about what it sees. 
+- Action — it acts through a tool call. 
+- Observation — it reads back the result: file contents, test output, error traces. 
+- The cycle repeats until the model decides it is done.
+
+Read a file, run tests, edit — any tool, any order, as many rounds as it takes. 
+Nothing outside the model fixes the sequence.
+
+## Orchestration: fixed pipeline
+
+The scaffold is in control. 
+- The developer writes the sequence in advance: localise the faulty code, repair it, validate against the tests. 
+- The model fills each step, but it never decides what comes next — the scaffold does.
+
+On failure it stops or moves on — no arrow goes back, it does not retry. 
+Cheaper and predictable, but no recovery.
+
+## Interface and Context
 
 Two designs for how the agent interacts with the codebase. 
 - ACI — a purpose-built interface. 
@@ -99,43 +120,31 @@ Two designs for how the agent interacts with the codebase.
 - Code as action — the model writes Python or bash in a sandbox. 
 - Full shell access, no guardrails.
 
-The ACI ablation is the cleanest evidence that the scaffold matters. 
-- Same model, same benchmark. 
+Context is managed, not logged. 
+- Compress old observations, search the syntax tree coarse to fine, retrieve by embedding.
+
+## Interface: side by side
+
+Same four operations, side by side — viewing, editing, searching, executing.
+
+The ACI ablation is the cleanest evidence that the scaffold matters, not the model. 
+- Same model, same benchmark, on Lite. 
 - Drop the linter, minus three points. 
 - Raw search instead of summarised, minus six. 
 - Whole files instead of a window, minus five.
 
-Context is managed, not logged. 
-- Compress old observations, search the syntax tree coarse to fine, retrieve by embedding.
+That's the two axes.
 
-## Interface and context
+## Back to the five stages
 
-Two designs. 
-- ACI — a purpose-built interface with a windowed viewer, linter-guarded edits, summarised search. 
-- Code as action — the model writes Python or bash in a sandbox.
-
-ACI ablation, same model, on Lite: 
-- drop the linter, minus three points. 
-- Raw search instead of summarised, minus six. 
-- Whole files instead of a window, minus five. 
-- That is the interface alone.
-
-Context is managed, not logged. 
-- Compress old observations, search the syntax tree coarse to fine, retrieve by embedding over a skeleton.
-
-
-## Agentic techniques: per-stage
-
-Four dimensions. 
-- Planning — where to change the code. 
-- Generation — writing the patch, one candidate or many. 
-- Execution — running it and reading the result. 
-- Refinement — how the agent recovers from failures.
+Same diagram as before, one stage lit up. Orchestration and interface cut across all five — now we go through them one at a time, starting where the model has the least to lean on: planning.
 
 ## Plan: finding the right code
 
-Planning here is about where the code is, not how to write it. 
-You choose one function among tens of thousands, and the symbol often does not appear in the issue text.
+Planning makes two commitments: where to change the code, and what the change should be. 
+Where — you choose one function among tens of thousands, and the symbol often does not appear in the issue text. 
+What — a signature, an interface, an invariant, stated concretely enough that the repository can check it. 
+Both are guesses; the section is mostly about the first, because that is the one with no pre-training prior to lean on.
 
 Add fault localisation to AutoCodeRover: 
 - nineteen to twenty-two percent on Lite, 
@@ -144,7 +153,7 @@ Add fault localisation to AutoCodeRover:
 
 ## Plan shape
     
-How the agent organises its reasoning before writing code.
+How does the agent explore possible plans? Before any code is written, it searches the space of candidate plans — a spectrum from no search to explicit search.
 
 - Chain of thought — the model thinks step by step in one straight line. 
 - If the first step is wrong, every step after it builds on that mistake. 
@@ -157,7 +166,7 @@ How the agent organises its reasoning before writing code.
 - Graph of thoughts — like a tree, but branches can merge back together. 
 - The model can revisit an earlier state or combine ideas from two different paths.
 
-The key question is: what scores each branch? 
+The key question is what scores each branch? 
 - A half-finished patch has not been tested yet. 
 - There is no compiler output, no test result — nothing external to judge it. 
 - So the scorer is usually the model itself, guessing whether the path looks right.
@@ -166,39 +175,55 @@ SWE-Search builds an LLM value function inside Monte Carlo tree search — twent
 But it calls a model at every node, which makes it expensive. 
 That is why cheap fixed pipelines still win on cost.
 
+Hold that gap: the scorer is the model judging its own guess — same distribution, it cannot surprise itself. So what could ground it instead? We'll get there — first, what these shapes actually look like in real agents.
+
+## Plan: Chain of Thought
+
+This is the agentic loop from the orchestration part — observe, think, act — now in action. It is what every production agent really runs — SWE-agent, OpenHands — the ReAct loop: Thought, Action, Observation, repeated. 
+Thought: the CSV breaks on a comma, the writer probably isn't quoting. Action: search for write_row. Observation: found it. Read it, see the manual join, edit it. 
+One straight line. If that first thought is wrong — the bug is really in the reader — it just keeps going. What catches it is not a better shape; it is the tests failing later, which is a different loop.
+
+## Plan: Tree of Thoughts
+
+In practice no agent grows a tree of half-thoughts. The tree lives one level up: run the whole ReAct agent several times, get several complete patches, score them. 
+Run 1 passes two of three tests, run 2 all three, run 3 none — pick run 2. 
+The scorer is tests or a trained critic, not the model's own hunch. OpenHands goes from sixty to sixty-six percent with five runs reranked. SWE-Search wraps it in Monte Carlo tree search with a learned value — plus twenty-three percent, but a model call at every node.
+
+## Plan: Graph of Thoughts
+
+Merging and revisiting is demonstrated on puzzles — Game-of-24, sorting — almost never on repository bugs. 
+In real agents you see the two ends: one chain, or many chains scored. The closest thing to revisit is Reflexion — write a note after a failure, retry with it — a loose loop, not a graph. 
+Treat the graph as the conceptual top of the spectrum, not something running in production.
+
 ## Plan: localisation
 
-Hierarchical narrowing. 
+So how does it stop guessing? Point at real code. A tree lets the model try several guesses, but nothing has run yet — so it narrows the actual repository from broad to specific, and every step names code it can check. 
 - Agentless: files, then classes and functions, then edit locations. 
-- AutoCodeRover: AST-backed search APIs, coarse to fine. 
-- Specification sketches: interfaces, pseudocode, assertions.
+- AutoCodeRover: AST-backed search APIs, coarse to fine.
 
-The useful plans name concrete program elements you can check against the repository.
+The useful plans name concrete program elements you can check against the repository — not invented requirements.
 
-## Plan: the function boundary
+## Localisation: Agentless
 
-D4C reports that perfect fault localisation makes repair worse. 
-Both sides are right.
+Narrowing without letting the model wander — three fixed steps, coarse to fine. 
+- Rank files: from the repo layout and the issue, shortlist the files most likely involved. 
+- Rank elements: inside those files, narrow to specific classes and functions. 
+- Pin locations: inside those, the exact lines to edit.
 
-- Above the function boundary — which function among tens of thousands? 
-- Localisation is the task. 
-- Below it — ranking lines within a known-faulty function fights the model's infilling prior.
+Three prompts, no search, no tools. The narrowing is hard-coded into the scaffold — fixed, not discovered.
 
-D4C repairs whole functions: 
-- a hundred and eighty of four hundred and thirty-seven Defects4J bugs, 
-- beating systems with perfect localisation by ten percent.
+## Localisation: AutoCodeRover
 
-## Plan: the Agentless paradox
+Let the model navigate, but through the syntax tree — not by reading whole files. 
+- Search APIs: search_class, search_method, search_method_in_class. 
+- The agent calls them coarse to fine, pulling in just the code it needs. 
+- AST-backed: structured, cheaper context than dumping whole files into the prompt.
 
-- Plan-then-generate: inspectable, brittle. 
-- Interleaved: adaptive, hard to audit. 
-- Generate-then-refine: first output as hypothesis.
+The model chooses what to search — agentic, where Agentless is a fixed funnel.
 
-Agentless scores highest and plans least. 
-The claim is not that deliberation helps. 
-Grounding helps — Agentless gets it structurally, hard-coding the narrowing an agentic loop rediscovers each time.
+Grounding is planning's job, done blind — nothing has run yet. Generation is next, and it finally produces something execution can check.
 
-## Generate: writing the patch
+## Generate: turning it into code
 
 Three approaches. 
 - Infilling — the model completes a span given surrounding context, works well within a single function. 
@@ -218,7 +243,11 @@ Error traces tell the agent what failed and where.
 But the test suite is a sample of the intended behaviour, not the behaviour itself. 
 A patch can pass every test and still be wrong.
 
+Right or wrong, that verdict is what refinement works with next.
+
 ## Refinement: iterative self-repair
+
+Execution just returned a verdict. What the agent does with it is the last dimension, and where it varies the most.
 
 Three mechanisms that close the loop by re-reading the model's own output. 
 - Self-Refine: the model critiques itself — plateaus. 
@@ -249,12 +278,9 @@ Hold on to that middle column from the refinement tables.
 
 Five systems side by side — how each handles orchestration, interface, planning, and refinement.
 
-## Surveyed systems on SWE-bench Verified
-
-Best published result for each of the five surveyed systems on Verified, pulled from swebench.com. 
-Devin is not listed — closed-source, self-reported, never reproduced.
-
 ## SWE-bench
+
+*Part two — how we measure.* Every number ahead scores one thing: did the final patch pass. Watch what that leaves invisible — plan quality, localisation, the work of refinement.
 
 Merged pull requests that close an issue and touch the test suite. 
 Twenty-three hundred from twelve Python repositories.
@@ -273,24 +299,47 @@ Resolve rate: both sets pass, first patch.
 
 Not string similarity — two correct patches may share no token.
 
-- Functional correctness: run it. 
-- Pass-at-k: probability one of k samples passes. 
-- Resolve rate: pass-at-one at repository scale. 
-- Cost: dollars, calls, wall-clock — decouples from resolve rate.
+- Functional correctness: does it run and pass? The only thing that counts. 
+- Pass-at-k: give it k tries, count it solved if any one passes. 
+- Resolve rate: pass-at-one on a whole repo — solved on the first try. 
+- Cost: dollars, calls, time — a higher score can cost much more.
 
 Every metric scores the end of the pipeline. 
 Plan quality, localisation, refinement efficiency: unmeasured.
 
 ## The five splits
 
-- Full: everything. 
-- Lite: three hundred easy single-file, some leak the fix. 
-- Verified: five hundred human-screened. 
-- Multilingual: nine languages. 
-- Pro: long-horizon, multi-file, held-out repos.
+Roughly two years of splits, oldest to newest. 
+- Full, Oct 2023: everything. 
+- Lite, Mar 2024: three hundred easy single-file, some leak the fix. 
+- Verified, Aug 2024: five hundred human-screened. 
+- Multilingual, May 2025: nine languages. 
+- Pro, Sep 2025: long-horizon, multi-file, held-out repos.
 
 Verified is the most curated, not the hardest. 
 Resolve rates are not comparable across splits.
+
+## How hard is each task?
+
+Before the graph, one thing about the tiers.
+When OpenAI built Verified, annotators estimated the fix time for each issue —
+how long a skilled engineer would need to write the patch.
+Three buckets: under fifteen minutes easy, up to an hour medium, over an hour hard.
+
+Two things to hold onto.
+It is estimated human effort — a proxy for how involved the change is, not a
+clock on the agent.
+And there were really four bins; one-to-four hours and four-plus collapse into
+hard, because only three issues exceed four hours.
+
+## The headline climbs
+
+Same nine systems, April 24 to March 25 — four lines, all one dataset.
+Blue is the overall rate: eighteen to sixty-five percent, SWE-agent to Augment.
+Orange easy, green medium, red hard.
+Watch the spread: easy is near eighty, hard is stuck at twenty.
+The overall line is just the tier-weighted average — it hides that gap.
+Next slide reads off the exact splits.
 
 ## What the numbers show
 
@@ -298,27 +347,16 @@ Nine systems on Verified, split by annotator difficulty.
 
 Easy and medium are ninety-one percent of Verified. 
 The headline mostly reports sub-hour work.
+And this split is not just one blog — Epoch AI's 2025 analysis finds the same
+composition independently, thirty-nine easy, fifty-two medium, nine hard.
+The pie is that mix; the table is how each tier resolves.
 
 The hard tier stalled near twenty percent. 
 A system can gain ten overall points while solving no new hard task.
 
-Union column: 
-- easy and medium are an ensembling problem — different systems solve different instances. 
-- Hard is not — over half defeats every system at once.
-
-## Can we trust the numbers?
-
-Verified against Pro, same model weights. 
-Everything drops twenty points or more.
-
-Read the floor, not the spread — only Opus 4.5 uses the standardised harness. 
-The others self-report. 
-The one measured most strictly drops furthest.
-
-- Contamination: OpenAI dropped Verified in 2026 — models reproduce gold patches from the task ID alone.
-- Reward hacking: closing test leaks cuts scores by double digits.
-
 ## Challenge: intent capture
+
+*Part three — where it breaks.* The spine already told us where to look: the weak stages are the two with no oracle, nothing that can tell the model it is wrong. This is the first of them.
 
 The stage with no feedback edge. 
 The agent guesses and commits.
@@ -345,66 +383,49 @@ Nobody has run the experiment.
 - If the hard tier moves, retrieval. 
 - If not, only training will.
 
-## Challenge: generation
+## Challenge: cost and verification
 
-Two correct patches can share no token. 
-Two near-identical patches can differ in meaning. 
-You cannot score generated code against a reference.
+Two problems on the same axis. 
 
 The dominant quality lever — sample N and rerank — multiplies cost directly. 
-Resolve rate decouples from compute. 
-The practical frontier is accuracy per dollar.
-
-## Challenge: execution
-
-The test suite is a sample of the intended behaviour, not the behaviour itself. 
-A patch can pass every test and still be wrong.
-
-- Reward hacking: closing test-leakage channels cuts scores by double digits. 
-- Agents partly learn the grader. 
-- Contamination: models reproduce gold patches from the task ID alone. 
-- OpenAI dropped Verified in 2026.
+Resolve rate decouples from compute: spending more does not reorder the systems.
 
 "All tests pass" smuggles ground truth into the stopping condition. 
-Any self-critique inside that loop looks more effective than it is.
+The suite is a sample of intended behaviour, not the behaviour itself — a patch can pass every test and still be wrong.
 
-## Challenge: refinement
+Self-critique alone can only reorganise what the model already believes — measured going negative.
 
-Real fixes touch several files over long sequences of steps.
-
-Another repair round drops fast in value. 
-- At fixed budget, often worse than a fresh sample. 
-- Self-critique alone can only reorganise what the model believes — measured going negative.
-
-Pro shows the same ceiling as the hard tier. 
-Long-horizon, multi-file tasks do not yield to more iterations.
-
-Iterative repair and best-of-N are the same lever — extra inference to cut variance. 
-The question is which allocation buys more correctness.
-
-## What it adds up to
-
-Everything that works puts something outside the model in a position to contradict it.
-
-- Oracle — test runner, compiler, human — can surprise the model. 
-- Refinement against it reliably improves code.
-
-- Proxy — trained critic, generated test — carries information but cannot surprise. 
-- No new information enters the loop.
-
-- Self-critique — same distribution as the generator. 
-- Can only reorganise what the model believes. 
-- Measured going negative on reasoning tasks.
-
-The two weak stages are the two with no oracle. 
-- Intent — the oracle is a human, nobody asks. 
-- Validation — the oracle is a test suite a wrong patch can pass.
+The practical frontier is not peak accuracy. 
+It is accuracy per dollar, bounded by an oracle a wrong patch can still pass.
 
 ## Takeaways
 
 - Agentic beats one-shot because it can run things, not because it reasons more.
-- One number does not suffice. Difficulty, contamination and cost belong next to any resolve rate.
+- All three challenges are the same gap: nothing outside the model catches a wrong guess about intent, a wrong file, or a wrong fix.
 - Verification is the bottleneck. In a randomised trial, developers were nineteen percent slower with AI tools — believing they were twenty percent faster.
 
 From autocomplete to autonomous issue resolution: crossed. 
-From impressive to dependable: a question about oracles.
+From impressive to dependable: still an open question.
+
+## Backup: can we trust the numbers?
+
+Verified against Pro, same model weights. 
+Everything drops twenty points or more.
+
+Read the floor, not the spread — only Opus 4.5 uses the standardised harness. 
+The others self-report. 
+The one measured most strictly drops furthest.
+
+- Contamination: OpenAI dropped Verified in 2026 — models reproduce gold patches from the task ID alone.
+- Reward hacking: closing test leaks cuts scores by double digits.
+
+If someone asks why the tier table is from 2025: because that is where the
+stratified data stops. By early 2026 the frontier had saturated Verified near
+eighty percent and OpenAI retired it as contaminated, so nobody re-ran the
+per-difficulty breakdown. The 2025 snapshot is the last clean read; the live
+frontier signal has moved to Pro.
+
+## Backup: surveyed systems on SWE-bench Verified
+
+Best published result for each of the five surveyed systems on Verified, pulled from swebench.com. 
+Devin's number is on a different, easier split, self-reported, and never reproduced — read it as context, not a comparison.

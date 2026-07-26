@@ -1,135 +1,20 @@
-%% Agentic AI for Code Generation --- seminar talk (20 minutes).
-%%
-%% Companion deck to report/main.tex. Uses the same TUM template (tum/ is shared
-%% via TEXINPUTS, see latexmkrc) and the same references.bib, so citations here
-%% and in the report cannot drift apart.
-%%
-%%   latexmk  ->  build/main.pdf
-%%
-%% What to SAY lives in script.md, not in this file -- the deck is the visual, the
-%% script is the delivery, and they are edited for different reasons.
-%%
-%% ---------------------------------------------------------------------------
-%% THE SHAPE. Rebuilt 2026-07-24 against supervisor feedback on the previous
-%% deck (archived at archive/main.tex). Reordered later the same day.
-%%
-%% FRAME NUMBERS BELOW ARE THE ONES IN THE FOOTLINE (Page N/24). The three
-%% section pages are NOT numbered, so frame numbers and PDF page numbers differ.
-%%
-%%   1        title
-%%   2-4      MOTIVATION            how coding changed, what that bought (on ONE
-%%                                  split), and the roadmap
-%%   5-13     HOW DO THE SYSTEMS WORK?
-%%              5-6   the pipeline, and why the problem is hard
-%%              7     the taxonomy of four technique branches
-%%              8     interface and context (branches 1-2)
-%%              9     the five systems
-%%              10-11 planning, then search (branch 3, split)
-%%              12-13 refinement mechanisms, three rows each (branch 4, split)
-%%   14-18    HOW WE MEASURE        the benchmark, metrics, datasets, results,
-%%                                  validity
-%%   19-23    CHALLENGES + SYNTHESIS
-%%              19-21 one open challenge per frame: long-horizon change,
-%%                    specification ambiguity, cost
-%%              22-23 what it adds up to, takeaways
-%%
-%% BRANCHES 3 AND 4 GET TWO FRAMES EACH (split 2026-07-24, for word count). Both
-%% splits moved words off the slide WITHOUT adding spoken content -- script.md
-%% already said the sentences that used to be printed. If either is re-merged, the
-%% prose has to come off the slide some other way, not back onto it.
-%%
-%% THREE SECTIONS, THREE ITEMS ON THE ROADMAP (frame 4). Keep them in one-to-one
-%% correspondence; see the comment on that frame.
-%%
-%% FRAME 3 IS ONE TRENDLINE PLUS ONE CONTRAST POINT. The climb is SWE-bench
-%% VERIFIED throughout -- nine dated submissions on one ruler, which is what makes
-%% the trend readable. A single SWE-bench PRO marker sits at the last date, same
-%% model weights, to show that the headline is ruler-dependent.
-%%
-%% The Pro marker is legitimate where a Pro *curve* would not be: it is one point
-%% at one date, labelled with its own split, against the same model. There is
-%% exactly one dated Pro figure in the project, so a Pro series would be invented
-%% data. An earlier version of this frame instead paired a 2023 *Full* number with
-%% a 2026 Verified one as a table row and flagged the mismatch in a footnote; that
-%% is a cross-split comparison dressed as a trend, and it made the single most
-%% important number in the talk unreadable. The difference is that a trend implies
-%% the points are commensurable and a labelled contrast point does not.
-%%
-%% SWE-BENCH IS DEFINED ON FRAME 15, in the measurement part. That is LATER than
-%% every frame that quotes a resolve rate -- 3 (Verified), and 8, 9, 10 and 21
-%% (Lite). Two forward pointers carry the reader, and they are load-bearing:
-%% frame 3 says where the benchmark gets defined, and frame 9's footnote says its
-%% percentages are on Lite and points at frame 15. If you move the definition
-%% again, move both pointers with it -- percentages arriving before their
-%% benchmark is exactly the "big jump to the dataset" the supervisor objected to
-%% in the previous deck.
-%%
-%% "Three code-generation tasks" (function synthesis / issue resolution / program
-%% repair, typed by input and output) was CUT on 2026-07-24. It was the frame that
-%% answered the supervisor's "it is not clear what the code generation tasks are",
-%% so the only remaining task definition is frame 15, which covers repository
-%% issue resolution alone. Recoverable from git history; the mbpp and defects4j
-%% bib entries went with it.
-%%
-%% SURVEY FIRST, ARGUMENT LAST. The report's thesis (refinement is a control loop
-%% only where a signal the generator did not produce can contradict it; oracle /
-%% proxy / self-critique) is NOT the spine here. Frames 2-21 are a neutral
-%% landscape. The loop-closure columns on frames 12-13 are presented as plain fact
-%% and left uninterpreted on purpose; frame 22 is where they are read. Do not
-%% move the interpretation earlier without also rewriting frame 4.
-%%
-%% STYLE: MINIMAL. Few words per frame, no custom colours. Colour comes only from
-%% the TUM palette in tum/tumcolors.sty -- there is no \definecolor in this file.
-%%
-%% FIGURES. Frames 2, 3 and 5 carry them: a delegation strip, the Verified
-%% trajectory chart, and the pipeline loop (lifted from report/main.tex:151-195 and
-%% recoloured to the TUM palette). The remaining stand-ins are still plain text,
-%% each with a FIGURE CANDIDATE comment naming the report line range it would come
-%% from -- the taxonomy tree (frame 7), plan shapes (frame 10) and the Verified-Pro
-%% gap (frame 18). Adding one is a deliberate pass, not a drive-by: a figure buys
-%% attention and costs the sentences you would say over it, so script.md needs
-%% re-timing every time one lands. Each of the three so far was paid for by cutting
-%% the prose it made redundant, on its own frame.
-%%
-%% EVERY PERCENTAGE CARRIES ITS SPLIT (Lite / Verified / Full / Pro). Comparing
-%% across splits is the specific error the report spends pages warning about.
-%% ---------------------------------------------------------------------------
-
-% 'sectionpage' is a CLASS option, not a \TUMbeamersetup key (tum/tumbeamer.cls:82
-% declares it under /TUM/beamer, and cls:86 defaults it to true). It is what turns
-% each \section into a divider frame -- the three of them are the structural fix
-% for "the logic between some slides is not smooth". Passing it to
-% \TUMbeamersetup instead is a hard pgfkeys error.
 \documentclass[
   aspectratio=169,
-  font=times,      % match the report's body font
+  font=times,
   sectionpage=true,
 ]{tumbeamer}
 
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{tabularx}
 
-% Figures on frames 2, 3 and 5. Same packages/versions as report/main.tex:32-35,
-% so a figure can be moved between the two documents without a rewrite. The TUM
-% palette (TUMBlue, TUMOrange, TUMGray*) comes from tum/tumcolors.sty, which the
-% class already loads -- there is no \definecolor anywhere in this deck, and there
-% should not be one: staying inside the template palette is what keeps two hand-
-% drawn figures from looking like they came from a different talk.
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 
-% Fixed-width table columns, ragged rather than justified. Slide tables are narrow
-% enough that justification opens rivers and throws Underfull \hbox warnings on
-% almost every cell; ragged-right is both quieter and easier to read at distance.
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
-% 'TUM more space' buys back the vertical room the default frametitle spends, and
-% the headline strip is dropped on content pages: the TUM logo is already in the
-% background, so a "Technical University of Munich" banner on every slide is a
-% redundant use of the scarcest resource on a slide. The footline stays, for the
-% page numbers.
 \TUMbeamersetup{
   title page   = TUM tower,
   content page = TUM more space,
@@ -137,12 +22,6 @@
   footline on  = {content page},
 }
 
-% The class installs the head/footline per frame style, so at \begin{document}
-% beamer still sees the *empty* templates of the title page and computes a text
-% height spanning the whole slide. Content then runs silently under the footline
-% -- with no Overfull warning, because beamer does not know the footline is there.
-% Install the content-page footline once up front and recompute, so \textheight
-% actually excludes it and TeX warns when a frame is genuinely too full.
 \makeatletter
 \AtBeginDocument{%
   \setbeamertemplate{footline}[TUM infoline]%
@@ -150,14 +29,6 @@
 }
 \makeatother
 
-% REPEATED PAGE NUMBERS. tumbeamer.cls:706-712 emits each section page as a
-% [noframenumbering] frame, so it keeps the PREVIOUS frame's number and the
-% footline prints e.g. "Page 4/30" twice. A reviewer read that as a bug, which is
-% fair. Rather than numbering the dividers (which would make the roadmap's frame
-% references wrong), give them no footline at all: a divider needs no page number.
-%
-% The redefinition is the class's own hook body with the frame wrapped in a group
-% so the blank footline template does not leak into the following content frames.
 \makeatletter
 \AtBeginSection[]{%
   \TUMframestyle{section page}%
@@ -169,48 +40,18 @@
 }
 \makeatother
 
-% Pull the bullet indent in: the default eats horizontal room that the sparse
-% frames here would rather spend on the text. Do NOT add vertical space to list
-% bodies -- several frames sit within a line or two of the footline, and a global
-% \vspace in the itemize template pushes them under it.
 \setlength{\leftmargini}{1.4em}
 
-% The title has to do two jobs on its own: name the object of study (autonomous
-% coding agents, not code generation in general) and say what kind of talk this
-% is (a seminar survey, not a system paper). "Seminar Report" alone did neither.
 \title{Autonomous Coding Agents}
-% Two lines, not one: the TUM tower drawing occupies the right third of the title
-% page, and a single-line subtitle of this length runs into it.
 \subtitle{A seminar survey of agentic AI \\ for code generation --- SS26}
 \author{Thua Duc Nguyen}
 \institute{Supervisor: Derui Zhu \\ \theDepartmentName, \theUniversityName}
 \date{\today}
 
-
 \begin{document}
 
 \maketitle
 
-
-% ============================================================================
-% MOTIVATION. Three frames: how the practice changed, how much it actually
-% bought, and what this talk will show.
-% ============================================================================
-
-% -------------------------------------------------------------- frame 2 ---
-% THE PROGRESSION FRAME. Primarily about the HUMAN's role -- what shrinks across
-% the rows is what the developer has to review.
-%
-% This frame ALSO now carries the traditional-vs-agentic comparison on its own. A
-% separate "Three eras" frame used to do that on the machinery axis (how a
-% candidate is found, what checks it, how it fails); it was cut on 2026-07-24.
-% The one line of it that had to survive is the closing sentence below: one-shot
-% output is unchecked. That sentence is the seed of the entire argument on the
-% "What it adds up to" frame, so do not delete it as redundant -- nothing else in
-% the deck says it before frame 22.
-%
-% archive/main.tex and git history hold the cut frame if the comparison ever
-% needs restoring; the genprog and tarantula bib entries went with it.
 \begin{frame}{How we write code has changed}
   \small
   \begin{tabular}{@{}L{0.14\textwidth}L{0.26\textwidth}L{0.24\textwidth}L{0.24\textwidth}@{}}
@@ -240,16 +81,6 @@
   \end{tabular}
 
   \medskip
-  % THE DELEGATION STRIP. This replaces the prose line "The unit being delegated
-  % grows: a line -> a function -> a whole issue", which said exactly this and
-  % said it worse -- the growth is a size relation, and a size relation should be
-  % drawn. The second row is the table's "What the human does" column restated as
-  % what the human READS, which is the quantity that actually shrinks.
-  %
-  % No \resizebox here, deliberately. The picture is ~10cm wide against a 16:9
-  % textwidth, so it already fits, and scaling it would push \small and
-  % \scriptsize off the sizes every other frame uses. If a later edit widens it,
-  % fix the widths rather than adding a resizebox.
   \begin{center}
     \begin{tikzpicture}[
       unit/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=2pt,
@@ -258,7 +89,6 @@
       era/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
       reads/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
     ]
-      % Box width IS the message: the delegated unit grows left to right.
       \node[unit, minimum width=15mm] (u1) at (0,0)   {a line};
       \node[unit, minimum width=27mm] (u2) at (3.1,0) {a function};
       \node[unit, minimum width=41mm] (u3) at (7.1,0) {a whole issue};
@@ -270,50 +100,12 @@
       \node[era, below=0.8mm of u2] (e2) {2022--};
       \node[era, below=0.8mm of u3] (e3) {2024--};
 
-      % The "reads every line / all of it / the outcome" row was REMOVED: it
-      % restated the table's own "Human" column two inches above it, and a
-      % reviewer flagged it as the one place the deck says the same thing twice.
-      % What the strip uniquely shows is the SIZE relation -- box width is the
-      % message -- and that needs no second row.
     \end{tikzpicture}
   \end{center}
 \end{frame}
 
-% -------------------------------------------------------------- frame 3 ---
-% ONE RULER. Every point here is SWE-bench Verified -- the same 500 tasks, the
-% same grading harness -- so the climb can be read directly. This is the only
-% frame in the deck that shows a trend, and putting a Full number next to a
-% Verified one would make it unreadable.
-%
-% NOTE: the deck no longer states the "resolve rates are not comparable across
-% splits" rule anywhere on a slide -- frame 16 was trimmed to a bare table and lost
-% the line that said it. The discipline is still enforced everywhere (every
-% percentage carries its split) but it is now unstated, so the speaker has to say
-% it. See script.md's first delivery note.
-%
-% The pre-agent baseline genuinely CANNOT go on this axis: Verified did not
-% exist until August 2024, so there is no Verified number for 2023. It stays in
-% the footnote, labelled with its own split, and must not be drawn as a fourth
-% row -- that would be the cross-split comparison this deck refuses to make.
-%
-% ONE SERIES ONLY. A hard-tier line was drawn here and removed: this frame is the
-% overall climb, and the difficulty split belongs to "What the numbers show",
-% which reveals it. Do not add a second series back without demoting that frame's
-% hard-tier bullet to a callback -- with both as reveals the stall is stated twice,
-% and with both as callbacks it is never actually argued.
 \begin{frame}{Real progress}
   \medskip
-  % Nine dated leaderboard submissions from one re-analysis
-  % [ganhotra2025difficulty], so every point is on the same ruler -- the two dates
-  % this frame used to quote as table rows (Apr 2024, Mar 2025) are the first and
-  % last of those nine. Nine points rather than three because the shape of the
-  % climb is the content, and three points cannot show a shape.
-  %
-  % No legend: one series needs none, and dropping it buys ~12pt of frame height.
-  % Axis block adapted from report/main.tex:475-497.
-  % BLOCKER FIX (reviewer, 2026-07-24): the y-axis was unreadable for twelve
-  % frames. One line, six seconds, and the chart becomes interpretable on sight.
-  % Do not delete it to buy height -- it is the cheapest fix in the deck.
   \textbf{SWE-bench Verified} progress --- 500 human-screened GitHub issues, graded by the project's own tests.
 
   \smallskip
@@ -321,11 +113,11 @@
     \begin{tikzpicture}
       \begin{axis}[
         width=0.88\textwidth,
-        height=3.8cm,   % max that keeps the footnote on the slide; 4.0cm overflows
+        height=3.8cm,
         ylabel={\% resolved},
-        ymin=0, ymax=104,   % headroom so the Opus label clears the top rule
+        ymin=0, ymax=104,
         ytick={0,20,40,60,80,100},
-        xmin=2024.10, xmax=2026.66,   % room right of Apr'26 for the gap label
+        xmin=2024.10, xmax=2026.66,
         xtick={2024.25, 2024.75, 2025.25, 2025.75, 2026.25},
         xticklabels={Apr'24, Oct'24, Apr'25, Oct'25, Apr'26},
         xticklabel style={font=\scriptsize},
@@ -343,42 +135,18 @@
         (2025.203,65.4)
       };
 
-      % SOLID, NOT DASHED. It was dashed to mark "different source", and a
-      % reviewer read it as a projection -- i.e. that 80.9 % was a forecast, the
-      % opposite of the point. Dashed means "predicted" to almost everyone. The
-      % source difference is now stated in the caption instead, where it cannot be
-      % misread as a line style.
       \addplot[TUMBlue, mark=*] coordinates {
         (2025.203,65.4) (2026.25,80.9)
       };
 
-      % SWE-bench Pro: TWO POINTS, and those are every dated Pro figure the
-      % project has. Pro was released Sept 2025 (arXiv:2509.16941), so nothing
-      % earlier exists -- do not extend this series to the left.
-      %   2025.71  ~23 %  top systems at release        (report/main.tex:1210)
-      %   2026.25  45.9 % Opus 4.5, standardised harness (report/main.tex:1214)
-      %
-      % THE TWO ARE NOT THE SAME SYSTEM: the first is top-of-leaderboard at
-      % release, the second is one named model. That is the same footing as the
-      % blue series, which is also nine different submissions in date order rather
-      % than a frontier -- so the two series are consistent, and the caption says
-      % "date order" for both rather than claiming either is a frontier.
-      %
-      % Do NOT add the other three models' April 2026 Pro numbers: the report is
-      % emphatic that the per-model spread must not be read (they self-report with
-      % custom scaffolding), and four markers at one x invites exactly that.
       \addplot[TUMOrange, mark=square*] coordinates {
         (2025.71,23.0) (2026.25,45.9)
       };
 
-      % The gap is the point, so draw it rather than leaving it to be eyeballed.
       \draw[<->, TUMGrayDark, thin] (axis cs:2026.25,79.0)
         -- node[font=\tiny, text=TUMGrayDark, right=1pt, inner sep=1pt]
            {$-35$\,pp} (axis cs:2026.25,47.8);
 
-      % Only the three systems the script names aloud get labels. The July 2024
-      % dip was annotated here too and collided with the SWE-agent label, so its
-      % explanation moved to the footnote below instead.
       \node[font=\scriptsize, text=TUMBlue, anchor=north west, inner sep=2pt]
         at (axis cs:2024.16,16.0) {SWE-agent 18.2\,\%};
       \node[font=\scriptsize, text=TUMBlue, anchor=south east, inner sep=2pt]
@@ -387,20 +155,13 @@
         at (axis cs:2026.36,83.0) {Opus 4.5, Verified 80.9\,\%};
       \node[font=\scriptsize, text=TUMOrange, anchor=north east, inner sep=2pt]
         at (axis cs:2026.36,43.5) {Pro 45.9\,\%};
-      \node[font=\scriptsize, text=TUMOrange, anchor=north west, inner sep=2pt]
-        at (axis cs:2025.30,25.5) {Pro at release $\sim$23\,\%};
+      \node[font=\scriptsize, text=TUMOrange, anchor=north east, inner sep=2pt]
+        at (axis cs:2025.60,19.0) {Pro at release $\sim$23\,\%};
       \end{axis}
     \end{tikzpicture}
 
-    % THE COLOUR KEY IS A CAPTION, NOT PROSE. It sat in the body footnote below
-    % and was read as prose and skipped; directly under the axes it is read as
-    % part of the figure. A bare beamer frame has no \caption, so this line
-    % inside the center block is the caption slot -- keep it here, and keep it to
-    % one line.
     {\footnotesize Blue: \textbf{SWE-bench Verified.} \quad Orange:
-    \textbf{SWE-bench Pro} --- harder, released Sept~2025. \quad Dated
-    submissions in date order, not a running frontier; the 2026 points come from a
-    different source than the nine before them.}
+    \textbf{SWE-bench Pro} --- harder, released Sept~2025.}
   \end{center}
 
   \smallskip
@@ -408,27 +169,14 @@
   not trained to be agents.
 
   \smallskip
-  % The colour key moved up into the caption under the axes. What is left here is
-  % only the forward promise: frame 3 quotes percentages twelve frames before
-  % frame 15 defines what they are measured on, and that gap is deliberate only as
-  % long as the slide admits to it.
   {\footnotesize More on SWE-bench later.}
 \end{frame}
 
-% -------------------------------------------------------------- frame 4 ---
-% THE ROADMAP FRAME. This exists because the supervisor said "I do not really
-% understand what you want to show". Each part is phrased as the QUESTION it
-% answers, not as a noun phrase, so the audience is told what they will be able
-% to do afterwards.
-%
-% THREE ITEMS, THREE \section COMMANDS, THREE SECTION PAGES. They must stay in
-% one-to-one correspondence: the section pages are what the audience uses to
-% locate themselves against this list, and a fourth question here with no section
-% page behind it is worse than no list at all.
 \begin{frame}{What this talk shows}
   \begin{enumerate}
     \item \textbf{How do the agentic AI systems work?} \\
-      {\small Five stages, why it is hard, a taxonomy, five systems.}
+      {\small Five stages, orchestration and interface, planning and
+      refinement, five systems.}
       \medskip
     \item \textbf{How do we measure them?} \\
       {\small The benchmark, the metrics, what the numbers hide.}
@@ -438,12 +186,27 @@
   \end{enumerate}
 \end{frame}
 
+\begin{frame}{A few terms, up front}
+  \begin{tabular}{@{}L{0.20\textwidth}L{0.72\textwidth}@{}}
+    \toprule
+    \textbf{Scaffold} & The non-model code around it --- tools, prompts,
+      control flow \\
+    \addlinespace
+    \textbf{AST} & A parsed structure of the code --- classes, functions,
+      calls, not raw text \\
+    \addlinespace
+    \textbf{Harness} & The environment a result is run and graded in \\
+    \addlinespace
+    \textbf{Oracle} & Something outside the model that can check it --- a
+      test suite, a compiler, a human \\
+    \addlinespace
+    \textbf{Critic} & A separate model, trained to score candidate outputs \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
 
-% ============================================================================
 \section{How do the agentic AI systems work?}
-% ============================================================================
 
-% -------------------------------------------------------------- frame 5 ---
 \begin{frame}{What is an agentic coding system?}
   A system that, given a natural-language request, \textbf{autonomously} produces a
   working code change --- navigating files, editing, executing, and revising
@@ -460,7 +223,6 @@
       not on isolated functions
   \end{itemize}
 \end{frame}
-
 
 \begin{frame}{The agent loop}
   \label{fr:stages}
@@ -502,45 +264,13 @@
   \end{center}
 \end{frame}
 
-% -------------------------------------------------------------- frame 7 ---
-% THE TAXONOMY FRAME, requested explicitly. Four branches, two levels, exemplars
-% at the leaves. Content basis is the taxonomy figure cut from the report
-% (git show 1224e61:report/main.tex, lines 152-237), reorganised by technique
-% family -- the original was organised by report section, which is a document
-% artefact and means nothing to an audience.
-% FIGURE CANDIDATE (later pass): a forest tree of the same four branches.
-%
-% THE TWO GROUP ROWS ARE THE POINT OF THIS TABLE, not decoration. Without them the
-% "Acts on" column reads as four stage ranges of differing width, so branch 1 looks
-% like merely a WIDER range instead of a different kind of thing -- which is exactly
-% the question the frame got asked ("why are 1 and 2 not in the five stages?").
-%
-% Branches 1-2 cannot sit at a stage:
-%   - Orchestration IS the loop's shape. Frame 8 describes each option purely in
-%     terms of which stages run and how often ("Generate -> Execute -> Refine over
-%     and over"; "Plan -> Generate -> Execute once, always"), so it is a statement
-%     about sequences of stages, not a position in one.
-%   - Interface & context is what the agent can see, which it needs at several
-%     stages at once.
-% Read against the pipeline's own question -- at each stage, what can tell the
-% model it is wrong? -- these two are PRECONDITIONS for 3 and 4: orchestration
-% decides whether execution feedback ever re-enters, interface decides whether the
-% agent can see the repository at all. Do not flatten the grouping back out.
-%
-% Branch 2's "Acts on" used to read "Generate + Execute", which its own frame
-% contradicts: frame 9 closes on AST search [zhang2024autocoderover] and skeleton +
-% retrieval [xia2024agentless], both LOCALISATION, i.e. Plan-stage work -- and both
-% citations reappear on the localisation frame. It is cross-cutting, not stage-local.
-%
-% The Frames column goes through \ref on purpose. It was hardcoded (8 / 9 / 11-17 /
-% 18-20) and correct only by luck: this deck renumbered five times on 2026-07-24.
 \begin{frame}{How the loop is controlled}
   The five stages say \textbf{what} an agent does. Two aspects:
 
   \bigskip
   \begin{itemize}
     \item \textbf{Orchestration} --- who decides what happens next?
-      The model, a hard-coded script, or a search algorithm?
+      The model, or a hard-coded script?
       \medskip
     \item \textbf{Interface \& context} --- what can the agent see and do?
       A purpose-built command set, or a raw sandbox?
@@ -551,41 +281,89 @@
   whether the loop runs at all, and what it has access to.
 \end{frame}
 
-
-% -------------------------------------------------------------- frame 8 ---
-% BRANCH 1 GETS ITS OWN FRAME. It used to exist only as the "Architecture" column
-% of the systems table, which meant the taxonomy promised four branches and
-% delivered three -- and the one silently demoted was the one that decides what
-% every other branch is attached to.
-%
-% EVERY BRANCH FRAME FROM HERE IS NUMBERED IN ITS TITLE ("1.", "2.", "3.", "4.").
-% That numbering is the only thing tying frames 8-20 back to the taxonomy on
-% frame 7. If a title loses its number the map is broken and the taxonomy frame
-% goes back to being twelve unexplained terms.
 \begin{frame}{Orchestration}
   \label{fr:orch}
   \begin{tabular}{@{}L{0.22\textwidth}L{0.46\textwidth}L{0.22\textwidth}@{}}
     \toprule
     \textbf{Mode} & \textbf{How it works} & \textbf{Who decides} \\
     \midrule
-    Agentic loop~\cite{yao2023react}
-      & Observe, think, act via tool call; repeat
+    Agentic loop \newline {\scriptsize ReAct}~\cite{yao2023react}
+      & Thought, Action, Observation; repeat
       & The model \\
     \addlinespace
     Fixed pipeline~\cite{xia2024agentless}
       & Localise, repair, validate; no loop
       & The scaffold \\
-    \addlinespace
-    Tree search~\cite{antoniades2024swesearch}
-      & Search over trajectories, scored and pruned
-      & A value function \\
     \bottomrule
   \end{tabular}
 
+  \bigskip
+  Two commons ways to run the same five stages.
 \end{frame}
 
-% -------------------------------------------------------------- frame 8 ---
-\begin{frame}{Interface and context}
+\begin{frame}{Orchestration: agentic loop}
+  \label{fr:orch-agentic}
+  {\small The \textbf{model} is in control: the \textbf{ReAct} loop --- Thought,
+  Action, Observation --- repeated until \emph{the model} decides it is
+  done~\cite{yao2023react}.}
+
+  \bigskip
+  \begin{center}
+    \begin{tikzpicture}[
+      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+                    font=\small, align=center, minimum height=0.8cm,
+                    minimum width=2.4cm},
+      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+      loop/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
+    ]
+      \node[stage] (think) at (0,0)   {Thought};
+      \node[stage] (act)   at (3.2,0) {Action\\{\scriptsize tool call}};
+      \node[stage] (obs)   at (6.4,0) {Observation};
+      \draw[arr] (think) -- (act);
+      \draw[arr] (act) -- (obs);
+      \draw[loop] (obs.south) to[out=270, in=270]
+        node[below=1mm, font=\scriptsize, text=TUMOrange]
+        {model loops until done} (think.south);
+    \end{tikzpicture}
+  \end{center}
+
+  \bigskip
+  {\small Read a file, run tests, edit --- \textbf{any tool, any order,} as many
+  rounds as it takes. Nothing outside the model fixes the sequence.}
+\end{frame}
+
+\begin{frame}{Orchestration: fixed pipeline}
+  \label{fr:orch-fixed}
+  {\small The \textbf{scaffold} is in control: the developer fixes the steps in
+  advance; the model only fills each one~\cite{xia2024agentless}.}
+
+  \bigskip
+  \begin{center}
+    \begin{tikzpicture}[
+      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+                    font=\small, align=center, minimum height=0.8cm,
+                    minimum width=2.2cm},
+      stop/.style={draw=TUMGray, fill=none, rounded corners=3pt,
+                   font=\small, align=center, minimum height=0.8cm,
+                   minimum width=1.6cm, text=TUMGrayDark},
+      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+    ]
+      \node[stage] (loc) at (0,0)   {Localise};
+      \node[stage] (rep) at (2.9,0) {Repair};
+      \node[stage] (val) at (5.8,0) {Validate};
+      \node[stop]  (end) at (8.5,0) {stop};
+      \draw[arr] (loc) -- (rep);
+      \draw[arr] (rep) -- (val);
+      \draw[arr] (val) -- (end);
+    \end{tikzpicture}
+  \end{center}
+
+  \bigskip
+  {\small On failure it stops or moves on --- \textbf{no arrow goes back.}
+  Cheaper and predictable, but no recovery.}
+\end{frame}
+
+\begin{frame}{Interface and Context}
 
   What the agent sees and does.
 
@@ -608,10 +386,7 @@
   \end{itemize}
 \end{frame}
 
-% Branch 1+2. The ACI ablation numbers are the load-bearing content: they are the
-% cleanest evidence in the whole survey that the SCAFFOLD, not the model, moves
-% the number. All three are on Lite and the slide says so.
-\begin{frame}{Interface and context}
+\begin{frame}{Interface: side by side}
   \label{fr:iface}
   \small
   \begin{tabular}{@{}L{0.14\textwidth}L{0.40\textwidth}L{0.36\textwidth}@{}}
@@ -641,70 +416,58 @@
   \end{tabular}
 \end{frame}
 
+\begin{frame}{Back to the five stages}
+  \begin{center}
+  \scalebox{0.9}{%
+    \begin{tikzpicture}[
+      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+                    font=\small, align=center, minimum height=0.8cm,
+                    minimum width=2.2cm},
+      here/.style={draw=TUMOrange, fill=TUMOrange!15, rounded corners=3pt,
+                   font=\small\bfseries, align=center, minimum height=0.8cm,
+                   minimum width=2.2cm},
+      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+    ]
+      \node[stage] (intent) at (0,0)    {Intent\\capture};
+      \node[here]  (plan)   at (2.6,0)  {Planning};
+      \node[stage] (gen)    at (5.2,0)  {Code\\generation};
+      \node[stage] (exec)   at (7.8,0)  {Execution};
+      \node[stage] (refine) at (10.4,0) {Refinement};
+      \draw[arr] (intent) -- (plan);
+      \draw[arr] (plan) -- (gen);
+      \draw[arr] (gen) -- (exec);
+      \draw[arr] (exec) -- (refine);
+    \end{tikzpicture}}
+  \end{center}
 
-% ------------------------------------------------------------- frame 10 ---
-% BRANCH 3, SIX FRAMES. Expanded 2026-07-24 from two: the planning/search half of
-% the report (its section 4) is the densest argument in the survey and two frames
-% could only assert its conclusions. The split follows the report's own seams:
-%
-%   10  the framing claim (where, not how) + the evidence for it
-%   11  plan shape, and why the scorer is the load-bearing part
-%   12  localisation plans -- what a grounded plan names
-%   13  the function boundary, which reconciles D4C with localisation-first
-%   14  search: why voting over programs needs an equivalence relation
-%   15  what ranking buys, and the Agentless paradox that closes the branch
-%
-% Each frame stays under ~60 words. The detail lives in the NUMBER of frames, not
-% in denser slides -- reverting to two frames means dropping content, not
-% recompressing it.
-\begin{frame}{Agentic techniques: per-stage}
-  \begin{tabular}{@{}L{0.22\textwidth}L{0.38\textwidth}L{0.30\textwidth}@{}}
-    \toprule
-    \textbf{Stage} & \textbf{Techniques} & \textbf{Key question} \\
-    \midrule
-    \textbf{Planning} \newline {\small where to change}
-      & Localisation plans; plan shape; plan--generate coupling
-      & Which file, which function? \\
-    \addlinespace
-    \textbf{Generation} \newline {\small writing the patch}
-      & Infilling; diff generation; sample-$N$-and-rank
-      & One candidate or many? \\
-    \addlinespace
-    \textbf{Execution} \newline {\small running the code}
-      & Test suite; linter; error traces
-      & Did the environment say no? \\
-    \addlinespace
-    \textbf{Refinement} \newline {\small how it recovers}
-      & Execution signals; iterative repair; rerank by a critic
-      & Retry or restart? \\
-    \bottomrule
-  \end{tabular}
+  \bigskip
+  Orchestration and interface cut \emph{across} all five. Now, stage by
+  stage --- starting where the model has the \textbf{least to lean on}.
 \end{frame}
 
 \begin{frame}{Plan: finding the right code}
   \label{fr:planning}
-  Planning is about \textbf{where the code is} --- which file, which function
-  --- and what evidence would confirm that guess.
+  Two commitments: \textbf{where} to change the code --- which file, which
+  function --- and \textbf{what} the change should be. Both are guesses; both
+  need evidence that could confirm them.
 
   \bigskip
   \begin{itemize}
-    \item Among tens of thousands of functions, \textbf{which one?}
+    \item \textbf{Where} --- among tens of thousands of functions, which one?
+      The relevant symbol often does not appear in the issue text.
       \medskip
-    \item The relevant symbol often \textbf{does not appear in the issue text}.
+    \item \textbf{What} --- a signature, an interface, an invariant to hold ---
+      stated concretely enough that the repository can check it.
   \end{itemize}
 
 \end{frame}
 
-% ------------------------------------------------------------- frame 11 ---
-% FIGURE CANDIDATE (later pass): report/main.tex lines 674-727 (CoT/ToT/GoT node
-% diagram). Until then the three shapes are three bullets.
-%
-% The last bullet is the one that matters and the one usually skipped: ToT's
-% branching is not what makes it work, the value function is. Do not cut it to
-% save a line -- frame 15's "ranking is only as good as its signal" is the same
-% claim one level up, and it lands only if this one was made.
 \begin{frame}{Plan: shape}
+  \label{fr:shape}
+  {\large How does the agent \textbf{explore possible plans}?}
+
   \begin{center}
+  \scalebox{0.85}{%
   \begin{tikzpicture}[
     node distance=0.8cm and 1.2cm,
     thought/.style={draw, circle, fill=TUMBlue!10, minimum size=0.6cm,
@@ -719,28 +482,28 @@
     \draw[arr] (c1) -- (c2);
     \draw[arr] (c2) -- (c3);
     \draw[arr] (c3) -- (c4);
-    \node[above=0.15cm of c2, font=\scriptsize\bfseries] {Chain of
-      Thought~\cite{wei2022chain}};
+    \node[above=0.15cm of c2, font=\scriptsize\bfseries]
+      {Chain of Thought~\cite{wei2022chain}};
 
-    \node[thought, below=2cm of c1] (t1) {A};
-    \node[thought, below right=0.5cm and 0.4cm of t1] (t2a) {B$_1$};
-    \node[thought, below left=0.5cm and 0.4cm of t1] (t2b) {B$_2$};
-    \node[thought, below right=0.5cm and 0.2cm of t2a] (t3a) {C$_1$};
+    \node[thought, below=1.15cm of c1] (t1) {A};
+    \node[thought, below right=0.5cm and 0.4cm of t1] (t2a) {B$_2$};
+    \node[thought, below left=0.5cm and 0.4cm of t1] (t2b) {B$_1$};
+    \node[thought, below right=0.5cm and 0.2cm of t2a] (t3a) {C$_3$};
     \node[thought, below left=0.5cm and 0.2cm of t2a] (t3b) {C$_2$};
-    \node[thought, below=0.7cm of t2b] (t3c) {C$_3$};
+    \node[thought, below=0.7cm of t2b] (t3c) {C$_1$};
     \draw[arr] (t1) -- (t2a);
     \draw[arr] (t1) -- (t2b);
     \draw[arr] (t2a) -- (t3a);
     \draw[arr] (t2a) -- (t3b);
     \draw[arr] (t2b) -- (t3c);
     \draw[backarr, TUMOrange] (t3b) to[bend right=45] (t2a);
-    \node[above=0.15cm of t1, font=\scriptsize\bfseries] {Tree of
-      Thoughts~\cite{yao2023tree}};
+    \node[above=0.15cm of t1, font=\scriptsize\bfseries]
+      {Tree of Thoughts~\cite{yao2023tree}};
     \node[below=0.05cm of t3b, font=\tiny, text=TUMOrange] {backtrack};
 
-    \node[thought, below=2cm of c3] (g1) {A};
-    \node[thought, below right=0.5cm and 0.4cm of g1] (g2a) {B$_1$};
-    \node[thought, below left=0.5cm and 0.4cm of g1] (g2b) {B$_2$};
+    \node[thought, below=1.15cm of c3] (g1) {A};
+    \node[thought, below right=0.5cm and 0.4cm of g1] (g2a) {B$_2$};
+    \node[thought, below left=0.5cm and 0.4cm of g1] (g2b) {B$_1$};
     \node[thought, below=1.2cm of g1] (g3) {C};
     \node[thought, below=0.7cm of g3] (g4) {D};
     \draw[arr] (g1) -- (g2a);
@@ -750,16 +513,115 @@
     \draw[arr] (g3) to[bend right=40]
       node[midway, right, font=\tiny, inner sep=1pt] {revisit} (g2a);
     \draw[arr] (g3) -- (g4);
-    \node[above=0.15cm of g1, font=\scriptsize\bfseries] {Graph of
-      Thoughts~\cite{besta2024graph}};
+    \node[above=0.15cm of g1, font=\scriptsize\bfseries]
+      {Graph of Thoughts~\cite{besta2024graph}};
     \node[left=0.05cm of g3, font=\tiny, text=TUMBlue] {merge};
-  \end{tikzpicture}
+  \end{tikzpicture}}
   \end{center}
+
+  \vspace{-2mm}
+  \centering
+  {\small \textbf{But which path is right?} Nothing has run yet, so the model is
+  only \textbf{guessing}.}
 \end{frame}
 
-% ------------------------------------------------------------- frame 12 ---
+\begin{frame}{Plan: Chain of Thought}
+  \label{fr:bu-cot}
+  {\small The \textbf{agentic loop} from orchestration (Slide~\ref{fr:orch}) ---
+  \emph{observe, think, act} --- in action. What every production agent runs
+  (SWE-agent, OpenHands): \textbf{Thought} $\rightarrow$ \textbf{Action}
+  $\rightarrow$ \textbf{Observation}, repeated~\cite{yao2023react}.}
+
+  \medskip
+  \begin{center}
+  \begin{tikzpicture}
+    \node[draw, rounded corners, fill=TUMBlue!5, inner sep=8pt,
+          text width=0.9\textwidth, font=\ttfamily\scriptsize, align=left]
+      {\textcolor{TUMBlue}{Thought:} CSV breaks on a comma --- the writer isn't quoting.\\
+       \textcolor{TUMOrange}{Action:} search\_dir 'def write\_row'\\
+       \textcolor{black!55}{Obs:} export/csv.py:41\\[2pt]
+       \textcolor{TUMBlue}{Thought:} let me read it.\\
+       \textcolor{TUMOrange}{Action:} open export/csv.py:41\\
+       \textcolor{black!55}{Obs:} def write\_row(cols): return ','.join(cols)\\[2pt]
+       \textcolor{TUMBlue}{Thought:} manual join, no quoting --- use csv.writer.\\
+       \textcolor{TUMOrange}{Action:} edit export/csv.py:41 \ldots};
+  \end{tikzpicture}
+  \end{center}
+
+  \medskip
+  {\small One straight line. If the first \textbf{Thought} is wrong --- the bug's
+  really in the \emph{reader} --- it just keeps going. Only \textbf{execution
+  feedback later} catches it, not the shape.}
+\end{frame}
+
+\begin{frame}{Plan: Tree of Thoughts}
+  \label{fr:bu-tot}
+  {\small No agent grows a tree of half-thoughts. The tree is \textbf{whole ReAct
+  runs}, sampled and \textbf{scored by something outside the model}.}
+
+  \medskip
+  \begin{center}
+  \begin{tikzpicture}[
+    b/.style={draw, rounded corners, fill=TUMBlue!10, font=\scriptsize,
+              inner sep=4pt},
+    arr/.style={-{Stealth[length=1.4mm]}, semithick},
+  ]
+    \node[b] (i) at (0,0) {issue};
+    \node[b] (r1) at (3.5,1.3)  {ReAct run 1 $\rightarrow$ patch A};
+    \node[b] (r2) at (3.5,0)    {ReAct run 2 $\rightarrow$ patch B};
+    \node[b] (r3) at (3.5,-1.3) {ReAct run 3 $\rightarrow$ patch C};
+    \node[b] (s1) at (7.7,1.3)  {tests 2/3};
+    \node[b, fill=TUMBlue!30] (s2) at (7.7,0) {tests 3/3 --- \textbf{pick}};
+    \node[b] (s3) at (7.7,-1.3) {tests 0/3};
+    \draw[arr] (i) -- (r1);
+    \draw[arr] (i) -- (r2);
+    \draw[arr] (i) -- (r3);
+    \draw[arr] (r1) -- (s1);
+    \draw[arr] (r2) -- (s2);
+    \draw[arr] (r3) -- (s3);
+  \end{tikzpicture}
+  \end{center}
+
+  \medskip
+  {\small The scorer is \textbf{tests or a trained critic}, not the model's
+  hunch. OpenHands \textbf{60\%\,$\rightarrow$\,66\%} with five
+  reranked~\cite{openhands2025verified}; SWE-Search wraps it in MCTS with a
+  learned value --- \textbf{+23\%}, but a model call per
+  node~\cite{antoniades2024swesearch}.}
+\end{frame}
+
+\begin{frame}{Plan: Graph of Thoughts}
+  \label{fr:bu-got}
+  {\small Merging branches, revisiting nodes --- shown on \textbf{puzzles}
+  (Game-of-24, sorting), \textbf{almost never on repository
+  bugs}~\cite{besta2024graph}.}
+
+  \medskip
+  \begin{itemize}
+    \item In real SWE agents you see the \textbf{two ends}: one chain (CoT), or
+      many chains scored (best-of-$N$).
+      \medskip
+    \item The closest thing to \emph{revisit}: \textbf{Reflexion} writes a note
+      after a failed attempt and retries with it --- a loose loop, not a
+      graph~\cite{shinn2023reflexion}.
+      \medskip
+    \item No surveyed end-to-end SWE agent builds a literal thought-graph.
+  \end{itemize}
+
+  \medskip
+  \begin{block}{Takeaway}
+    The graph is the \emph{conceptual} top of the spectrum --- useful to reason
+    about, not something you will find running in production.
+  \end{block}
+\end{frame}
+
 \begin{frame}{Plan: localisation}
-  The plan repository agents actually use: narrow \textbf{hierarchically}.
+  \label{fr:localisation}
+  {\large So how does it \textbf{stop guessing}?}
+
+  \medskip
+  Point at real code. Narrow the repo from broad to specific --- each step
+  something you can check:
 
   \bigskip
   \begin{itemize}
@@ -768,9 +630,6 @@
       \medskip
     \item \textbf{AutoCodeRover} --- AST-backed search APIs, coarse to
       fine~\cite{zhang2024autocoderover}
-      \medskip
-    \item \textbf{Specification sketches} --- interfaces, pseudocode, assertions,
-      examples
   \end{itemize}
 
   \bigskip
@@ -780,54 +639,52 @@
   \end{block}
 \end{frame}
 
-% ------------------------------------------------------------- frame 13 ---
-% THE RECONCILIATION. D4C and Agentless look like a contradiction -- one says
-% localisation is the whole problem, the other that perfect localisation HURTS --
-% and an audience that has seen frames 10-12 will feel it. Report section 5.4
-% resolves it by scale, and that resolution is this frame's only job.
-\begin{frame}{Plan: the function boundary}
-  D4C reports that \textbf{perfect fault localisation makes repair
-  worse}~\cite{xu2024d4c}. Frames~\ref{fr:planning}--12 said localisation is the
-  problem. Both are right.
+\begin{frame}{Localisation: Agentless}
+  {\small Narrowing without letting the model wander: three fixed steps, coarse
+  to fine~\cite{xia2024agentless}.}
 
   \bigskip
-  \begin{itemize}
-    \item \textbf{Above} the function boundary --- \emph{which} function, among
-      tens of thousands? No pre-training prior answers that. Localisation
-      \textbf{is} the task.
+  \begin{enumerate}
+    \item \textbf{Rank files} --- from the repo layout and the issue, shortlist
+      the files most likely involved.
       \medskip
-    \item \textbf{Below} it --- ranking \emph{lines within} a function already
-      known to be faulty fights the model's infilling prior.
-  \end{itemize}
+    \item \textbf{Rank elements} --- inside those files, narrow to specific
+      classes and functions.
+      \medskip
+    \item \textbf{Pin locations} --- inside those, the exact lines to edit.
+  \end{enumerate}
 
   \bigskip
-  {\small D4C repairs whole functions: \textbf{180 of 437} single-function
-  Defects4J bugs, beating systems given perfect fault localisation by
-  10\,\%~\cite{xu2024d4c}.}
-\end{frame}
-
-\begin{frame}{Plan: the Agentless paradox}
-  \label{fr:planlast}
-  \begin{itemize}
-    \item \textbf{Plan-then-generate} --- inspectable, brittle if the plan is
-      wrong~\cite{xia2024agentless}
-    \item \textbf{Interleaved} --- adaptive, but spread over many turns and hard
-      to audit~\cite{yao2023react}
-    \item \textbf{Generate-then-refine} --- first output as
-      hypothesis~\cite{madaan2023selfrefine}
-  \end{itemize}
-
-  \bigskip
-  \begin{block}{The system that plans \emph{least} is competitive with those that
-    plan most}
-    So the claim is not that deliberation helps. It is that
-    \textbf{grounding} helps --- and Agentless gets its grounding
-    \emph{structurally}, hard-coding the narrowing an agentic loop has to
-    rediscover by exploring.
+  \begin{block}{Fixed, not discovered}
+    Three prompts, coarse to fine. No search, no tools --- the narrowing is
+    hard-coded into the scaffold.
   \end{block}
 \end{frame}
 
-\begin{frame}{Generate: writing the patch}
+\begin{frame}{Localisation: AutoCodeRover}
+  {\small Let the model navigate --- but through the syntax tree, not by reading
+  whole files~\cite{zhang2024autocoderover}.}
+
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Search APIs} --- \texttt{search\_class},
+      \texttt{search\_method}, \texttt{search\_method\_in\_class}.
+      \medskip
+    \item The agent calls them \textbf{coarse to fine}, pulling in just the code
+      it needs.
+      \medskip
+    \item AST-backed: structured, cheaper context than dumping whole files into
+      the prompt.
+  \end{itemize}
+
+  \bigskip
+  \begin{block}{Discovered, not fixed}
+    The model chooses what to search --- agentic, where Agentless is a fixed
+    funnel.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Generate: turning it into code}
   The model writes or edits source code --- a patch, a new function, a refactored
   block.
 
@@ -844,12 +701,6 @@
       clusters by execution~\cite{li2022alphacode}.
   \end{itemize}
 
-  \medskip
-  \begin{block}{Two correct patches can share no token}
-    There is no canonical form --- string-similarity metrics fail. Ranking
-    must use \textbf{execution} or \textbf{AST normalisation}, not text
-    comparison.
-  \end{block}
 \end{frame}
 
 \begin{frame}{Execute: running the code}
@@ -872,24 +723,17 @@
     A patch can pass every test and still be wrong. The grading oracle is
     \textbf{incomplete} --- it checks what the tests exercise, nothing more.
   \end{block}
+
+  \smallskip
+  {\small Right or wrong, that verdict is what refinement works with next.}
 \end{frame}
 
-% ------------------------------------------------------------- frame 16 ---
-% THE PARADOX FRAME. Agentless has been on screen since frame 9 as the system that
-% ------------------------------------------------------------- frame 12 ---
-% Branch 4, FIRST HALF. Split from a single six-row table on 2026-07-24 for word
-% count. THE SPLIT IS BY MECHANISM FAMILY AND KEEPS THE ORIGINAL ROW ORDER, which
-% is what makes it safe: the rows are grouped by what the mechanism DOES (re-read
-% your own output / bring in a test or a critic), not by what its signal is WORTH.
-%
-% THE MIDDLE COLUMN STAYS UNINTERPRETED ON BOTH FRAMES, ON PURPOSE. "What closes
-% the loop" is presented as plain description; the oracle / proxy / self-critique
-% reading is frame 22's payoff. Do not retitle these frames to something like "the
-% model checks itself" vs "something else checks it" -- that is the reading, and
-% frame 22 has nothing left to land if it arrives here.
 \begin{frame}{Refinement: iterative self-repair}
   \label{fr:refine1}
   \small
+  Execution returned a verdict. What the agent does with it is refinement.
+
+  \medskip
   \begin{tabular}{@{}L{0.26\textwidth}L{0.30\textwidth}L{0.34\textwidth}@{}}
     \toprule
     \textbf{Mechanism} & \textbf{What closes the loop}
@@ -914,10 +758,6 @@
   something else --- next.}
 \end{frame}
 
-% ------------------------------------------------------------- frame 13 ---
-% Branch 4, SECOND HALF. Same columns, same order, continued. The "hold on to the
-% middle column" pointer lives HERE rather than on the first half, so it is said
-% once, after the audience has seen all six rows.
 \begin{frame}{Refinement: tests and trained critics}
   \label{fr:refine2}
   \small
@@ -945,17 +785,6 @@
   containment second.}
 \end{frame}
 
-
-% --------------------------------------------------------------- frame 14 ---
-% PROMOTED OUT OF BACKUP 2026-07-24. It closes the refinement run rather than
-% opening the measurement one: stopping rules are a property of the loop, and the
-% "all tests pass" bullet is the first time the deck says out loud that the
-% halting condition is itself an oracle -- which is the frame-23 argument in
-% miniature, one section early.
-%
-% It also carries the forward pointer to frame 23 that used to sit at the end of
-% frame 13. The pointer belongs at the END of the refinement run, not in the
-% middle of it.
 \begin{frame}{Refinement: when does the loop stop?}
   \label{fr:refinelast}
   \begin{itemize}
@@ -969,16 +798,7 @@
     \item Iterate or best-of-$N$: \textbf{the same lever}. Fix the budget to
       compare.
   \end{itemize}
-
-  \medskip
-  {\small OpenHands on Verified: \textbf{60.6\,\%} one rollout,
-  \textbf{66.4\,\%} with five reranked by a trained
-  critic~\cite{openhands2025verified}.
-
-  \smallskip
-  Hold on to that middle column --- it is where this talk ends up.}
 \end{frame}
-
 
 \begin{frame}{Five systems compared}
   \label{fr:systems}
@@ -1024,51 +844,8 @@
   \end{tabular}
 \end{frame}
 
-\begin{frame}{Surveyed systems on SWE-bench Verified}
-  {\scriptsize Source: \url{https://swebench.com}, ``All agents'' view.
-  Best published result per system.}
-
-  \medskip
-  \small
-  \begin{tabular}{@{}L{0.30\textwidth}L{0.30\textwidth}rl@{}}
-    \toprule
-    \textbf{System} & \textbf{Backbone} & \textbf{\% Resolved} & \textbf{Date} \\
-    \midrule
-    SAGE (OpenHands)
-      & Claude 4.5 Opus   & 73.8\,\% & 2025-11 \\
-    OpenHands
-      & GPT-5             & 71.8\,\% & 2025-08 \\
-    SWE-agent
-      & Claude 4 Sonnet   & 66.6\,\% & 2025-05 \\
-    AutoCodeRover-v2.1
-      & Claude 3.5 Sonnet & 51.6\,\% & 2025-01 \\
-    Agentless-1.5
-      & Claude 3.5 Sonnet & 50.8\,\% & 2024-12 \\
-    Devin
-      & undisclosed       & 13.9\,\%$^*$ & 2024-03 \\
-    Agentless-1.5
-      & GPT-4o            & 38.8\,\% & 2024-10 \\
-    AutoCodeRover
-      & GPT-4o            & 38.4\,\% & 2024-06 \\
-    SWE-agent
-      & GPT-4o            & 23.2\,\% & 2024-07 \\
-    \bottomrule
-  \end{tabular}
-
-  \smallskip
-  {\scriptsize $^*$25\,\% of SWE-bench Full, not Verified.
-  Cognition stopped reporting benchmark numbers in
-  2024~\cite{cognition2024devin}.}
-\end{frame}
-
-% ============================================================================
 \section{How do we measure them?}
-% ============================================================================
 
-% ------------------------------------------------------------- frame 14 ---
-% SWE-BENCH IS DEFINED HERE, as the worked example -- four lines, in the order
-% the harness actually applies them. The evaluation part later adds splits and
-% threats; it does not have to introduce the benchmark from scratch.
 \begin{frame}{SWE-bench}
   \label{fr:swebench}
   Merged pull requests that \textbf{close an issue} and \textbf{touch the test
@@ -1082,78 +859,130 @@
     \item \textbf{Graded} --- \emph{fail-to-pass} must flip,
       \emph{pass-to-pass} must not regress.
   \end{enumerate}
-
-  \bigskip
-  \begin{block}{The two filters do different work}
-    Tests give the \textbf{grading oracle}; the issue link gives the
-    \textbf{intent}.
-  \end{block}
-
-  \medskip
-  {\small \textbf{Resolve rate} $=$ both test sets pass, first patch (pass@1).}
 \end{frame}
 
-% ------------------------------------------------------------- frame 15 ---
-% "How to assess the quality of generated code" -- the flatly missing part in the
-% old deck. Order: what we cannot use, what we use instead, what it costs.
 \begin{frame}{Measuring generated code}
-  \textbf{Not} string similarity --- two correct patches may share no token.
-
   \medskip
   \begin{itemize}
-    \item \textbf{Functional correctness} --- run it. The only kind that
-      survives.
+    \item \textbf{Functional correctness} --- does it run and pass? The only
+      thing that counts.
       \smallskip
-    \item \textbf{pass@$k$} --- one of $k$ samples passes; unbiased estimator
-      over a larger pool~\cite{chen2021humaneval}.
+    \item \textbf{pass@$k$} --- give it $k$ tries; solved if any one
+      passes~\cite{chen2021humaneval}.
       \smallskip
-    \item \textbf{Resolve rate} --- pass@1 at repository scale
-      (frame~\ref{fr:swebench}).
+    \item \textbf{Resolve rate} --- pass@1 on a whole repo: solved on the first
+      try.
       \smallskip
-    \item \textbf{Cost} --- USD, calls, wall-clock. It \emph{decouples} from
-      resolve rate~\cite{sweeffi2025}.
+    \item \textbf{Cost} --- dollars, calls, time. A higher score can cost much
+      more~\cite{sweeffi2025}.
   \end{itemize}
-
-  \medskip
-  \begin{block}{What none of them measure}
-    All score the \textbf{end} of the pipeline. Plan quality, localisation,
-    refinement efficiency: unmeasured.
-  \end{block}
 \end{frame}
 
-% ------------------------------------------------------------- frame 16 ---
-% Datasets. The splits table is the part the supervisor needs in order to read any
-% number later. It used to close on "Verified is the most curated split, not the
-% hardest one -- resolve rates are not comparable across rows", which was the only
-% place the deck stated that rule; that line is gone and nothing replaced it.
-% The \label was dropped with the last \ref that pointed at it.
 \begin{frame}{SWE-bench: the five splits}
   \label{fr:splits}
-  \begin{tabular}{@{}llL{0.52\textwidth}@{}}
+  \begin{tabularx}{\textwidth}{@{}lll>{\raggedright\arraybackslash}X@{}}
     \toprule
-    \textbf{Split} & \textbf{Size} & \textbf{Selected how} \\
+    \textbf{Split} & \textbf{Size} & \textbf{Released} & \textbf{Selected how} \\
     \midrule
-    Full & 2{,}294 & Every scraped PR that touches tests \\
-    Lite & 300 & Single-file patches; some issues leak the
+    Full & 2{,}294 & Oct 2023 & Every scraped PR that touches tests \\
+    Lite & 300 & Mar 2024 & Single-file patches; some issues leak the
       fix~\cite{xia2024agentless} \\
-    Verified & 500 & Human-screened for clear issues and fair
+    Verified & 500 & Aug 2024 & Human-screened for clear issues and fair
       tests~\cite{openai2024verified} \\
-    Multilingual & 300 & Same pipeline, 9 non-Python
+    Multilingual & 300 & May 2025 & Same pipeline, 9 non-Python
       languages~\cite{swebench2025multilingual} \\
-    Pro & 1{,}865 & Long-horizon, multi-file; held-out proprietary
+    Pro & 1{,}865 & Sep 2025 & Long-horizon, multi-file; held-out proprietary
       repos~\cite{deng2025swebenchpro} \\
     \bottomrule
-  \end{tabular}
+  \end{tabularx}
+  \medskip
+  How hard is SWE bench?
 \end{frame}
 
-% ------------------------------------------------------------- frame 17 ---
-% The stratified result. A table, not a chart: "Real progress" already draws the
-% overall climb from these same nine submissions, so what is new here is the
-% SPLIT -- the easy and medium tiers, the tier sizes, and the union column.
-%
-% Bullet 2 is the REVEAL of the hard-tier stall, and it is the only place the deck
-% states it. Keep it that way: see the note on "Real progress" before drawing a
-% hard-tier series there.
+\begin{frame}{SWE-bench: how hard is each task?}
+  \label{fr:difficulty}
+  \textbf{Verified tasks are devided into three categories}
+  \medskip
+  \begin{center}
+    \small
+    \begin{tabular}{@{}ll@{}}
+      \toprule
+      \textbf{Tier} & \textbf{Estimated human fix-time} \\
+      \midrule
+      \textcolor{TUMOrange}{$\blacksquare$}~Easy & $<$15\,min \\
+      \textcolor{TUMGreen}{$\blacksquare$}~Medium & 15\,min\,--\,1\,h \\
+      \textcolor{TUMExtRed}{$\blacksquare$}~Hard & $>$1\,h \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{SWE-bench: the headline climbs}
+  \label{fr:headline}
+  \smallskip
+  \textbf{SWE-bench Verified} --- nine systems, Apr'24 to
+  Mar'25~\cite{ganhotra2025difficulty}.
+
+  \smallskip
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.88\textwidth,
+        height=5cm,
+        ylabel={\% resolved},
+        ymin=0, ymax=104,
+        ytick={0,20,40,60,80,100},
+        xmin=2024.16, xmax=2025.30,
+        xtick={2024.25, 2024.5, 2024.75, 2025.0, 2025.25},
+        xticklabels={Apr'24, Jul'24, Oct'24, Jan'25, Apr'25},
+        xticklabel style={font=\scriptsize},
+        yticklabel style={font=\scriptsize},
+        ylabel style={font=\scriptsize},
+        grid=major,
+        grid style={dashed, TUMGrayLight},
+        axis line style={TUMGrayDark},
+        tick style={TUMGrayDark},
+        legend style={font=\tiny, at={(0.5,1.02)}, anchor=south,
+                      legend columns=4, draw=none, fill=none,
+                      /tikz/every even column/.append style={column sep=4pt}},
+        every axis plot/.append style={thick, mark size=1.6pt},
+      ]
+      \addplot[TUMBlue, mark=*] coordinates {
+        (2024.251,18.2) (2024.467,33.6) (2024.571,23.2) (2024.918,50.8)
+        (2024.918,55.0) (2024.975,57.2) (2025.044,64.6) (2025.099,63.4)
+        (2025.203,65.4)
+      };
+      \addlegendentry{Overall}
+      
+      \addplot[TUMOrange, mark=square*] coordinates {
+        (2024.251,27.3) (2024.467,47.9) (2024.571,36.6) (2024.918,70.6)
+        (2024.918,72.2) (2024.975,74.7) (2025.044,77.3) (2025.099,81.4)
+        (2025.203,80.4)
+      };
+      \addlegendentry{Easy}
+
+      \addplot[TUMGreen, mark=triangle*] coordinates {
+        (2024.251,10.0) (2024.467,28.0) (2024.571,16.9) (2024.918,42.5)
+        (2024.918,49.4) (2024.975,50.6) (2025.044,62.1) (2025.099,56.7)
+        (2025.203,62.1)
+      };
+      \addlegendentry{Medium}
+
+      \addplot[TUMExtRed, mark=diamond*] coordinates {
+        (2024.251,0.0) (2024.467,4.4) (2024.571,2.2) (2024.918,13.3)
+        (2024.918,13.3) (2024.975,20.0) (2025.044,24.4) (2025.099,24.4)
+        (2025.203,20.0)
+      };
+      \addlegendentry{Hard}
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+
+  \smallskip
+  \textbf{Easy near 80\,\%, hard stuck at 20\,\%.} The overall line hides the
+  spread --- exact splits next.
+\end{frame}
+
 \begin{frame}{SWE-bench: what the numbers show}
   \label{fr:numbers}
   The same nine submissions, by annotator
@@ -1161,46 +990,124 @@
 
   \medskip
   \begin{center}
-    \begin{tabular}{@{}lccc@{}}
-      \toprule
-      \textbf{Tier} & \textbf{First (Apr '24)} & \textbf{Last (Mar '25)}
-        & \textbf{Union of all nine} \\
-      \midrule
-      Easy \ {\small$<$15\,min ($n{=}194$)} & 27.3\,\% & 80.4\,\% & 95.4\,\% \\
-      Medium \ {\small$\leq$1\,h ($n{=}261$)} & 10.0\,\% & 62.1\,\% & 84.3\,\% \\
-      Hard \ {\small$>$1\,h ($n{=}45$)} & \phantom{0}0.0\,\% & 20.0\,\%
-        & 42.2\,\% \\
-      \bottomrule
-    \end{tabular}
+    \begin{minipage}[c]{0.56\textwidth}
+      \raggedleft\small
+      \begin{tabular}{@{}lcc@{}}
+        \toprule
+        \textbf{Tier} & \textbf{First} & \textbf{Last} \\
+        & {\scriptsize Apr '24} & {\scriptsize Mar '25} \\
+        \midrule
+        \textcolor{TUMOrange}{$\blacksquare$}~Easy \ {\small$<$15\,min
+          ($n{=}194$)} & 27.3\,\% & 80.4\,\% \\
+        \textcolor{TUMGreen}{$\blacksquare$}~Medium \ {\small$\leq$1\,h
+          ($n{=}261$)} & 10.0\,\% & 62.1\,\% \\
+        \textcolor{TUMExtRed}{$\blacksquare$}~Hard \ {\small$>$1\,h
+          ($n{=}45$)} & \phantom{0}0.0\,\% & 20.0\,\% \\
+        \bottomrule
+      \end{tabular}
+    \end{minipage}%
+    \hspace{0.5cm}%
+    \begin{minipage}[c]{0.30\textwidth}
+      \begin{tikzpicture}
+        \def\r{1.15cm}
+        \fill[TUMOrange] (0,0) -- (90:\r)
+          arc[start angle=90, end angle=-49.68, radius=\r] -- cycle;
+        \fill[TUMGreen] (0,0) -- (-49.68:\r)
+          arc[start angle=-49.68, end angle=-237.6, radius=\r] -- cycle;
+        \fill[TUMExtRed] (0,0) -- (-237.6:\r)
+          arc[start angle=-237.6, end angle=-270, radius=\r] -- cycle;
+        \node[font=\scriptsize, text=white] at (20.16:0.62cm) {39\,\%};
+        \node[font=\scriptsize, text=white] at (-143.64:0.62cm) {52\,\%};
+        \node[font=\scriptsize, text=TUMExtRed] at (106.2:1.5cm) {9\,\%};
+        \node[font=\scriptsize, text=TUMGrayDark, anchor=north]
+          at (0,-1.35cm) {Task mix ($n{=}500$)};
+      \end{tikzpicture}
+    \end{minipage}
   \end{center}
 
   \smallskip
   \begin{itemize}
-    \item Easy $+$ medium are \textbf{91\,\% of Verified}. The headline mostly
-      reports sub-hour work.
-    \item The hard tier \textbf{stopped} near 20\,\%. A system can gain ten
-      points of \emph{overall} resolve rate while solving no new hard task.
-    \item Easy and medium are an \textbf{ensembling} problem --- different
-      systems already solve different instances, so pooling them wins. Hard is
-      not: over half of it defeats every system at once.
+    \item Easy $+$ medium are \textbf{91\,\% of Verified}.
+    \item The hard tier \textbf{stopped} near 20\,\%.
   \end{itemize}
 \end{frame}
 
-% ------------------------------------------------------------- frame 18 ---
-% Validity. The Verified-Pro numbers are quoted as a FLOOR and a DIRECTION only,
-% with the reason on the slide. The per-model spread is unreadable because the
-% column mixes harnesses -- and the model measured most strictly shows the
-% biggest drop, which would invert the naive reading.
-% FIGURE CANDIDATE (later pass): report/main.tex lines 1240-1287.
-\begin{frame}{SWE-bench: can we trust the numbers?}
+\section{What are the challenges?}
+
+\begin{frame}{Challenge: intent capture}
+  \label{fr:ambiguity}
+  \begin{itemize}
+    \item No system in the survey \textbf{asks a clarifying question}. It
+      guesses and commits.
+      \medskip
+    \item Tests do not catch a wrong guess about something they never check.
+  \end{itemize}
+
+  \vfill
+  {\footnotesize
+   Clarification mechanisms exist and
+   work~\cite{lahiri2022ticoder,mu2024clarifygpt,vijayvargiya2026ambiguity}.}
+\end{frame}
+
+\begin{frame}{Challenge: plan}
+  \begin{itemize}
+    \item Big repositories \textbf{do not fit in context}. The agent must
+      guess what to read.
+      \medskip
+    \item Success drops from \textbf{80\,\%} on easy tasks to
+      \textbf{20\,\%} on hard, multi-file ones (frame~\ref{fr:numbers}).
+  \end{itemize}
+
+  \vfill
+  {\footnotesize
+   Difficulty split from~\cite{ganhotra2025difficulty}; training-time fixes
+   proposed by~\cite{wei2025swerl,pan2024swegym}.}
+\end{frame}
+
+\begin{frame}{Challenge: cost and verification}
+  \begin{itemize}
+    \item Running more attempts costs more but \textbf{does not raise the
+      success rate}.
+      \medskip
+    \item \textbf{``All tests pass''} is not proof of correctness --- a wrong
+      patch can still pass.
+  \end{itemize}
+
+  \vfill
+  {\footnotesize
+   Sample-and-rerank cost vs.\ resolve rate
+   from~\cite{turncontrol2025,sweeffi2025}.}
+\end{frame}
+
+\begin{frame}{Takeaways}
+  \begin{itemize}
+    \item \textbf{Agentic beats one-shot because it can run things}, not
+      because it reasons more.
+      \medskip
+    \item All three challenges are the \textbf{same gap}: nothing outside the
+      model catches a wrong guess about intent, a wrong file, or a wrong fix.
+      \medskip
+    \item \textbf{Verification is the bottleneck.} In a randomised trial,
+      developers were 19\,\% \emph{slower} --- believing they were 20\,\%
+      faster~\cite{metr2025rct}.
+  \end{itemize}
+
+  \bigskip
+  \begin{block}{}
+    \centering
+    Autocomplete to autonomous issue resolution: crossed.\\
+    Impressive to \textbf{dependable}: still an open question.
+  \end{block}
+\end{frame}
+
+\setbeamertemplate{footline}{}
+
+\appendix
+
+\begin{frame}[noframenumbering]{Backup: SWE-bench --- can we trust the numbers?}
   \label{fr:trust}
   \textbf{Verified against Pro}, April 2026:
 
-  % THE HARNESS COLUMN EXISTS SO THE EYE OBEYS THE CAPTION. A reviewer noted that
-  % the bare table invites the per-model comparison the caption forbids, and that
-  % the caption is the smallest text on the slide. Naming the harness per row puts
-  % the reason INSIDE the table: three rows are the vendors' own numbers, one is
-  % measured. Do not drop this column to save width.
   \medskip
   \begin{center}
     \small
@@ -1232,208 +1139,43 @@
   \end{itemize}
 \end{frame}
 
-
-% ============================================================================
-\section{What are the challenges?}
-% ============================================================================
-
-% ------------------------------------------------------------- frame 19 ---
-% ONE CHALLENGE PER FRAME. This was a single three-bullet frame until 2026-07-24;
-% at 1:00 for all three, each bullet arrived compressed to a headline and the
-% supporting evidence had to be said rather than shown. Split, each frame states
-% the claim, shows what backs it, and closes on the block that says what would
-% change. The titles are numbered so the audience can count them off against the
-% "three open challenges" promised on the section page.
-%
-% THE SPOKEN TIME DID NOT GROW WITH THE FRAME COUNT. script.md still budgets
-% ~1:00 across the three; the extra room is for text the audience READS while the
-% speaker says the same sentences. If a later pass starts speaking every line on
-% these frames, the deck goes over 20 minutes.
-\begin{frame}{Challenge: intent capture}
-  \label{fr:ambiguity}
-  The stage with \emph{no feedback edge} (frame~\ref{fr:stages}). The agent
-  \textbf{guesses and commits}.
+\begin{frame}[noframenumbering]{Backup: surveyed systems on SWE-bench Verified}
+  {\scriptsize Source: \url{https://swebench.com}, ``All agents'' view.
+  Best published result per system.}
 
   \medskip
-  \begin{itemize}
-    \item Issue reports leave out edge cases and implicit invariants.
-      \medskip
-    \item Tests constrain only what they exercise. A wrong guess about an
-      \textbf{untested invariant} scores as a success.
-      \medskip
-    \item \textbf{No surveyed system asks a clarifying question.}
-  \end{itemize}
-
-  \medskip
-  \begin{block}{The gap is the evaluation, not the mechanism}
-    Clarification mechanisms exist and
-    work~\cite{lahiri2022ticoder,mu2024clarifygpt,vijayvargiya2026ambiguity}.
-    SWE-bench filters out ambiguity by construction --- the agent is never
-    rewarded for asking.
-  \end{block}
-\end{frame}
-
-\begin{frame}{Challenge: plan}
-  The repository does not fit in context. The agent must \textbf{choose what to
-  read}, and that choice is most of the problem.
-
-  \medskip
-  \begin{itemize}
-    \item Hard tier stuck at \textbf{20\,\%} against easy \textbf{80\,\%}
-      (frame~\ref{fr:numbers})~\cite{ganhotra2025difficulty}.
-      \medskip
-    \item Of the 45 hard instances, 25 need several files --- only \textbf{9}
-      are solved by anyone at all.
-      \medskip
-    \item Is the cause \textbf{retrieval} (never sees the right files) or
-      \textbf{reasoning} (cannot compose the change)?
-  \end{itemize}
-
-  \medskip
-  \begin{block}{The cheapest experiment nobody has run}
-    Hand it the \textbf{gold file set}. Hard tier moves $\Rightarrow$ retrieval.
-    It does not $\Rightarrow$ only training
-    will~\cite{wei2025swerl,pan2024swegym}.
-  \end{block}
-\end{frame}
-
-\begin{frame}{Challenge: generation}
-  Two correct patches can share \textbf{no token}. Two near-identical patches
-  can differ in meaning.
-
-  \medskip
-  \begin{itemize}
-    \item You cannot score generated code against a reference --- every
-      string-similarity metric fails.
-      \medskip
-    \item The dominant quality lever --- \textbf{sample $N$, rerank} ---
-      multiplies cost directly~\cite{turncontrol2025}.
-      \medskip
-    \item Resolve rate \textbf{decouples from compute} --- spending more does
-      not order the systems~\cite{sweeffi2025}.
-  \end{itemize}
-
-  \medskip
-  \begin{block}{}
-    \centering
-    The practical frontier is not peak accuracy.\\
-    It is \textbf{accuracy per dollar} and \textbf{per minute}.
-  \end{block}
-\end{frame}
-
-\begin{frame}{Challenge: execution}
-  The test suite is a \textbf{sample} of the intended behaviour, not the
-  behaviour itself.
-
-  \medskip
-  \begin{itemize}
-    \item A patch can pass every test and \textbf{still be wrong}.
-      \medskip
-    \item Reward hacking: closing test-leakage channels cuts scores by
-      \textbf{double digits} --- agents partly learn the
-      grader~\cite{cursor2025rewardhacking}.
-      \medskip
-    \item Contamination: models reproduce gold patches from the task ID
-      alone~\cite{openai2026swebench}. OpenAI dropped Verified in 2026.
-  \end{itemize}
-
-  \medskip
-  \begin{block}{The oracle decides when the loop stops}
-    ``All tests pass'' smuggles ground truth into the stopping condition ---
-    any self-critique inside that loop will look more effective than it is.
-  \end{block}
-\end{frame}
-
-\begin{frame}{Challenge: refinement}
-  Real fixes touch \textbf{several files} coherently, over a long sequence of
-  steps.
-
-  \medskip
-  \begin{itemize}
-    \item The marginal value of another repair round drops fast. At fixed
-      budget, another round is often \emph{worse} than a fresh
-      sample~\cite{olausson2024selfrepair}.
-      \medskip
-    \item Self-critique alone can only reorganise what the model already
-      believes --- measured going
-      \textbf{negative}~\cite{huang2024selfcorrect}.
-      \medskip
-    \item Pro shows the same ceiling as the hard tier: long-horizon,
-      multi-file tasks do not yield to more
-      iterations~\cite{deng2025swebenchpro}.
-  \end{itemize}
-
-  \medskip
-  \begin{block}{Iterative repair vs.\ best-of-$N$: the same lever}
-    Extra inference to cut variance, pulled sequentially or in parallel. The
-    question is which allocation of the same tokens buys more correctness.
-  \end{block}
-\end{frame}
-
-% ------------------------------------------------------------- frame 22 ---
-% THE PAYOFF FRAME. Everything before this was descriptive; this is the report's
-% argument, and it is earned by the preceding frames rather than asserted at the
-% start. It re-reads the middle column of frames 12-13, which was deliberately
-% left uninterpreted.
-\begin{frame}{What it adds up to}
-  Everything that works puts \textbf{something outside the model} in a position to
-  contradict it. Sorted by \emph{what closes the loop}:
-
-  \smallskip
-  \scriptsize
-  \begin{tabular}{@{}L{0.30\textwidth}L{0.64\textwidth}@{}}
+  \small
+  \begin{tabular}{@{}L{0.30\textwidth}L{0.30\textwidth}rl@{}}
     \toprule
-    \textbf{Oracle} \newline {\scriptsize can surprise the model}
-      & Self-debugging \emph{with tests} \quad D4C \quad Agentless validate \\
-    \textbf{Proxy} \newline {\scriptsize carries information, nothing new enters}
-      & Reflexion \emph{(its own tests)} \quad Best-of-$N$ $+$ trained critic \\
-    \textbf{Self-critique} \newline {\scriptsize only reorganises what the model
-      believes; sometimes
-      \emph{negative}~\cite{huang2024selfcorrect,olausson2024selfrepair}}
-      & Self-Refine \quad Self-debugging \emph{without tests} \\
+    \textbf{System} & \textbf{Backbone} & \textbf{\% Resolved} & \textbf{Date} \\
+    \midrule
+    SAGE (OpenHands)
+      & Claude 4.5 Opus   & 73.8\,\% & 2025-11 \\
+    OpenHands
+      & GPT-5             & 71.8\,\% & 2025-08 \\
+    SWE-agent
+      & Claude 4 Sonnet   & 66.6\,\% & 2025-05 \\
+    AutoCodeRover-v2.1
+      & Claude 3.5 Sonnet & 51.6\,\% & 2025-01 \\
+    Agentless-1.5
+      & Claude 3.5 Sonnet & 50.8\,\% & 2024-12 \\
+    Agentless-1.5
+      & GPT-4o            & 38.8\,\% & 2024-10 \\
+    AutoCodeRover
+      & GPT-4o            & 38.4\,\% & 2024-06 \\
+    SWE-agent
+      & GPT-4o            & 23.2\,\% & 2024-07 \\
+    Devin
+      & undisclosed       & 13.9\,\%$^*$ & 2024-03 \\
     \bottomrule
   \end{tabular}
 
   \smallskip
-  \normalsize
-  \begin{block}{So the two weak stages are the two with no oracle}
-    \textbf{Intent} --- the oracle is a human, nobody asks. \quad
-    \textbf{Validation} --- a suite a wrong patch passes.
-  \end{block}
+  {\scriptsize $^*$On \textbf{SWE-bench Full}, a different and easier split
+  than the Verified numbers above --- not directly comparable. Self-reported;
+  Cognition stopped publishing benchmark numbers in
+  2024~\cite{cognition2024devin}.}
 \end{frame}
-
-% ------------------------------------------------------------- frame 23 ---
-\begin{frame}{Takeaways}
-  \begin{enumerate}
-    \item \textbf{Agentic beats one-shot because it can run things}, not
-      because it reasons more.
-      \medskip
-    \item \textbf{One number no longer suffices.} Difficulty, contamination and
-      cost belong next to any resolve rate.
-      \medskip
-    \item \textbf{Verification is the bottleneck.} In a randomised trial,
-      developers were 19\,\% \emph{slower} --- believing they were 20\,\%
-      faster~\cite{metr2025rct}.
-  \end{enumerate}
-
-  \bigskip
-  \begin{block}{}
-    \centering
-    Autocomplete to autonomous issue resolution: crossed.\\
-    Impressive to \textbf{dependable} is a question about oracles.
-  \end{block}
-\end{frame}
-
-
-% ============================================================================
-% Backup. All noframenumbering, so the visible count stays at the numbered deck.
-% ============================================================================
-
-% Backup and references are [noframenumbering] too, so they would repeat the
-% last content frame's number. Same fix, and from here it need not be undone.
-\setbeamertemplate{footline}{}
-
-\appendix
 
 \begin{frame}[noframenumbering]{Backup: the context bottleneck}
   \begin{itemize}
@@ -1453,13 +1195,6 @@
   {\small An agent cannot fix what it never places in context.}
 \end{frame}
 
-
-% The bibliography is already minimal: BibTeX prints only the entries actually cited.
-% What made it sprawl over eight pages was beamer's default bibliography formatting,
-% not the entry count:
-%   - the default bibliography item is an ICON, which forces a wide hanging indent;
-%   - beamer sets \itemsep between entries as if they were bullets.
-% Text-numbered items, no icon, and zero itemsep pack them into ~3.
 \setbeamertemplate{bibliography item}[text]
 \setbeamerfont{bibliography item}{size=\tiny}
 \setbeamerfont{bibliography entry author}{size=\tiny}
@@ -1467,16 +1202,10 @@
 \setbeamerfont{bibliography entry location}{size=\tiny}
 \setbeamerfont{bibliography entry note}{size=\tiny}
 
-% Beamer puts author, title, location and note each on its OWN line, so a
-% four-field entry costs four lines and 40 entries ran to seven pages. Emptying
-% these three templates removes the line break beamer inserts before each field
-% (it does not remove the field's text), so an entry flows as one paragraph.
 \setbeamertemplate{bibliography entry title}{}
 \setbeamertemplate{bibliography entry location}{}
 \setbeamertemplate{bibliography entry note}{}
 
-% \itemsep set in the frame body does NOT reach the bibliography: thebibliography
-% opens its own list, which resets the spacing. Patch the environment itself.
 \makeatletter
 \let\beamer@oldthebibliography\thebibliography
 \renewcommand{\thebibliography}[1]{%
