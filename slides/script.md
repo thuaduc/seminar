@@ -14,10 +14,10 @@ April 2024, first agentic scaffolds: eighteen percent.
 March 2025: sixty-five. 
 April 2026: eighty-one. 
 
-Massive improvement in two years, and the models were not trained to be agents.
-
-Same weights, but SWE-bench Pro — a harder, held-out benchmark — knocks about thirty-five points off that number. 
-Real progress, not a solved problem.
+Massive improvement in two years. 
+Two factors:
+- Model improvement. Models were not trained to be agents.
+- Agent system improvement
 
 
 ## What this talk shows
@@ -38,7 +38,6 @@ Critic: a separate model, trained to score candidate outputs.
 
 ## What is an agentic coding system?
 
-*Part one — how they work.* One loop, five stages. At every stage I ask the same question, and it is the spine of the whole talk: what can tell the model it is wrong?
 
 A system that takes a natural-language request and autonomously produces a working code change. 
 It navigates files, edits, executes, and revises without step-by-step human guidance.
@@ -71,14 +70,18 @@ Nearly all systems do the same five things.
 
 ## How the loop is controlled
 
-- Orchestration — who decides what happens next? 
-- The model, or a hard-coded script?
+The five stages are what happens. Two controls decide how the loop runs —
+and each acts on a different part of the loop you just saw.
 
-- Interface and context — what can the agent see and do? 
-- A purpose-built command set, or a raw sandbox?
+Orchestration is the arrows — it decides the next step.
+The model deciding, or a hard-coded script? That is what decides whether
+refinement ever loops back, or the run just stops.
 
-These are not stages. 
-They cut across every stage — they decide whether the loop runs at all and what it has access to.
+Interface and context is inside each box — what the agent can see and do at a
+stage: a purpose-built command set, or a raw sandbox.
+
+So: orchestration controls the flow between stages, interface controls what
+happens within one. Neither is a stage itself — both cut across all five.
 
 
 ## Orchestration
@@ -112,7 +115,7 @@ Cheaper and predictable, but no recovery.
 
 ## Interface and Context
 
-Two designs for how the agent interacts with the codebase. 
+Two common designs for how the agent interacts with the codebase. 
 - ACI — a purpose-built interface. 
 - The agent views files through a scrollable window, edits with linter-guarded commands, searches with summarised results. 
 - The scaffold controls what the model sees and rejects bad actions before they run.
@@ -179,9 +182,13 @@ Hold that gap: the scorer is the model judging its own guess — same distributi
 
 ## Plan: Chain of Thought
 
-This is the agentic loop from the orchestration part — observe, think, act — now in action. It is what every production agent really runs — SWE-agent, OpenHands — the ReAct loop: Thought, Action, Observation, repeated. 
-Thought: the CSV breaks on a comma, the writer probably isn't quoting. Action: search for write_row. Observation: found it. Read it, see the manual join, edit it. 
-One straight line. If that first thought is wrong — the bug is really in the reader — it just keeps going. What catches it is not a better shape; it is the tests failing later, which is a different loop.
+Start from the problem the plan is for — a one-line bug report: the app crashes on checkout with an empty cart.
+It names no file and no fix. Planning has to decide where the bug is and what to change.
+
+Chain of thought is the simplest shape: observe, think, act, in one straight line — the ReAct loop from orchestration.
+Watch that every action here is just looking — grep, open. No edit yet. The output of planning is not a fix, it is a plan: where and what.
+Thought: an empty cart, probably a divide-by-zero in the total. Action: grep the total function. Observation: sum of prices over length of items. Thought: length is zero when empty. Action: open it to confirm. Observation: no guard. Plan — where: total at cart.py line 12; what: guard the empty cart, return zero. Then generation writes the edit, later.
+One straight line. If that first thought is wrong — the crash is really in the receipt — it just keeps going. What catches it is not a better shape; it is the tests failing later, which is a different loop.
 
 ## Plan: Tree of Thoughts
 

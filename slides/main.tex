@@ -265,24 +265,33 @@
 \end{frame}
 
 \begin{frame}{How the loop is controlled}
-  The five stages say \textbf{what} an agent does. Two aspects:
+  The five stages are \textbf{what} happens. Two controls decide \textbf{how} the
+  loop runs --- and each acts on a different part of it:
 
-  \bigskip
-  \begin{itemize}
-    \item \textbf{Orchestration} --- who decides what happens next?
-      The model, or a hard-coded script?
-      \medskip
-    \item \textbf{Interface \& context} --- what can the agent see and do?
-      A purpose-built command set, or a raw sandbox?
-  \end{itemize}
+  \medskip
+  \begin{center}
+    \begin{tabular}{@{}lll@{}}
+      \toprule
+       & \textbf{Orchestration} & \textbf{Interface \& context} \\
+      \midrule
+      Acts on & the \textbf{arrows} between stages & \textbf{inside} each stage \\
+      \addlinespace
+      What it does & decides the next step & sets what it can see and do \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
 
-  \bigskip
-  They cut \emph{across} every stage --- they decide
-  whether the loop runs at all, and what it has access to.
+  \medskip
+  Neither is a stage --- both cut \emph{across} all five, and decide whether the
+  loop even closes.
 \end{frame}
 
 \begin{frame}{Orchestration}
   \label{fr:orch}
+  Two common ways to run the same five stages.
+
+  \bigskip
+
   \begin{tabular}{@{}L{0.22\textwidth}L{0.46\textwidth}L{0.22\textwidth}@{}}
     \toprule
     \textbf{Mode} & \textbf{How it works} & \textbf{Who decides} \\
@@ -296,9 +305,6 @@
       & The scaffold \\
     \bottomrule
   \end{tabular}
-
-  \bigskip
-  Two commons ways to run the same five stages.
 \end{frame}
 
 \begin{frame}{Orchestration: agentic loop}
@@ -527,31 +533,32 @@
 
 \begin{frame}{Plan: Chain of Thought}
   \label{fr:bu-cot}
-  {\small The \textbf{agentic loop} from orchestration (Slide~\ref{fr:orch}) ---
-  \emph{observe, think, act} --- in action. What every production agent runs
-  (SWE-agent, OpenHands): \textbf{Thought} $\rightarrow$ \textbf{Action}
-  $\rightarrow$ \textbf{Observation}, repeated~\cite{yao2023react}.}
+  \textbf{The problem to plan for} --- no file, no fix given:
+
+  \smallskip
+  \begin{center}
+    \begin{tikzpicture}
+      \node[draw, rounded corners, fill=TUMOrange!8, inner sep=6pt,
+            text width=0.86\textwidth, font=\small, align=left]
+        {\textit{``The app crashes when you check out with an empty cart.''}};
+    \end{tikzpicture}
+  \end{center}
 
   \medskip
   \begin{center}
   \begin{tikzpicture}
     \node[draw, rounded corners, fill=TUMBlue!5, inner sep=8pt,
-          text width=0.9\textwidth, font=\ttfamily\scriptsize, align=left]
-      {\textcolor{TUMBlue}{Thought:} CSV breaks on a comma --- the writer isn't quoting.\\
-       \textcolor{TUMOrange}{Action:} search\_dir 'def write\_row'\\
-       \textcolor{black!55}{Obs:} export/csv.py:41\\[2pt]
-       \textcolor{TUMBlue}{Thought:} let me read it.\\
-       \textcolor{TUMOrange}{Action:} open export/csv.py:41\\
-       \textcolor{black!55}{Obs:} def write\_row(cols): return ','.join(cols)\\[2pt]
-       \textcolor{TUMBlue}{Thought:} manual join, no quoting --- use csv.writer.\\
-       \textcolor{TUMOrange}{Action:} edit export/csv.py:41 \ldots};
+          text width=0.9\textwidth, font=\ttfamily\small, align=left]
+      {\textcolor{TUMBlue}{Thought:} empty cart --- maybe a divide-by-zero in the total.\\
+       \textcolor{TUMOrange}{Action:} grep 'def total'\\
+       \textcolor{black!55}{Obs:} cart.py:12 --- return sum(prices) / len(items)\\[3pt]
+       \textcolor{TUMBlue}{Thought:} len(items) is 0 when the cart is empty.\\
+       \textcolor{TUMOrange}{Action:} open cart.py:12 --- confirm the division\\
+       \textcolor{black!55}{Obs:} yes, no empty-case guard\\[4pt]
+       \textbf{Plan} --- \emph{where:} cart.py:12 \texttt{total()}\quad
+       \emph{what:} guard empty cart $\to$ 0};
   \end{tikzpicture}
   \end{center}
-
-  \medskip
-  {\small One straight line. If the first \textbf{Thought} is wrong --- the bug's
-  really in the \emph{reader} --- it just keeps going. Only \textbf{execution
-  feedback later} catches it, not the shape.}
 \end{frame}
 
 \begin{frame}{Plan: Tree of Thoughts}
