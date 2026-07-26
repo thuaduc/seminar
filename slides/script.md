@@ -27,7 +27,7 @@ Three questions.
 - How do we measure them? 
 - What are the challenges?
 
-## What is an autonomous coding agent?
+## What is an agentic coding system?
 
 A system that takes a natural-language request and autonomously produces a working code change. 
 It navigates files, edits, executes, and revises without step-by-step human guidance.
