@@ -594,16 +594,27 @@
 \end{frame}
 
 % -------------------------------------------------------------- frame 8 ---
-\begin{frame}{What the agent sees and does}
-  \textbf{Agent--Computer Interface (ACI)} --- a purpose-built command set.
-  The agent views files through a scrollable window, edits with linter-guarded
-  commands, and searches with summarised results. The scaffold controls what the
-  model can see and rejects malformed actions before they run.
+\begin{frame}{Interface and context}
+
+  What the agent sees and does.
+
+  \bigskip
+
+  \textbf{Agent--Computer Interface (ACI)}
+  \begin{itemize}
+    \item Purpose-built command set
+    \item Scrollable file viewer, linter-guarded edits, summarised search
+    \item The scaffold controls what the model can see
+    \item Malformed actions rejected before they run
+  \end{itemize}
 
   \medskip
-  \textbf{Code as action} --- the agent writes Python or bash in a sandbox.
-  No guardrails, no summarisation. The model has full shell access and manages
-  context itself.
+  \textbf{Code as action}
+  \begin{itemize}
+    \item The agent writes Python or bash in a sandbox
+    \item Full shell access, no guardrails, no summarisation
+    \item The model manages its own context
+  \end{itemize}
 \end{frame}
 
 % Branch 1+2. The ACI ablation numbers are the load-bearing content: they are the
