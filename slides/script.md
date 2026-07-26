@@ -174,11 +174,6 @@ The key question is what scores each branch?
 - There is no compiler output, no test result — nothing external to judge it. 
 - So the scorer is usually the model itself, guessing whether the path looks right.
 
-SWE-Search builds an LLM value function inside Monte Carlo tree search — twenty-three percent relative improvement. 
-But it calls a model at every node, which makes it expensive. 
-That is why cheap fixed pipelines still win on cost.
-
-Hold that gap: the scorer is the model judging its own guess — same distribution, it cannot surprise itself. So what could ground it instead? We'll get there — first, what these shapes actually look like in real agents.
 
 ## Plan: Chain of Thought
 
@@ -289,8 +284,14 @@ Five systems side by side — how each handles orchestration, interface, plannin
 
 *Part two — how we measure.* Every number ahead scores one thing: did the final patch pass. Watch what that leaves invisible — plan quality, localisation, the work of refinement.
 
-Merged pull requests that close an issue and touch the test suite. 
-Twenty-three hundred from twelve Python repositories.
+Each task is a real, merged pull request from a popular open-source project —
+one that both closes a GitHub issue and touches the test suite.
+Nothing synthetic: a human reported the bug, a maintainer fixed it, the fix shipped.
+
+Twenty-three hundred of them, mined from twelve large, mature Python libraries —
+Django, scikit-learn, matplotlib, sympy and the like.
+Real codebases, hundreds of thousands of lines, the maintainer's own patch as ground truth — not toy problems.
+The flip side is a monoculture: Python only, twelve projects — a limitation we come back to.
 
 - The test filter gives a grading oracle. 
 - The issue filter gives the intent.
@@ -301,6 +302,8 @@ Produce a patch.
 - pass-to-pass must not regress.
 
 Resolve rate: both sets pass, first patch.
+
+That is one task, pass or fail. Next: how you turn thousands of them into a single number worth comparing.
 
 ## Measuring generated code
 
@@ -314,6 +317,8 @@ Not string similarity — two correct patches may share no token.
 Every metric scores the end of the pipeline. 
 Plan quality, localisation, refinement efficiency: unmeasured.
 
+So we settle on one number, resolve rate. But there is no single SWE-bench — it is a family of splits, and which one a paper quotes changes the story.
+
 ## The five splits
 
 Roughly two years of splits, oldest to newest. 
@@ -326,9 +331,10 @@ Roughly two years of splits, oldest to newest.
 Verified is the most curated, not the hardest. 
 Resolve rates are not comparable across splits.
 
+From here we stay on Verified — the split everyone quotes. But a single number on it still hides a lot, so before the graph, one thing about how its tasks differ.
+
 ## How hard is each task?
 
-Before the graph, one thing about the tiers.
 When OpenAI built Verified, annotators estimated the fix time for each issue —
 how long a skilled engineer would need to write the patch.
 Three buckets: under fifteen minutes easy, up to an hour medium, over an hour hard.
@@ -338,6 +344,8 @@ It is estimated human effort — a proxy for how involved the change is, not a
 clock on the agent.
 And there were really four bins; one-to-four hours and four-plus collapse into
 hard, because only three issues exceed four hours.
+
+Three tiers, fixed per task. Now watch two years of progress split along them.
 
 ## The headline climbs
 
@@ -360,6 +368,8 @@ The pie is that mix; the table is how each tier resolves.
 
 The hard tier stalled near twenty percent. 
 A system can gain ten overall points while solving no new hard task.
+
+So the same number both drives progress and hides where it stalls. That tension hands us into the last part: where these systems actually break.
 
 ## Challenge: intent capture
 
