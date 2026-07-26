@@ -78,9 +78,10 @@ The agentic loop.
 - Then it acts through a tool call, and the cycle repeats until the model decides it is done.
 
 The fixed pipeline. 
-- The sequence is hard-coded: localise the fault, generate a repair, validate with tests. 
-- There is no loop and no decision about what to do next. 
-- The scaffold is in control.
+- The developer writes the sequence in advance: step one, find the faulty file; step two, narrow to the function; step three, generate a patch; step four, run the tests. 
+- The model does each step, but it never decides what comes next — the scaffold does. 
+- If the patch fails the tests, the system does not go back and try again. 
+- It just moves on or stops.
 
 Tree search. 
 - Multiple trajectories are explored in parallel, each scored and pruned by a value function. 
