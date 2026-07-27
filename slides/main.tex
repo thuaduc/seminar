@@ -15,6 +15,13 @@
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
+% +/- trade-off bullets, used on the generation-strategy slides.
+\newcommand{\pro}{\item[\textcolor{TUMGreen}{\textbf{+}}]}
+\newcommand{\con}{\item[\textcolor{TUMExtRed}{\textbf{--}}]}
+\newenvironment{tradeoffs}
+  {\small\begin{itemize}\setlength{\itemsep}{0.3em}}
+  {\end{itemize}}
+
 \usepackage{etoolbox}
 
 % Reusable five-stage agent-loop diagram.
@@ -241,8 +248,8 @@
     \item \textbf{How do we measure performance?} \\
       {\small The benchmark, the metrics, what the numbers hide.}
       \medskip
-    \item \textbf{What are the challenges?} \\
-      {\small Three open challenges --- and the pattern behind them.}
+    \item \textbf{Why are we stuck on the hard tasks?} \\
+      {\small Four reasons --- and the pattern behind them.}
   \end{enumerate}
 \end{frame}
 
@@ -252,10 +259,14 @@
     \textbf{Scaffold} & The non-model code around it --- tools, prompts,
       control flow \\
     \addlinespace
-    \textbf{Tool call} & The model asking the scaffold to act --- read a file,
-      run the tests --- and getting the output back \\
+    \textbf{Tool call} & A single scaffold action the model invokes and waits
+      on --- open a file, run a command, apply an edit \\
     \addlinespace
-    \textbf{Harness} & The environment a result is run and graded in \\
+    \textbf{Patch} & A description of a change --- which lines, in which
+      files --- not the changed code \\
+    \addlinespace
+    \textbf{Harness} & The fixed environment a submission is graded in ---
+      not the one it was made in \\
     \addlinespace
     \textbf{Oracle} & Something outside the model that can check it --- a
       test suite, a compiler, a human \\
@@ -451,12 +462,13 @@
 
 \begin{frame}{Back to the five stages}
   \begin{center}
-    \scalebox{0.9}{\agentloopdiagram[plan]}
+    \scalebox{0.9}{\agentloopdiagram}
   \end{center}
 
   \medskip
-  Now, stage by stage --- starting with \textbf{Planning}, where the model has
-  the \textbf{least to lean on}.
+  \begin{center}
+    Now, stage by stage.
+  \end{center}
 \end{frame}
 
 \begin{frame}{Plan: finding the right code}
@@ -532,11 +544,6 @@
     \node[left=0.05cm of g3, font=\tiny, text=TUMBlue] {merge};
   \end{tikzpicture}}
   \end{center}
-
-  \vspace{-2mm}
-  \centering
-  {\small \textbf{But which path is right?} Nothing has run yet, so the model is
-  only \textbf{guessing}.}
 \end{frame}
 
 \begin{frame}{Plan: Chain of Thought}
@@ -632,8 +639,7 @@
 
 \begin{frame}{Generate: infilling}
   \label{fr:gen-infill}
-  {\small Complete a \textbf{span} from the surrounding context --- works well
-  \textbf{within a single function}.}
+  {\small Complete a \textbf{span} from the surrounding context.}
 
   \smallskip
   {\small Plan from earlier: guard \texttt{total()} so an empty cart returns 0.}
@@ -651,15 +657,20 @@
   \end{tikzpicture}
   \end{center}
 
-  \smallskip
-  {\small Conditions on the \textcolor{black!55}{grey context}, emits only the
-  \textcolor{TUMOrange}{orange span}.}
+  {\footnotesize Conditions on the \textcolor{black!55}{grey context}, emits
+  only the \textcolor{TUMOrange}{orange span}.}
+
+  \begin{tradeoffs}
+    \pro Matches the pre-training objective --- fill a gap from both sides
+    \pro Cannot be mis-placed: the scaffold decides where the gap is
+    \con One contiguous span --- in practice, one function
+    \con The surrounding code has to fit in the prompt
+  \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Generate: diff generation}
   \label{fr:gen-diff}
-  {\small Emit a \textbf{unified diff}, not the whole file --- smaller output,
-  but \textbf{fragile if the context is stale}.}
+  {\small Emit a \textbf{unified diff}, not the whole file.}
 
   \medskip
   \begin{center}
@@ -674,9 +685,14 @@
   \end{tikzpicture}
   \end{center}
 
-  \medskip
-  {\small Only the change travels --- but the \textcolor{black!55}{context
-  lines} must still \textbf{match}, or the patch will not apply.}
+  \smallskip
+  \begin{tradeoffs}
+    \pro Only the change travels --- edits a large file without re-emitting it
+    \pro One patch spans many hunks and many files
+    \con The model must state \emph{where}: the
+      \textcolor{black!55}{context lines} have to match
+    \con A stale anchor is rejected before a single test runs
+  \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Generate: sample $N$, pick one}
@@ -705,9 +721,14 @@
   \end{tikzpicture}
   \end{center}
 
-  \medskip
-  {\small Same plan, $N$ attempts. Ranking needs an \textbf{oracle} --- the
-  model's own confidence is not enough.}
+  \smallskip
+  \begin{tradeoffs}
+    \pro One bad sample no longer sinks the task
+    \pro Candidates differ --- covers approaches a single pass would miss
+    \con Ranking needs an \textbf{oracle}; the model's own confidence is not
+      enough
+    \con Cost scales with $N$ --- calls, dollars, wall-clock
+  \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Execute: running the code}
@@ -886,6 +907,64 @@
 
 \section{How do we measure performance?}
 
+\begin{frame}{Sonnet 5 --- which benchmarks?}
+  \label{fr:sonnet5}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item SWE-bench Verified~\cite{openai2024verified}
+        \item SWE-bench Pro~\cite{deng2025swebenchpro}
+        \item SWE-bench Multilingual~\cite{swebench2025multilingual}
+        \item SWE-bench Multimodal~\cite{yang2024swebenchmm}
+        \item Terminal-Bench 2.1~\cite{merrill2026terminalbench}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item OSWorld-Verified~\cite{xie2024osworld,xlang2025osworldverified}
+        \item Humanity's Last Exam~\cite{phan2025hle}
+        \item GDPval-AA v2~\cite{aa2026gdpvalaa,patwardhan2025gdpval}
+        \item BrowseComp~\cite{wei2025browsecomp}
+        \item USAMO 2026~\cite{petrov2025usamo,balunovic2025matharena}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \bigskip
+  {\scriptsize Source: Sonnet 5 System Card,
+  2026-06-30~\cite{anthropic2026sonnet5,vellum2026sonnet5}.}
+\end{frame}
+
+\begin{frame}{GPT-5.6 --- which benchmarks?}
+  \label{fr:gpt56}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item SWE-bench Pro~\cite{deng2025swebenchpro}
+        \item Terminal-Bench 2.1~\cite{merrill2026terminalbench}
+        \item DeepSWE v1.1~\cite{datacurve2026deepswe}
+        \item Agents' Last Exam~\cite{sun2026agentslastexam}
+        \item GDPval-AA v2~\cite{aa2026gdpvalaa,patwardhan2025gdpval}
+        \item BrowseComp~\cite{wei2025browsecomp}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item OSWorld 2.0~\cite{yuan2026osworld2}
+        \item Toolathlon~\cite{li2025toolathlon}
+        \item MRCR v2 (long context)~\cite{gemini2024mrcr,deepmind2026mrcrv2}
+        \item HealthBench Professional~\cite{hicks2026healthbenchpro,arora2025healthbench}
+        \item AA Intelligence Index~\cite{aa2026intelligenceindex}
+        \item AA Coding Agent Index~\cite{aa2026codingindex}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \bigskip
+  {\scriptsize Source: GPT-5.6 launch eval
+  table~\cite{openai2026gpt56,aa2026codingindex}.}
+\end{frame}
+
 \begin{frame}{SWE-bench}
   \label{fr:swebench}
   Merged pull requests that \textbf{close an issue} and \textbf{touch the test
@@ -917,7 +996,7 @@
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{Measuring generated code}
+\begin{frame}{SWE-bench: metrics}
   \medskip
   \begin{itemize}
     \item \textbf{Functional correctness} --- does it run and pass? The only
@@ -979,11 +1058,6 @@
 
 \begin{frame}{SWE-bench: the headline climbs}
   \label{fr:headline}
-  \smallskip
-  \textbf{SWE-bench Verified} --- nine systems, Apr'24 to
-  Mar'25~\cite{ganhotra2025difficulty}.
-
-  \smallskip
   \begin{center}
     \begin{tikzpicture}
       \begin{axis}[
@@ -1013,7 +1087,36 @@
         (2025.203,65.4)
       };
       \addlegendentry{Overall}
-      
+      \end{axis}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{SWE-bench: the headline climbs}
+  \label{fr:headline2}
+  \begin{center}
+    \begin{tikzpicture}
+      \begin{axis}[
+        width=0.88\textwidth,
+        height=5cm,
+        ylabel={\% resolved},
+        ymin=0, ymax=104,
+        ytick={0,20,40,60,80,100},
+        xmin=2024.16, xmax=2025.30,
+        xtick={2024.25, 2024.5, 2024.75, 2025.0, 2025.25},
+        xticklabels={Apr'24, Jul'24, Oct'24, Jan'25, Apr'25},
+        xticklabel style={font=\scriptsize},
+        yticklabel style={font=\scriptsize},
+        ylabel style={font=\scriptsize},
+        grid=major,
+        grid style={dashed, TUMGrayLight},
+        axis line style={TUMGrayDark},
+        tick style={TUMGrayDark},
+        legend style={font=\tiny, at={(0.5,1.02)}, anchor=south,
+                      legend columns=4, draw=none, fill=none,
+                      /tikz/every even column/.append style={column sep=4pt}},
+        every axis plot/.append style={thick, mark size=1.6pt},
+      ]
       \addplot[TUMOrange, mark=square*] coordinates {
         (2024.251,27.3) (2024.467,47.9) (2024.571,36.6) (2024.918,70.6)
         (2024.918,72.2) (2024.975,74.7) (2025.044,77.3) (2025.099,81.4)
@@ -1037,10 +1140,6 @@
       \end{axis}
     \end{tikzpicture}
   \end{center}
-
-  \smallskip
-  \textbf{Easy near 80\,\%, hard stuck at 20\,\%.} The overall line hides the
-  spread --- exact splits next.
 \end{frame}
 
 \begin{frame}{SWE-bench: what the numbers show}
@@ -1057,12 +1156,9 @@
         \textbf{Tier} & \textbf{First} & \textbf{Last} \\
         & {\scriptsize Apr '24} & {\scriptsize Mar '25} \\
         \midrule
-        \textcolor{TUMOrange}{$\blacksquare$}~Easy \ {\small$<$15\,min
-          ($n{=}194$)} & 27.3\,\% & 80.4\,\% \\
-        \textcolor{TUMGreen}{$\blacksquare$}~Medium \ {\small$\leq$1\,h
-          ($n{=}261$)} & 10.0\,\% & 62.1\,\% \\
-        \textcolor{TUMExtRed}{$\blacksquare$}~Hard \ {\small$>$1\,h
-          ($n{=}45$)} & \phantom{0}0.0\,\% & 20.0\,\% \\
+        \textcolor{TUMOrange}{$\blacksquare$}~Easy \ {\small$<$15\,min} & 27.3\,\% & 80.4\,\% \\
+        \textcolor{TUMGreen}{$\blacksquare$}~Medium \ {\small$\leq$1\,h} & 10.0\,\% & 62.1\,\% \\
+        \textcolor{TUMExtRed}{$\blacksquare$}~Hard \ {\small$>$1\,h} & \phantom{0}0.0\,\% & 20.0\,\% \\
         \bottomrule
       \end{tabular}
     \end{minipage}%
@@ -1092,30 +1188,31 @@
   \end{itemize}
 \end{frame}
 
-\section{What are the challenges?}
+\section{Why are we stuck on the hard tasks?}
 
-\begin{frame}{Challenge: intent capture}
+\begin{frame}{1. Nothing checks what you meant}
   \label{fr:ambiguity}
   \begin{itemize}
-    \item No system in the survey \textbf{asks a clarifying question}. It
-      guesses and commits.
+    \item The agent commits to \textbf{one reading} of the issue --- and
+      nothing ever contradicts it.
       \medskip
-    \item Tests do not catch a wrong guess about something they never check.
+    \item A wrong guess about something the tests never check
+      \textbf{scores as a success}.
   \end{itemize}
 
   \vfill
   {\footnotesize
-   Clarification mechanisms exist and
+   No surveyed system asks. Clarification mechanisms exist and
    work~\cite{lahiri2022ticoder,mu2024clarifygpt,vijayvargiya2026ambiguity}.}
 \end{frame}
 
-\begin{frame}{Challenge: plan}
+\begin{frame}{2. It has to guess what to read}
   \begin{itemize}
-    \item Big repositories \textbf{do not fit in context}. The agent must
-      guess what to read.
+    \item The repository \textbf{does not fit in context}. Choosing what to
+      read is most of the problem.
       \medskip
-    \item Success drops from \textbf{80\,\%} on easy tasks to
-      \textbf{20\,\%} on hard, multi-file ones (frame~\ref{fr:numbers}).
+    \item Hard tasks are disproportionately \textbf{multi-file} --- exactly
+      where agents stall (frame~\ref{fr:numbers}).
   \end{itemize}
 
   \vfill
@@ -1124,19 +1221,18 @@
    proposed by~\cite{wei2025swerl,pan2024swegym}.}
 \end{frame}
 
-\begin{frame}{Challenge: cost and verification}
+\begin{frame}{3. Passing the tests is not being right}
   \begin{itemize}
-    \item Running more attempts costs more but \textbf{does not raise the
-      success rate}.
+    \item The suite is a \textbf{sample} of intended behaviour, not the
+      behaviour itself.
       \medskip
-    \item \textbf{``All tests pass''} is not proof of correctness --- a wrong
-      patch can still pass.
+    \item ``All tests pass'' is also the \textbf{stopping rule}.
   \end{itemize}
 
   \vfill
   {\footnotesize
-   Sample-and-rerank cost vs.\ resolve rate
-   from~\cite{turncontrol2025,sweeffi2025}.}
+   ``Reward hacking is swamping model intelligence
+   gains''~\cite{cursor2025rewardhacking}.}
 \end{frame}
 
 \begin{frame}{Takeaways}
@@ -1144,20 +1240,10 @@
     \item \textbf{Agentic beats one-shot because it can run things}, not
       because it reasons more.
       \medskip
-    \item All three challenges are the \textbf{same gap}: nothing outside the
-      model catches a wrong guess about intent, a wrong file, or a wrong fix.
-      \medskip
     \item \textbf{Verification is the bottleneck.} In a randomised trial,
       developers were 19\,\% \emph{slower} --- believing they were 20\,\%
       faster~\cite{metr2025rct}.
   \end{itemize}
-
-  \bigskip
-  \begin{block}{}
-    \centering
-    Autocomplete to autonomous issue resolution: crossed.\\
-    Impressive to \textbf{dependable}: still an open question.
-  \end{block}
 \end{frame}
 
 \setbeamertemplate{footline}{}
@@ -1199,69 +1285,6 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Backup: Sonnet 5 --- what did Anthropic report?}
-  \label{fr:sonnet5}
-  Released 2026-06-30, ``the most agentic Sonnet yet,'' priced below
-  Opus~\cite{anthropic2026sonnet5}.
-
-  \medskip
-  \begin{center}
-    \small
-    \begin{tabular}{@{}lcl@{}}
-      \toprule
-      \textbf{Model} & \textbf{SWE-bench Pro} & \textbf{Scored by} \\
-      \midrule
-      Sonnet 4.6 & 58.1\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
-      Sonnet 5 & 63.2\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
-      Opus 4.8 & 69.2\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
-
-  \medskip
-  {\footnotesize Anthropic's own system card, same simple bash-plus-file-edit
-  scaffold used since Claude 3.5~\cite{vellum2026sonnet5}. No independent Pro
-  leaderboard has scored Sonnet 5 yet --- same gap as the April
-  table~\cite{deng2025swebenchpro}.}
-
-  \medskip
-  {\small A Verified score above 80\,\% circulated at launch, but figures
-  disagree (82--85\,\%) and none trace to the system card directly ---
-  omitted here on purpose.}
-\end{frame}
-
-\begin{frame}[noframenumbering]{Backup: GPT-5.6 --- what did OpenAI report?}
-  \label{fr:gpt56}
-  Preview announced 2026-06-26 --- the \textbf{U.S. government} asked OpenAI
-  to cap access to $\sim$20 approved partners first; public release followed
-  13 days later, 2026-07-09~\cite{techcrunch2026gpt56gate}.
-
-  \medskip
-  Three tiers --- \textbf{Sol} (flagship), \textbf{Terra}, \textbf{Luna}:
-
-  \medskip
-  \begin{center}
-    \small
-    \begin{tabular}{@{}lccl@{}}
-      \toprule
-      & \textbf{SWE-bench Pro} & \textbf{Terminal-Bench} & \textbf{Scored by} \\
-      \midrule
-      Sol & 64.6\,\% & 88.8\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
-      Terra & 63.4\,\% & 87.4\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
-      Luna & 62.7\,\% & 84.7\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
-
-  \medskip
-  {\footnotesize No Verified score published at all --- the eval table leads
-  with Pro, the harder split~\cite{openai2026gpt56}.}
-
-  \medskip
-  {\small For 13 days, the most capable model on the market had \textbf{no
-  public benchmark of any kind} --- access, not just scoring, gates what can
-  be verified~\cite{techcrunch2026gpt56gate}.}
-\end{frame}
 
 \begin{frame}[noframenumbering]{Backup: surveyed systems on SWE-bench Verified}
   {\scriptsize Source: \url{https://swebench.com}, ``All agents'' view.
