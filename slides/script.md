@@ -24,7 +24,7 @@ Two factors:
 
 Three questions. 
 - How do the systems work? 
-- How do we measure them? 
+- How do we measure performance? 
 - What are the challenges?
 
 ## A few terms, up front
@@ -197,33 +197,7 @@ Merging and revisiting is demonstrated on puzzles — Game-of-24, sorting — al
 In real agents you see the two ends: one chain, or many chains scored. The closest thing to revisit is Reflexion — write a note after a failure, retry with it — a loose loop, not a graph. 
 Treat the graph as the conceptual top of the spectrum, not something running in production.
 
-## Plan: localisation
-
-So how does it stop guessing? Point at real code. A tree lets the model try several guesses, but nothing has run yet — so it narrows the actual repository from broad to specific, and every step names code it can check. 
-- Agentless: files, then classes and functions, then edit locations. 
-- AutoCodeRover: AST-backed search APIs, coarse to fine.
-
-The useful plans name concrete program elements you can check against the repository — not invented requirements.
-
-## Localisation: Agentless
-
-Narrowing without letting the model wander — three fixed steps, coarse to fine. 
-- Rank files: from the repo layout and the issue, shortlist the files most likely involved. 
-- Rank elements: inside those files, narrow to specific classes and functions. 
-- Pin locations: inside those, the exact lines to edit.
-
-Three prompts, no search, no tools. The narrowing is hard-coded into the scaffold — fixed, not discovered.
-
-## Localisation: AutoCodeRover
-
-Let the model navigate, but through the syntax tree — not by reading whole files. 
-- Search APIs: search_class, search_method, search_method_in_class. 
-- The agent calls them coarse to fine, pulling in just the code it needs. 
-- AST-backed: structured, cheaper context than dumping whole files into the prompt.
-
-The model chooses what to search — agentic, where Agentless is a fixed funnel.
-
-Grounding is planning's job, done blind — nothing has run yet. Generation is next, and it finally produces something execution can check.
+Planning ends here, and it all happens blind: where and what, chosen before anything runs. Generation is next — it finally produces something execution can check. (Grounding mechanics — Agentless, AutoCodeRover — are in the backup slides if the question comes up.)
 
 ## Generate: turning it into code
 
@@ -238,12 +212,10 @@ Ranking must use execution or AST normalisation.
 
 ## Execute: running the code
 
-This is where the environment can say no. 
-- The test suite, the linter, the type checker — all external to the model.
-
-Error traces tell the agent what failed and where. 
-But the test suite is a sample of the intended behaviour, not the behaviour itself. 
-A patch can pass every test and still be wrong.
+This is where the environment can say no — all three checks external to the model.
+- Test suite: fail-to-pass must flip, pass-to-pass must not regress.
+- Linter or type checker: syntax and type errors, before tests even run.
+- Error traces: what failed, and where.
 
 Right or wrong, that verdict is what refinement works with next.
 
@@ -446,3 +418,29 @@ frontier signal has moved to Pro.
 
 Best published result for each of the five surveyed systems on Verified, pulled from swebench.com. 
 Devin's number is on a different, easier split, self-reported, and never reproduced — read it as context, not a comparison.
+
+## Backup: Plan --- localisation
+
+So how does it stop guessing? Point at real code. A tree lets the model try several guesses, but nothing has run yet — so it narrows the actual repository from broad to specific, and every step names code it can check. 
+- Agentless: files, then classes and functions, then edit locations. 
+- AutoCodeRover: AST-backed search APIs, coarse to fine.
+
+The useful plans name concrete program elements you can check against the repository — not invented requirements.
+
+## Backup: Localisation --- Agentless
+
+Narrowing without letting the model wander — three fixed steps, coarse to fine. 
+- Rank files: from the repo layout and the issue, shortlist the files most likely involved. 
+- Rank elements: inside those files, narrow to specific classes and functions. 
+- Pin locations: inside those, the exact lines to edit.
+
+Three prompts, no search, no tools. The narrowing is hard-coded into the scaffold — fixed, not discovered.
+
+## Backup: Localisation --- AutoCodeRover
+
+Let the model navigate, but through the syntax tree — not by reading whole files. 
+- Search APIs: search_class, search_method, search_method_in_class. 
+- The agent calls them coarse to fine, pulling in just the code it needs. 
+- AST-backed: structured, cheaper context than dumping whole files into the prompt.
+
+The model chooses what to search — agentic, where Agentless is a fixed funnel.

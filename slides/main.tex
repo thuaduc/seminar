@@ -178,7 +178,7 @@
       {\small Five stages, orchestration and interface, planning and
       refinement, five systems.}
       \medskip
-    \item \textbf{How do we measure them?} \\
+    \item \textbf{How do we measure performance?} \\
       {\small The benchmark, the metrics, what the numbers hide.}
       \medskip
     \item \textbf{What are the challenges?} \\
@@ -622,92 +622,31 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{Plan: localisation}
-  \label{fr:localisation}
-  {\large So how does it \textbf{stop guessing}?}
-
-  \medskip
-  Point at real code. Narrow the repo from broad to specific --- each step
-  something you can check:
-
-  \bigskip
-  \begin{itemize}
-    \item \textbf{Agentless} --- files $\rightarrow$ classes/functions
-      $\rightarrow$ edit locations~\cite{xia2024agentless}
-      \medskip
-    \item \textbf{AutoCodeRover} --- AST-backed search APIs, coarse to
-      fine~\cite{zhang2024autocoderover}
-  \end{itemize}
-
-  \bigskip
-  \begin{block}{What the useful ones share}
-    They name \textbf{concrete program elements} that can be checked against the
-    repository --- not invented requirements.
-  \end{block}
-\end{frame}
-
-\begin{frame}{Localisation: Agentless}
-  {\small Narrowing without letting the model wander: three fixed steps, coarse
-  to fine~\cite{xia2024agentless}.}
-
-  \bigskip
-  \begin{enumerate}
-    \item \textbf{Rank files} --- from the repo layout and the issue, shortlist
-      the files most likely involved.
-      \medskip
-    \item \textbf{Rank elements} --- inside those files, narrow to specific
-      classes and functions.
-      \medskip
-    \item \textbf{Pin locations} --- inside those, the exact lines to edit.
-  \end{enumerate}
-
-  \bigskip
-  \begin{block}{Fixed, not discovered}
-    Three prompts, coarse to fine. No search, no tools --- the narrowing is
-    hard-coded into the scaffold.
-  \end{block}
-\end{frame}
-
-\begin{frame}{Localisation: AutoCodeRover}
-  {\small Let the model navigate --- but through the syntax tree, not by reading
-  whole files~\cite{zhang2024autocoderover}.}
-
-  \bigskip
-  \begin{itemize}
-    \item \textbf{Search APIs} --- \texttt{search\_class},
-      \texttt{search\_method}, \texttt{search\_method\_in\_class}.
-      \medskip
-    \item The agent calls them \textbf{coarse to fine}, pulling in just the code
-      it needs.
-      \medskip
-    \item AST-backed: structured, cheaper context than dumping whole files into
-      the prompt.
-  \end{itemize}
-
-  \bigskip
-  \begin{block}{Discovered, not fixed}
-    The model chooses what to search --- agentic, where Agentless is a fixed
-    funnel.
-  \end{block}
-\end{frame}
-
 \begin{frame}{Generate: turning it into code}
   The model writes or edits source code --- a patch, a new function, a refactored
   block.
 
   \medskip
   \begin{itemize}
-    \item \textbf{Infilling} --- the model completes a span given surrounding
-      context. Works well within a single function.
+    \item \textbf{Infilling}
+      \begin{itemize}
+        \item completes a span from the surrounding context
+        \item works well within a single function
+      \end{itemize}
       \medskip
-    \item \textbf{Diff generation} --- produce a unified diff rather than a full
-      file. Smaller output, but fragile if the context is stale.
+    \item \textbf{Diff generation}
+      \begin{itemize}
+        \item a unified diff, not a whole file --- smaller output
+        \item fragile if the surrounding context is stale
+      \end{itemize}
       \medskip
-    \item \textbf{Sample $N$, pick one} --- generate many candidates, rank by
-      test results or a critic. AlphaCode samples up to \emph{millions} and
-      clusters by execution~\cite{li2022alphacode}.
+    \item \textbf{Sample $N$, pick one}
+      \begin{itemize}
+        \item many candidates, ranked by test results or a critic
+        \item AlphaCode samples up to \emph{millions}, clusters by
+          execution~\cite{li2022alphacode}
+      \end{itemize}
   \end{itemize}
-
 \end{frame}
 
 \begin{frame}{Execute: running the code}
@@ -715,23 +654,25 @@
 
   \medskip
   \begin{itemize}
-    \item \textbf{Test suite} --- fail-to-pass tests must flip, pass-to-pass
-      must not regress.
+    \item \textbf{Test suite}
+      \begin{itemize}
+        \item fail-to-pass tests must flip
+        \item pass-to-pass must not regress
+      \end{itemize}
       \medskip
-    \item \textbf{Linter / type checker} --- catches syntax errors and type
-      mismatches before tests run.
+    \item \textbf{Linter / type checker}
+      \begin{itemize}
+        \item catches syntax errors and type mismatches before tests run
+      \end{itemize}
       \medskip
-    \item \textbf{Error traces} --- stack traces and assertion messages tell the
-      agent \emph{what} failed and \emph{where}.
+    \item \textbf{Error traces}
+      \begin{itemize}
+        \item stack traces and assertion messages say \emph{what} failed and
+          \emph{where}
+      \end{itemize}
   \end{itemize}
 
   \medskip
-  \begin{block}{The test suite is a sample, not the spec}
-    A patch can pass every test and still be wrong. The grading oracle is
-    \textbf{incomplete} --- it checks what the tests exercise, nothing more.
-  \end{block}
-
-  \smallskip
   {\small Right or wrong, that verdict is what refinement works with next.}
 \end{frame}
 
@@ -795,15 +736,22 @@
 \begin{frame}{Refinement: when does the loop stop?}
   \label{fr:refinelast}
   \begin{itemize}
-    \item \textbf{All tests pass} --- but that is quietly an oracle. The
-      stopping rule has smuggled in ground truth.
+    \item \textbf{All tests pass}
+      \begin{itemize}
+        \item but that is quietly an oracle
+        \item the stopping rule has smuggled in ground truth
+      \end{itemize}
       \medskip
-    \item \textbf{Diminishing returns} --- at fixed budget, another repair round
-      is often \emph{worse} than a fresh
-      sample~\cite{olausson2024selfrepair}.
+    \item \textbf{Diminishing returns}
+      \begin{itemize}
+        \item at fixed budget, another repair round is often \emph{worse} than
+          a fresh sample~\cite{olausson2024selfrepair}
+      \end{itemize}
       \medskip
-    \item Iterate or best-of-$N$: \textbf{the same lever}. Fix the budget to
-      compare.
+    \item \textbf{Iterate or best-of-$N$ --- the same lever}
+      \begin{itemize}
+        \item fix the budget to compare
+      \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -851,7 +799,7 @@
   \end{tabular}
 \end{frame}
 
-\section{How do we measure them?}
+\section{How do we measure performance?}
 
 \begin{frame}{SWE-bench}
   \label{fr:swebench}
@@ -903,7 +851,6 @@
     \bottomrule
   \end{tabularx}
   \medskip
-  How hard is SWE bench?
 \end{frame}
 
 \begin{frame}{SWE-bench: how hard is each task?}
@@ -1200,6 +1147,75 @@
 
   \bigskip
   {\small An agent cannot fix what it never places in context.}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Backup: Plan --- localisation}
+  \label{fr:localisation}
+  {\large So how does it \textbf{stop guessing}?}
+
+  \medskip
+  Point at real code. Narrow the repo from broad to specific --- each step
+  something you can check:
+
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Agentless} --- files $\rightarrow$ classes/functions
+      $\rightarrow$ edit locations~\cite{xia2024agentless}
+      \medskip
+    \item \textbf{AutoCodeRover} --- AST-backed search APIs, coarse to
+      fine~\cite{zhang2024autocoderover}
+  \end{itemize}
+
+  \bigskip
+  \begin{block}{What the useful ones share}
+    They name \textbf{concrete program elements} that can be checked against the
+    repository --- not invented requirements.
+  \end{block}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Backup: Localisation --- Agentless}
+  {\small Narrowing without letting the model wander: three fixed steps, coarse
+  to fine~\cite{xia2024agentless}.}
+
+  \bigskip
+  \begin{enumerate}
+    \item \textbf{Rank files} --- from the repo layout and the issue, shortlist
+      the files most likely involved.
+      \medskip
+    \item \textbf{Rank elements} --- inside those files, narrow to specific
+      classes and functions.
+      \medskip
+    \item \textbf{Pin locations} --- inside those, the exact lines to edit.
+  \end{enumerate}
+
+  \bigskip
+  \begin{block}{Fixed, not discovered}
+    Three prompts, coarse to fine. No search, no tools --- the narrowing is
+    hard-coded into the scaffold.
+  \end{block}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Backup: Localisation --- AutoCodeRover}
+  {\small Let the model navigate --- but through the syntax tree, not by reading
+  whole files~\cite{zhang2024autocoderover}.}
+
+  \bigskip
+  \begin{itemize}
+    \item \textbf{Search APIs} --- \texttt{search\_class},
+      \texttt{search\_method}, \texttt{search\_method\_in\_class}.
+      \medskip
+    \item The agent calls them \textbf{coarse to fine}, pulling in just the code
+      it needs.
+      \medskip
+    \item AST-backed: structured, cheaper context than dumping whole files into
+      the prompt.
+  \end{itemize}
+
+  \bigskip
+  \begin{block}{Discovered, not fixed}
+    The model chooses what to search --- agentic, where Agentless is a fixed
+    funnel.
+  \end{block}
 \end{frame}
 
 \setbeamertemplate{bibliography item}[text]
