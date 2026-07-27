@@ -45,3 +45,226 @@
 % Both were verified against the publisher record before being added, so if the
 % pre-LLM comparison is ever restored, recover them from git history rather than
 % retyping them.
+
+% ---------------------------------------------------------------------------
+% Backup: newest-model self-reports (Sonnet 5, GPT-5.6), added 2026-07-27.
+% Both cite the vendor's own launch materials/eval tables -- self-reported,
+% same trust caveat as the April fr:trust table. Verified numbers for Sonnet 5
+% and GPT-5.6 Sol were deliberately left off the slides: circulating figures
+% (82--85% and ~96% respectively) never traced to a primary source and
+% disagreed across outlets during research.
+
+@misc{anthropic2026sonnet5,
+  title={Introducing {Claude} Sonnet 5},
+  author={{Anthropic}},
+  year={2026},
+  howpublished={\url{https://www.anthropic.com/news/claude-sonnet-5}},
+  note={Accessed: 2026-07-27}
+}
+
+@misc{vellum2026sonnet5,
+  title={{Claude} Sonnet 5 Benchmarks Explained},
+  author={{Vellum}},
+  year={2026},
+  howpublished={\url{https://www.vellum.ai/blog/claude-sonnet-5-benchmarks-explained}},
+  note={Tabulates {SWE-bench} Pro scores from Anthropic's Sonnet 5 System
+    Card (2026-06-30). Accessed: 2026-07-27}
+}
+
+@misc{openai2026gpt56,
+  title={{OpenAI} Releases {GPT-5.6}: A Three-Tier Model Family with
+    Programmatic Tool Calling},
+  author={{MarkTechPost}},
+  year={2026},
+  howpublished={\url{https://www.marktechpost.com/2026/07/09/openai-releases-gpt-5-6-a-three-tier-model-family-with-programmatic-tool-calling/}},
+  note={Reports {OpenAI}'s published {GPT-5.6} eval table ({SWE-bench} Pro,
+    Terminal-Bench). Accessed: 2026-07-27}
+}
+
+@misc{aa2026codingindex,
+  title={{AI} Coding Agent Benchmarks \& Leaderboard},
+  author={{Artificial Analysis}},
+  year={2026},
+  howpublished={\url{https://artificialanalysis.ai/agents/coding-agents}},
+  note={Coding Agent Index: independently run, not vendor-reported ---
+    aggregates {DeepSWE}, Terminal-Bench v2, and repository {Q\&A}, pass@1
+    over 3 attempts (methodology at
+    \url{https://artificialanalysis.ai/methodology/coding-agents-benchmarking}).
+    Scores as tabulated in~\cite{openai2026gpt56}. Accessed: 2026-07-27}
+}
+
+% ---------------------------------------------------------------------------
+% Sources for individual benchmarks named on the Sonnet 5 / GPT-5.6
+% "which benchmarks?" slides, added 2026-07-27. Verified against arXiv
+% abstract pages or the org's own methodology page before being added.
+
+@article{merrill2026terminalbench,
+  title={Terminal-Bench: Benchmarking Agents on Hard, Realistic Tasks in
+    Command Line Interfaces},
+  author={Merrill, Mike A. and others},
+  journal={arXiv preprint arXiv:2601.11868},
+  year={2026},
+  note={89-task 2.0 release; version 2.1 is a task-patch revision announced
+    at \url{https://www.laude.org/updates/terminal-bench} (2026-07-24), no
+    separate paper}
+}
+
+@article{xie2024osworld,
+  title={{OSWorld}: Benchmarking Multimodal Agents for Open-Ended Tasks in
+    Real Computer Environments},
+  author={Xie, Tianbao and Zhang, Danyang and others},
+  journal={arXiv preprint arXiv:2404.07972},
+  year={2024}
+}
+
+@misc{xlang2025osworldverified,
+  title={{OSWorld}-Verified},
+  author={{XLANG Lab}},
+  year={2025},
+  howpublished={\url{https://xlang.ai/blog/osworld-verified}},
+  note={Infrastructure/quality revision of the same 369-task {OSWorld} set
+    (VMware to {AWS}), not a new task set. Accessed: 2026-07-27}
+}
+
+@article{yuan2026osworld2,
+  title={{OSWorld} 2.0: Benchmarking Computer Use Agents on Long-Horizon
+    Real-World Tasks},
+  author={Yuan, Mengqi and Zhou, Zilong and Xiong, Xinzhuang and others},
+  journal={arXiv preprint arXiv:2606.29537},
+  year={2026},
+  note={New 108-task long-horizon set (median 1.6\,h/task) --- distinct
+    from {OSWorld}-Verified~\cite{xlang2025osworldverified}}
+}
+
+@article{wei2025browsecomp,
+  title={{BrowseComp}: A Simple Yet Challenging Benchmark for Browsing
+    Agents},
+  author={Wei, Jason and Sun, Zhiqing and others},
+  journal={arXiv preprint arXiv:2504.12516},
+  year={2025}
+}
+
+@article{patwardhan2025gdpval,
+  title={{GDPval}: Evaluating {AI} Model Performance on Real-World
+    Economically Valuable Tasks},
+  author={Patwardhan, Tejal and others},
+  journal={arXiv preprint arXiv:2510.04374},
+  year={2025}
+}
+
+@misc{aa2026gdpvalaa,
+  title={{GDPval}-{AA}},
+  author={{Artificial Analysis}},
+  year={2026},
+  howpublished={\url{https://artificialanalysis.ai/evaluations/gdpval-aa}},
+  note={{Artificial Analysis}'s own Elo leaderboard layered on OpenAI's
+    {GDPval} task set~\cite{patwardhan2025gdpval}, not an independent task
+    design. Accessed: 2026-07-27}
+}
+
+@article{phan2025hle,
+  title={Humanity's Last Exam},
+  author={Phan, Long and others},
+  journal={arXiv preprint arXiv:2501.14249},
+  year={2025}
+}
+
+@article{sun2026agentslastexam,
+  title={Agents' Last Exam},
+  author={Sun, Yiyou and others},
+  journal={arXiv preprint arXiv:2606.05405},
+  year={2026},
+  note={Rolling set of 1{,}500+ long-horizon, executable occupational
+    tasks (O*NET/{SOC}) --- distinct from Humanity's Last
+    Exam~\cite{phan2025hle}, despite the name}
+}
+
+@misc{datacurve2026deepswe,
+  title={{DeepSWE} v1.1},
+  author={{Datacurve AI}},
+  year={2026},
+  howpublished={\url{https://deepswe.datacurve.ai/blog/deepswe-v1-1}},
+  note={113 long-horizon {SWE} tasks (TS/Go/Python/JS/Rust), sandboxed
+    grading. Unrelated to the same-named 2025 {Agentica}/Together {AI}
+    open-weight coding agent beyond sharing a name. Accessed: 2026-07-27}
+}
+
+@article{li2025toolathlon,
+  title={The Tool Decathlon ({Toolathlon}): Benchmarking Language Agents
+    for Diverse, Realistic, and Long-Horizon Task Execution},
+  author={Li, Junlong and Zhao, Wenshuo and others},
+  journal={arXiv preprint arXiv:2510.25726},
+  year={2025}
+}
+
+@article{gemini2024mrcr,
+  title={Gemini 1.5: Unlocking Multimodal Understanding Across Millions of
+    Tokens of Context},
+  author={{Gemini Team, Google DeepMind}},
+  journal={arXiv preprint arXiv:2403.05530},
+  year={2024},
+  note={Origin of the {MRCR} (Multi-Round Co-reference Resolution)
+    long-context eval}
+}
+
+@misc{deepmind2026mrcrv2,
+  title={{MRCR} v2},
+  author={{Google DeepMind}},
+  year={2026},
+  howpublished={\url{https://github.com/google-deepmind/eval_hub/tree/master/eval_hub/mrcr_v2}},
+  note={Harder 2/4/8-needle variant scaling to 8{M} tokens; still a
+    {Google DeepMind} eval~\cite{gemini2024mrcr} despite appearing in
+    {OpenAI}'s launch table. Accessed: 2026-07-27}
+}
+
+@article{arora2025healthbench,
+  title={{HealthBench}: Evaluating Large Language Models Towards Improved
+    Human Health},
+  author={Arora, Rahul K. and others},
+  journal={arXiv preprint arXiv:2505.08775},
+  year={2025}
+}
+
+@article{hicks2026healthbenchpro,
+  title={{HealthBench} Professional: Evaluating Large Language Models on
+    Real Clinician Chats},
+  author={Hicks, Rebecca Soskin and Trofimov, Mikhail and others},
+  journal={arXiv preprint arXiv:2604.27470},
+  year={2026}
+}
+
+@article{petrov2025usamo,
+  title={Proof or Bluff? Evaluating {LLM}s on 2025 {USA} Math Olympiad},
+  author={Petrov, Ivo and Dekoninck, Jasper and others},
+  journal={arXiv preprint arXiv:2503.21934},
+  year={2025}
+}
+
+@article{balunovic2025matharena,
+  title={{MathArena}: Evaluating {LLM}s on Uncontaminated Math
+    Competitions},
+  author={Balunovi{\'c}, Mislav and Dekoninck, Jasper and Petrov, Ivo and
+    Jovanovi{\'c}, Nikola and Vechev, Martin},
+  journal={arXiv preprint arXiv:2505.23281},
+  year={2025},
+  note={Same team's platform reapplies the Petrov et
+    al.~\cite{petrov2025usamo} methodology to {USAMO} 2026; results at
+    \url{https://matharena.ai/usamo/}, no separate 2026 paper}
+}
+
+@misc{aa2026intelligenceindex,
+  title={{Artificial Analysis} Intelligence Index},
+  author={{Artificial Analysis}},
+  year={2026},
+  howpublished={\url{https://artificialanalysis.ai/evaluations/artificial-analysis-intelligence-index}},
+  note={Weighted composite over 9 evals including {GDPval-AA},
+    Terminal-Bench, and {HLE}. Accessed: 2026-07-27}
+}
+
+@article{yang2024swebenchmm,
+  title={{SWE-bench} Multimodal: Do {AI} Systems Generalize to Visual
+    Software Domains?},
+  author={Yang, John and Jimenez, Carlos E. and Zhang, Alex L. and others},
+  journal={arXiv preprint arXiv:2410.03859},
+  year={2024}
+}
