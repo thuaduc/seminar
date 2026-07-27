@@ -29,9 +29,10 @@ Three questions.
 
 ## A few terms, up front
 
-Five words you'll keep hearing — quick definitions before I use them. 
+Six words you'll keep hearing — quick definitions before I use them. 
 Scaffold: the non-model code around it — tools, prompts, control flow. 
 Tool call: the model asking the scaffold to act — read a file, run the tests — and getting the output back. 
+Patch: a description of a change — which lines, in which files — not the changed code itself. It's what an agent actually submits. 
 Harness: the environment a result is run and graded in. 
 Oracle: something outside the model that can check it — a test suite, a compiler, a human. 
 Critic: a separate model, trained to score candidate outputs.
@@ -186,16 +187,17 @@ Planning ends here, and it all happens blind: where and what, chosen before anyt
 
 Now generation turns that plan into code. Same empty-cart example, three ways to emit the edit.
 
-First, infilling. The model completes a span given the surrounding lines — grey is the context it conditions on, orange is all it emits: the two-line guard. Cheap and reliable, but really only within a single function.
+First, infilling. The model completes a span given the surrounding lines — grey is the context it conditions on, orange is all it emits: the two-line guard.
+In its favour: this is the pre-training objective, filling a gap from both sides, so it's the shape the model is strongest at — and it can't be mis-placed, because the scaffold decided where the gap goes. Against it: one contiguous span, in practice one function, and the surrounding code has to fit in the prompt.
 
 ## Generate: diff generation
 
-Second, a unified diff — only the change travels, not the whole file. Smaller output, and it edits large files without re-emitting them. The catch: the context lines have to match the current file. If the file moved on, the patch won't apply — stale-context fragility.
+Second, a unified diff — only the change travels, not the whole file. That buys two things: it edits a large file without re-emitting it, and one patch can span many hunks and many files. What it costs: now the model has to state *where* itself. Those context lines are the address, and they have to match the current file. If the file moved on, the patch is rejected before a single test runs — stale-context fragility.
 
 ## Generate: sample N, pick one
 
 Third, don't trust one shot — sample many and pick. Same plan, N attempts: one wraps a try/except, one adds the guard, one returns zero always. Rank them by the tests — patch B passes three of three, pick it.
-The point: the ranking needs an oracle. Two correct patches can share no token, so you can't compare them as strings, and the model's own confidence isn't enough — you run them. AlphaCode takes this to the extreme: sample up to millions, cluster by execution behaviour.
+What you gain: one bad sample no longer sinks the task, and diverse candidates cover approaches a single pass would miss. What you pay: the ranking needs an oracle. Two correct patches can share no token, so you can't compare them as strings, and the model's own confidence isn't enough — you run them. And cost scales with N — calls, dollars, wall-clock. AlphaCode takes this to the extreme: sample up to millions, cluster by execution behaviour.
 
 ## Execute: running the code
 
@@ -208,21 +210,11 @@ Right or wrong, that verdict is what refinement works with next.
 
 ## Refinement: iterative self-repair
 
-Execution just returned a verdict. What the agent does with it is the last dimension, and where it varies the most.
-
-Three mechanisms that close the loop by re-reading the model's own output. 
-- Self-Refine: the model critiques itself — plateaus. 
-- Reflexion: verbal critique across attempts with self-written tests — inherits what those tests miss. 
-- Self-debugging: the model explains its own code — explains the bug as intended.
+Execution returned a verdict; what the agent does with it is refinement. Don't read the rows — read the middle column, because that is the whole question, and here the answer is the same three times: the model's own output, read back by the model. Self-Refine critiques itself, Reflexion writes the critique down and carries it to the next attempt, self-debugging narrates its own code looking for the discrepancy — three prompts, one architecture. Which is why the failures rhyme: it plateaus, or it explains the bug as intended, because the misreading that wrote the code also writes the critique of it. Reflexion is the one to pause on — usually filed as external feedback, but HumanEval supplies no reward at inference, so it writes its own tests, and its ninety-one-against-eighty headline rests on a proxy. The ceiling is one sentence: if a model could tell its wrong code from its right code by looking, it would have written the right code first. Not zero, though — self-debugging with no tests still buys two to three percent, and twelve where tests exist. That gap is the next slide.
 
 ## Refinement: tests and trained critics
 
-Three that bring in something external. 
-- D4C: failing tests plus the whole function. 
-- Agentless: regression plus generated reproduction tests. 
-- Best-of-N with a critic: rollouts ranked by a trained model.
-
-All run in per-instance sandboxes — for reproducibility first, containment second.
+Same table, different middle column: now something the generator did not produce closes the loop, and every mechanism that survives at repository scale is on this slide rather than the last one. But external is not one thing. Only D4C is purely oracle — failing tests plus the whole function. Agentless is oracle plus proxy, and the proxy half inherits whatever was misread: misunderstand the issue and you generate a reproduction test that confirms the misunderstanding. The critic ranking OpenHands' rollouts is a separately trained model, so it can genuinely disagree with the generator — that is worth points — but it cannot surprise it; its ceiling is its own fidelity. Notice the third column stops rhyming: plausible-but-incorrect patches, an inherited misreading, cost scaling with N — mechanism-specific failures instead of one systemic one. That is what a real signal buys. CRITIC is the controlled experiment — same model, same prompt, one variable: self-critique with a tool corrects reliably, without one it does almost nothing. And the sandbox: containment is the obvious reason, but reproducibility is the first one — SWE-bench suites are environment-dependent, so without a per-instance container you are grading the environment, not the patch.
 
 ## Refinement: when does the loop stop?
 
@@ -273,7 +265,7 @@ Resolve rate: both sets pass, first patch.
 
 That is one task, pass or fail. Next: how you turn thousands of them into a single number worth comparing.
 
-## Measuring generated code
+## SWE-bench: metrics
 
 Not string similarity — two correct patches may share no token.
 
@@ -296,26 +288,15 @@ Roughly two years of splits, oldest to newest.
 - Multilingual, May 2025: nine languages. 
 - Pro, Sep 2025: long-horizon, multi-file, held-out repos.
 
-Pro is the one to watch — the contamination-resistant successor. Enterprise and held-out repositories kept off public GitHub, several languages, and tasks that need large multi-file changes. That is why the frontier falls from about eighty percent on Verified to about forty-six on Pro.
-
-Verified is the most curated, not the hardest. 
-Resolve rates are not comparable across splits.
-
-From here we stay on Verified — the split everyone quotes. But a single number on it still hides a lot, so before the graph, one thing about how its tasks differ.
 
 ## How hard is each task?
 
-When OpenAI built Verified, annotators estimated the fix time for each issue —
-how long a skilled engineer would need to write the patch.
-Three buckets: under fifteen minutes easy, up to an hour medium, over an hour hard.
+How reliable is the benchmark? 
 
-Two things to hold onto.
-It is estimated human effort — a proxy for how involved the change is, not a
-clock on the agent.
-And there were really four bins; one-to-four hours and four-plus collapse into
-hard, because only three issues exceed four hours.
+We will now focus on Verified split of swe bench. 
 
-Three tiers, fixed per task. Now watch two years of progress split along them.
+When OpenAI built Verified, annotators estimated the fix time for each issue — how long would a skilled engineer need to write the fix.
+
 
 ## The headline climbs
 
@@ -326,73 +307,43 @@ Watch the spread: easy is near eighty, hard is stuck at twenty.
 The overall line is just the tier-weighted average — it hides that gap.
 Next slide reads off the exact splits.
 
-## What the numbers show
 
-Nine systems on Verified, split by annotator difficulty.
-
-Easy and medium are ninety-one percent of Verified. 
-The headline mostly reports sub-hour work.
-And this split is not just one blog — Epoch AI's 2025 analysis finds the same
-composition independently, thirty-nine easy, fifty-two medium, nine hard.
-The pie is that mix; the table is how each tier resolves.
-
-The hard tier stalled near twenty percent. 
-A system can gain ten overall points while solving no new hard task.
+Easy and medium are ninety-one percent of Verified. The hard tier stalled near twenty percent. A system can gain ten overall points while solving no new hard task.
 
 So the same number both drives progress and hides where it stalls. That tension hands us into the last part: where these systems actually break.
 
-## Challenge: intent capture
+By early 2026 OpenAI retired Verified — the frontier model and agent reach eighty percent. They move on to to Pro.
 
-*Part three — where it breaks.* The spine already told us where to look: the weak stages are the two with no oracle, nothing that can tell the model it is wrong. This is the first of them.
+So what are the challenges for the hard, long horizon, multiple file changes task:
 
-The stage with no feedback edge. 
-The agent guesses and commits.
+## 1. Nothing checks what you meant
 
-- Issue reports leave out edge cases. 
-- Tests only check what they exercise — a wrong guess about an untested invariant scores as a success. 
-- No surveyed system asks a clarifying question.
+Intent capture is the one stage with no feedback edge. The agent reads the issue, commits to it, and never revisit. So the issue could be false positive and be assumped that it's right till the end of the agent run. 
 
-Clarification mechanisms exist and work. 
-The gap is the evaluation: SWE-bench filters out ambiguity by construction. 
-The agent is never rewarded for asking.
+## 2. It has to guess what to read
 
-## Challenge: plan
+The second reason is that the repository does not fit in the context window, so before the agent can be right it has to choose what to look at — and that choice is most of the problem. 
 
-The repository does not fit in context. 
-The agent must choose what to read, and that choice is most of the problem.
+Hard tasks are disproportionately multi-file, exactly where agents stall 
 
-- Hard tier stuck at twenty percent against easy at eighty. 
-- Of the forty-five hard instances, twenty-five need several files — only nine are solved by anyone.
 
-Is the cause retrieval or reasoning? 
-Nobody has run the experiment. 
-- Hand it the gold file set. 
-- If the hard tier moves, retrieval. 
-- If not, only training will.
+## 3. Passing the tests is not being right
 
-## Challenge: cost and verification
+Third: the oracle we lean on is not the thing we actually want. A test suite is a sample of intended behaviour, not the behaviour itself, so a patch can turn tests from failed to pass, and still be wrong — wrong.
 
-Two problems on the same axis. 
-
-The dominant quality lever — sample N and rerank — multiplies cost directly. 
-Resolve rate decouples from compute: spending more does not reorder the systems.
-
-"All tests pass" smuggles ground truth into the stopping condition. 
-The suite is a sample of intended behaviour, not the behaviour itself — a patch can pass every test and still be wrong.
-
-Self-critique alone can only reorganise what the model already believes — measured going negative.
-
-The practical frontier is not peak accuracy. 
-It is accuracy per dollar, bounded by an oracle a wrong patch can still pass.
+Worse, that same verdict is the stopping rule: the loop stops when the tests pass.
 
 ## Takeaways
 
 - Agentic beats one-shot because it can run things, not because it reasons more.
-- All three challenges are the same gap: nothing outside the model catches a wrong guess about intent, a wrong file, or a wrong fix.
-- Verification is the bottleneck. In a randomised trial, developers were nineteen percent slower with AI tools — believing they were twenty percent faster.
 
-From autocomplete to autonomous issue resolution: crossed. 
-From impressive to dependable: still an open question.
+- Three of the four are the same gap: nothing outside the model catches a wrong guess about intent, a wrong file, or a wrong fix — and the fourth says you cannot buy past it.
+
+- Verification is the bottleneck. In a randomised trial, experienced developers worked real issues on their own repositories, half the tasks with AI allowed, half without. 
+
+With AI, they generate the code much faster. But the time went into prompting, to reading and to repairing output, is also a lot.
+
+So they ended up being 19% slower and though that they are 20% faster.
 
 ## Backup: can we trust the numbers?
 
