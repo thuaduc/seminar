@@ -1,137 +1,112 @@
-# Speaker script — Agentic AI for Code Generation
+# Speaker script: Agentic AI for Code Generation
 
 ## How we write code has changed
 
-Manual: you write every line. 
-Autocomplete: you accept or reject suggestions, still reading every line. 
-One-shot: you describe a function, the model writes it, but nothing checks it. 
-Agentic: you state an intent, the system edits files, runs tests, reads failures, tries again.
+Two columns: what the machine does, and what stays with you.
+Manual: you write every line, and lean on the test suite to catch mistakes.
+Autocomplete: you accept or reject each suggestion, line by line, and you stay the author.
+One-shot: you describe a function, the model writes it, and you have to read and check all of it yourself.
+Agentic: you state an intent, then review the outcome, while the system finds files, edits, and runs tests.
 
 
 ## Real progress
 
-April 2024, first agentic scaffolds: eighteen percent. 
-March 2025: sixty-five. 
-April 2026: eighty-one. 
+April 2024, the first agentic scaffolds: eighteen percent.
+March 2025: sixty-five.
+April 2026: eighty-one.
 
-Massive improvement in two years. 
-Two factors:
-- Model improvement. Models were not trained to be agents.
-- Agent system improvement
+Massive improvement in two years.
+Two things drove it:
+- Better models. And note that none of them were trained to be agents.
+- Better agent systems around those models.
 
 
 ## What this talk shows
 
-Three questions. 
-- How do the systems work? 
-- How do we measure performance? 
+Three questions.
+- How do the systems work?
+- How do we measure performance?
 - What are the challenges?
 
 ## A few terms, up front
 
-Six words you'll keep hearing — quick definitions before I use them. 
-Scaffold: the non-model code around it — tools, prompts, control flow. 
-Tool call: the model asking the scaffold to act — read a file, run the tests — and getting the output back. 
-Patch: a description of a change — which lines, in which files — not the changed code itself. It's what an agent actually submits. 
-Harness: the environment a result is run and graded in. 
-Oracle: something outside the model that can check it — a test suite, a compiler, a human. 
+Six words you'll keep hearing, so let me define them before I use them.
+Scaffold: the non-model code around the model, so tools, prompts, control flow.
+Tool call: the model asking the scaffold to act, say read a file or run the tests, and getting the output back.
+Patch: a description of a change, which lines in which files, not the changed code itself. It's what an agent actually submits.
+Harness: the environment a result is run and graded in.
+Oracle: something outside the model that can check it, like a test suite, a compiler, a human.
 Critic: a separate model, trained to score candidate outputs.
 
 ## What is an agentic coding system?
 
-
-A system that takes a natural-language request and autonomously produces a working code change. 
+A system that takes a natural-language request and autonomously produces a working code change.
 It navigates files, edits, executes, and revises without step-by-step human guidance.
-
-Three properties. 
-- Autonomous — it decides what to do next. 
-- Grounded in execution — it runs tests, reads errors, acts on them. 
-- Repository-scale — it works across files in a real codebase, not on isolated functions.
+And it works across files in a repo, not on isolated functions.
 
 ## The agent loop
 
 Nearly all systems do the same five things.
 
-- Intent capture — the agent reads the issue or specification. 
-- This is where it decides what is being asked. 
+- Intent capture: the agent reads the issue or specification.
+- This is where it decides what is being asked.
 - It happens once, at the start, and is never revisited.
 
-- Planning — the agent decides where in the codebase to act. 
-- Which files, which functions. 
-- What is the problem and how to solve it.
+- Planning: the agent decides where in the codebase to act.
+- Which files, which functions.
+- What the problem is and how to solve it.
 
-- Code generation — the agent writes or edits source code. 
+- Code generation: the agent writes or edits source code.
 - A patch, a new function, a refactored block.
 
-- Execution — the agent runs what it wrote. 
-- Tests, linters, the program itself. 
+- Execution: the agent runs what it wrote.
+- Tests, linters, the program itself.
 
-- Refinement — the agent reads the execution result and decides what to change. 
+- Refinement: the agent reads the execution result and decides what to change.
 - It either regenerates the patch or replans from an earlier point.
 
-The key at the bottom flags the two cross-cutting controls we cover next: orchestration is the arrows — which step runs next; interface and context is inside each box — what the agent can see and do.
+Two controls decide how the loop runs.
 
-## How the loop is controlled
+Orchestration is the arrows. It decides which step comes next.
 
-The five stages are what happens. Two controls decide how the loop runs —
-and each acts on a different part of the loop you just saw.
-
-Orchestration is the arrows — it decides the next step.
-The model deciding, or a hard-coded script? That is what decides whether
-refinement ever loops back, or the run just stops.
-
-Interface and context is inside each box — what the agent can see and do at a
-stage: a purpose-built command set, or a raw sandbox.
-
-So: orchestration controls the flow between stages, interface controls what
-happens within one. Neither is a stage itself — both cut across all five.
-
-
-## Orchestration
-
-Two ways to run the same five stages — the difference is who picks the next step.
-
-The agentic loop: the model decides. 
-The fixed pipeline: the scaffold decides. 
-
-An example of each next.
+Interface and context sit inside each stage. They are the eyes, arms and legs of the agent: what it can see, and what it can do.
 
 ## Orchestration: agentic loop
 
-The model is in control — this is the ReAct loop: Thought, Action, Observation. 
-- Thought — it reasons about what it sees. 
-- Action — it acts through a tool call. 
-- Observation — it reads back the result: file contents, test output, error traces. 
+The model is in control. This is the ReAct loop, an observe, think, act cycle.
+- Observe: it reads the environment, so file contents, test output, error traces.
+- Think: it reasons about the next step.
+- Act: it takes an action through a tool call.
 - The cycle repeats until the model decides it is done.
 
-Read a file, run tests, edit — any tool, any order, as many rounds as it takes. 
+Read a file, run tests, edit: any tool, any order, as many rounds as it takes.
 Nothing outside the model fixes the sequence.
 
 ## Orchestration: fixed pipeline
 
-The scaffold is in control. 
-- The developer writes the sequence in advance: localise the faulty code, repair it, validate against the tests. 
-- The model fills each step, but it never decides what comes next — the scaffold does.
+Here the scaffold is in control.
+- The developer writes the sequence in advance: localise the faulty code, repair it, validate against the tests.
+- The model fills in each step, but it never decides what comes next. The scaffold does.
 
-On failure it stops or moves on — no arrow goes back, it does not retry. 
+On failure it stops or moves on. No arrow goes back, so it does not retry.
 Cheaper and predictable, but no recovery.
 
 ## Interface and Context
 
-Two common designs for how the agent interacts with the codebase. 
-- ACI — a purpose-built interface. 
-- The agent views files through a scrollable window, edits with linter-guarded commands, searches with summarised results. 
-- The scaffold controls what the model sees and rejects bad actions before they run.
+Two common designs for how the agent interacts with the codebase.
+- ACI, the agent-computer interface: a purpose-built interface.
+- The agent views files through a scrollable window, edits with linter-guarded commands, searches with summarised results.
+- The scaffold controls what the model sees, and rejects bad actions before they run.
 
-- Code as action — the model writes Python or bash in a sandbox. 
+- Code as action: the model writes Python or bash in a sandbox.
 - Full shell access, no guardrails.
 
-Context is managed, not logged. 
+Context is managed, not logged.
 - Compress old observations, search the syntax tree coarse to fine, retrieve by embedding.
 
 ## Interface: side by side
 
-Same four operations, side by side — viewing, editing, searching, executing.
+The same four operations, side by side: viewing, editing, searching, executing.
 
 ## Back to the five stages
 
@@ -139,69 +114,69 @@ Now we go through them one at a time, starting with plan.
 
 ## Plan: finding the right code
 
-Planning makes two commitments: where to change the code, and what the change should be. 
-Where — you choose one function among tens of thousands, and the symbol often does not appear in the issue text. 
-What — a signature, an interface, an invariant, stated concretely enough that the repository can check it. 
+Planning makes two commitments: where to change the code, and what the change should be.
+Where: you pick one function among tens of thousands, and the symbol you need often does not appear in the issue text at all.
+What: a signature, an interface, an invariant, stated concretely enough that the repository can check it.
 
 
 ## Plan shape
-    
-How does the agent explore possible plans? Before any code is written, it searches the space of candidate plans — a spectrum from no search to explicit search.
 
-- Chain of thought — the model thinks step by step in one straight line. 
-- If the first step is wrong, every step after it builds on that mistake. 
-- There is no way to go back.
+How does the agent explore possible plans? Before any code is written it searches the space of candidate plans, and that runs on a spectrum from no search to explicit search.
 
-- Tree of thoughts — instead of one path, the model generates several options at each step. 
-- A scorer picks the most promising branch and drops the rest. 
+- Chain of thought: the model thinks step by step in one straight line.
+- If the first step is wrong, every step after it builds on that mistake.
+- There is no way back.
+
+- Tree of thoughts: instead of one path, the model generates several options at each step.
+- A scorer picks the most promising branch and drops the rest.
 - This is where it starts to look like search.
 
-- Graph of thoughts — like a tree, but branches can merge back together. 
-- The model can revisit an earlier state or combine ideas from two different paths.
+- Graph of thoughts: like a tree, but branches can merge back together.
+- The model can revisit an earlier state, or combine ideas from two different paths.
 
 ## Plan: Chain of Thought
 
-Start from the problem the plan is for — a one-line bug report: the app crashes on checkout with an empty cart.
+Start from the problem the plan is for, a one-line bug report: the app crashes on checkout with an empty cart.
 It names no file and no fix. Planning has to decide where the bug is and what to change.
 
-Chain of thought is the simplest shape: observe, think, act, in one straight line — the ReAct loop from orchestration.
-Watch that every action here is just looking — grep, open. No edit yet. The output of planning is not a fix, it is a plan: where and what.
-Thought: an empty cart, probably a divide-by-zero in the total. Action: grep the total function. Observation: sum of prices over length of items. Thought: length is zero when empty. Action: open it to confirm. Observation: no guard. Plan — where: total at cart.py line 12; what: guard the empty cart, return zero. Then generation writes the edit, later.
-One straight line. If that first thought is wrong — the crash is really in the receipt — it just keeps going. What catches it is not a better shape; it is the tests failing later, which is a different loop.
+Chain of thought is the simplest shape: observe, think, act, in one straight line. It's the ReAct loop from orchestration.
+Watch that every action here is just looking: grep, open. No edit yet. The output of planning is not a fix, it is a plan: where and what.
+Thought: an empty cart, probably a divide-by-zero in the total. Action: grep the total function. Observation: sum of prices over length of items. Thought: length is zero when the cart is empty. Action: open it to confirm. Observation: no guard. Plan, where: total at cart.py line 12. What: guard the empty cart, return zero. Generation writes the edit later.
+One straight line. If that first thought is wrong, say the crash is really in the receipt, it just keeps going. What catches it is not a better shape, it's the tests failing later, and that is a different loop.
 
 ## Plan: Tree of Thoughts
 
-In practice no agent grows a tree of half-thoughts. The tree lives one level up: run the whole ReAct agent several times, get several complete patches, score them. 
-Run 1 passes two of three tests, run 2 all three, run 3 none — pick run 2. 
-The scorer is tests or a trained critic, not the model's own hunch. OpenHands goes from sixty to sixty-six percent with five runs reranked. SWE-Search wraps it in Monte Carlo tree search with a learned value — plus twenty-three percent, but a model call at every node.
+In practice no agent grows a tree of half-thoughts. The tree lives one level up: run the whole ReAct agent several times, get several complete patches, score them.
+Run 1 passes two of three tests, run 2 all three, run 3 none. Pick run 2.
+The scorer is tests or a trained critic, not the model's own hunch. OpenHands goes from sixty to sixty-six percent with five runs reranked. SWE-Search wraps it in Monte Carlo tree search with a learned value, worth plus twenty-three percent, but it costs a model call at every node.
 
 ## Plan: Graph of Thoughts
 
-Merging and revisiting is demonstrated on puzzles — Game-of-24, sorting — almost never on repository bugs. 
-In real agents you see the two ends: one chain, or many chains scored. The closest thing to revisit is Reflexion — write a note after a failure, retry with it — a loose loop, not a graph. 
+Merging and revisiting is demonstrated on puzzles, Game-of-24 and sorting, almost never on repository bugs.
+In real agents you only see the two ends: one chain, or many chains scored. The closest thing to revisiting is Reflexion, which writes a note after a failure and retries with it. That's a loose loop, not a graph.
 Treat the graph as the conceptual top of the spectrum, not something running in production.
 
-Planning ends here, and it all happens blind: where and what, chosen before anything runs. Generation is next — it finally produces something execution can check. (Grounding mechanics — Agentless, AutoCodeRover — are in the backup slides if the question comes up.)
+Planning ends here, and all of it happens blind: where and what, chosen before anything runs. Generation is next, and it finally produces something execution can check. (The grounding mechanics for Agentless and AutoCodeRover are in the backup slides if the question comes up.)
 
 ## Generate: infilling
 
-Now generation turns that plan into code. Same empty-cart example, three ways to emit the edit.
+Now generation turns the plan into code. Same empty-cart example, three ways to write the edit.
 
-First, infilling. The model completes a span given the surrounding lines — grey is the context it conditions on, orange is all it emits: the two-line guard.
-In its favour: this is the pre-training objective, filling a gap from both sides, so it's the shape the model is strongest at — and it can't be mis-placed, because the scaffold decided where the gap goes. Against it: one contiguous span, in practice one function, and the surrounding code has to fit in the prompt.
+First, infilling. The scaffold opens a gap and the model fills it. It reads the grey lines and writes only the orange ones, the two-line guard.
+In its favour: this is the operation models are trained on most. The bulk of training is cutting a span out of a real file and asking the model to put it back, given what surrounds it. So it is the shape the model is strongest at, and the diff format on the next slide is not. It also can't land in the wrong place, because the scaffold picked the spot. Against it: one span at a time, in practice one function, and the surrounding code has to fit in the prompt.
 
 ## Generate: diff generation
 
-Second, a unified diff — only the change travels, not the whole file. That buys two things: it edits a large file without re-emitting it, and one patch can span many hunks and many files. What it costs: now the model has to state *where* itself. Those context lines are the address, and they have to match the current file. If the file moved on, the patch is rejected before a single test runs — stale-context fragility.
+Second, a diff: send only the change, not the whole file. Two wins. You can edit a huge file without re-writing it, and one patch can touch many places in many files. The cost is that the model now has to point to where the edit goes, and the surrounding context lines are what locate it. If it is off by even one line, the patch will not apply, before any test runs.
 
 ## Generate: sample N, pick one
 
-Third, don't trust one shot — sample many and pick. Same plan, N attempts: one wraps a try/except, one adds the guard, one returns zero always. Rank them by the tests — patch B passes three of three, pick it.
-What you gain: one bad sample no longer sinks the task, and diverse candidates cover approaches a single pass would miss. What you pay: the ranking needs an oracle. Two correct patches can share no token, so you can't compare them as strings, and the model's own confidence isn't enough — you run them. And cost scales with N — calls, dollars, wall-clock. AlphaCode takes this to the extreme: sample up to millions, cluster by execution behaviour.
+Third, don't trust one shot. Write N patches and keep the one that passes. Here one wraps a try/except, one adds the guard, one returns zero always. The tests rank them: B passes three of three, so take B.
+What you gain: one bad sample no longer sinks the task, and different candidates try different ideas. What you pay: picking needs an oracle. Two correct patches can share no token, so you can't compare them as text, and the model's own confidence doesn't count. You have to run them. And cost grows with N: calls, dollars, wall-clock.
 
 ## Execute: running the code
 
-This is where the environment can say no — all three checks external to the model.
+This is where the environment can say no. All three checks are external to the model.
 - Test suite: fail-to-pass must flip, pass-to-pass must not regress.
 - Linter or type checker: syntax and type errors, before tests even run.
 - Error traces: what failed, and where.
@@ -210,126 +185,141 @@ Right or wrong, that verdict is what refinement works with next.
 
 ## Refinement: iterative self-repair
 
-Execution returned a verdict; what the agent does with it is refinement. Don't read the rows — read the middle column, because that is the whole question, and here the answer is the same three times: the model's own output, read back by the model. Self-Refine critiques itself, Reflexion writes the critique down and carries it to the next attempt, self-debugging narrates its own code looking for the discrepancy — three prompts, one architecture. Which is why the failures rhyme: it plateaus, or it explains the bug as intended, because the misreading that wrote the code also writes the critique of it. Reflexion is the one to pause on — usually filed as external feedback, but HumanEval supplies no reward at inference, so it writes its own tests, and its ninety-one-against-eighty headline rests on a proxy. The ceiling is one sentence: if a model could tell its wrong code from its right code by looking, it would have written the right code first. Not zero, though — self-debugging with no tests still buys two to three percent, and twelve where tests exist. That gap is the next slide.
+After execution returns a verdict, refinement decides what to do with it. 
+
+These first three all work the same way: the model reads back its own output and tries to fix it.
+- Self-Refine: the model critiques its own answer and rewrites it, with no outside signal.
+- Reflexion: after a failed attempt it writes itself a short note on what went wrong, then retries with that note in view.
+- Self-debugging: the model explains its own code back to itself, like talking to a rubber duck, and uses a test verdict if there is one.
+
+So they fail the same way. It plateaus, or it explains the bug as intended, because whatever misread the problem also misreads the fix. 
+
+The ceiling is simple: if a model could spot its own wrong code just by looking, it would have written it right the first time. 
+
+Still, it isn't useless. Self-debugging adds two to three percent without tests and twelve with them, and that gap is the next slide.
 
 ## Refinement: tests and trained critics
 
-Same table, different middle column: now something the generator did not produce closes the loop, and every mechanism that survives at repository scale is on this slide rather than the last one. But external is not one thing. Only D4C is purely oracle — failing tests plus the whole function. Agentless is oracle plus proxy, and the proxy half inherits whatever was misread: misunderstand the issue and you generate a reproduction test that confirms the misunderstanding. The critic ranking OpenHands' rollouts is a separately trained model, so it can genuinely disagree with the generator — that is worth points — but it cannot surprise it; its ceiling is its own fidelity. Notice the third column stops rhyming: plausible-but-incorrect patches, an inherited misreading, cost scaling with N — mechanism-specific failures instead of one systemic one. That is what a real signal buys. CRITIC is the controlled experiment — same model, same prompt, one variable: self-critique with a tool corrects reliably, without one it does almost nothing. And the sandbox: containment is the obvious reason, but reproducibility is the first one — SWE-bench suites are environment-dependent, so without a per-instance container you are grading the environment, not the patch.
+Now something the model did not produce closes the loop, and that is the whole difference.
+- D4C: it hands the failing tests and the whole function back to the model and asks for a fresh fix.
+- Agentless validate: it keeps the project's own regression tests and adds generated ones to screen out bad patches.
+- Best-of-N plus critic: it runs several patches to completion and lets a trained critic rank them.
+
+External tests or critic can genuinely surprise the model. Generated tests cannot, because a misread issue just produces a test that confirms the misread. 
+
+But they are also limited. Tests catch only the cases they run; the critic, only what it learned.
 
 ## Refinement: when does the loop stop?
 
-All tests pass — but that smuggles ground truth into the stopping condition.
+All tests pass, but that smuggles ground truth into the stopping condition.
 
-Diminishing returns — another repair round is often worse than a fresh sample at fixed budget.
+Diminishing returns: at a fixed budget, another repair round is often worse than a fresh sample.
 
-Iterative repair and best-of-N are the same lever: extra inference to cut variance. 
+Iterative repair and best-of-N are the same lever: extra inference to cut variance.
 - OpenHands: sixty percent on Verified with one rollout, sixty-six with five reranked by a critic.
 
 Hold on to that middle column from the refinement tables.
 
 ## Five systems compared
 
-Five systems side by side — how each handles orchestration, interface, planning, and refinement.
+Five systems side by side: how each one handles orchestration, interface, planning, and refinement, and where each is actually used.
 
 ## Where are these systems used?
 
-The five we studied are mostly research artefacts — open-source, run mostly on SWE-bench. Blueprints, not products.
+The five we studied are mostly research artefacts: open-source, run mostly on SWE-bench. Blueprints, not products.
 
-- SWE-agent, AutoCodeRover, Agentless live in papers and on the leaderboard.
+- SWE-agent, AutoCodeRover and Agentless live in papers and on the leaderboard.
 - Two are shipped: OpenHands as an open platform from All Hands AI, Devin as Cognition's commercial cloud agent.
-- And the tools developers actually reach for daily — Claude Code, Cursor, Copilot, Codex — are productised descendants: the same observe-think-act loop, the same purpose-built interface, the same execution-grounded refinement.
+- And the tools developers actually reach for daily, so Claude Code, Cursor, Copilot, Codex, are productised descendants: the same observe, think, act loop, the same purpose-built interface, the same execution-grounded refinement.
 
 Same ingredients, deployed as IDE assistants, autonomous PR bots, and CI jobs. So the patterns we just dissected are the patterns in the tools you already use.
 
 ## SWE-bench
 
-Let's talk about benchmark. There are a ton of benchmarks out there. But one of the first, most used by research papers is SWE bench.
+Let's talk about benchmarks. There are a ton of them out there, but one of the first and the one most used by research papers is SWE-bench.
 
-It's a suite of tasks. Each task is a real, merged pull request from a popular open-source project: Django, scikit-learn, matplotlib 
-one that both closes a GitHub issue and touches the test suite.
+It's a suite of tasks. Each task is a real, merged pull request from a popular open-source project: Django, scikit-learn, matplotlib. One that both closes a GitHub issue and touches the test suite.
 Nothing synthetic: a human reported the bug, a maintainer fixed it, the fix shipped.
 
+Real codebases, hundreds of thousands of lines, with the maintainer's own patch as ground truth. Not toy problems.
+The flip side is a monoculture: Python only, twelve projects, a limitation we come back to.
 
-Real codebases, hundreds of thousands of lines, the maintainer's own patch as ground truth — not toy problems.
-The flip side is a monoculture: Python only, twelve projects — a limitation we come back to.
+- The test filter gives you a grading oracle.
+- The issue filter gives you the intent.
 
-- The test filter gives a grading oracle. 
-- The issue filter gives the intent.
-
-Task: repository before the fix, plus the issue text. 
-Produce a patch. 
-- Fail-to-pass tests must flip, 
+Task: the repository before the fix, plus the issue text.
+Produce a patch.
+- Fail-to-pass tests must flip,
 - pass-to-pass must not regress.
 
-Resolve rate: both sets pass, first patch.
+Resolve rate: both sets pass, on the first patch.
 
 That is one task, pass or fail. Next: how you turn thousands of them into a single number worth comparing.
 
 ## SWE-bench: metrics
 
-Not string similarity — two correct patches may share no token.
+Not string similarity, because two correct patches may share no token.
 
-- Functional correctness: does it run and pass? The only thing that counts. 
-- Pass-at-k: give it k tries, count it solved if any one passes. 
-- Resolve rate: pass-at-one on a whole repo — solved on the first try. 
-- Cost: dollars, calls, time — a higher score can cost much more.
+- Functional correctness: does it run and pass? The only thing that counts.
+- Pass-at-k: give it k tries, count it solved if any one passes.
+- Resolve rate: pass-at-one over a whole split, solved on the first try.
+- Cost: dollars, calls, time. A higher score can cost much more.
 
-Every metric scores the end of the pipeline. 
-Plan quality, localisation, refinement efficiency: unmeasured.
+Every metric scores the end of the pipeline.
+Plan quality, localisation, refinement efficiency: all unmeasured.
 
-So we settle on one number, resolve rate. But there is no single SWE-bench — it is a family of splits, and which one a paper quotes changes the story.
+So we settle on one number, resolve rate. But there is no single SWE-bench. It's a family of splits, and which one a paper quotes changes the story.
 
 ## The five splits
 
-Roughly two years of splits, oldest to newest. 
-- Full, Oct 2023: everything. 
-- Lite, Mar 2024: three hundred easy single-file, some leak the fix. 
-- Verified, Aug 2024: five hundred human-screened. 
-- Multilingual, May 2025: nine languages. 
+Roughly two years of splits, oldest to newest.
+- Full, Oct 2023: everything.
+- Lite, Mar 2024: three hundred easy single-file tasks, some of which leak the fix.
+- Verified, Aug 2024: five hundred, human-screened.
+- Multilingual, May 2025: nine languages.
 - Pro, Sep 2025: long-horizon, multi-file, held-out repos.
 
 
 ## How hard is each task?
 
-How reliable is the benchmark? 
+How reliable is the benchmark?
 
-We will now focus on Verified split of swe bench. 
+We'll focus on the Verified split from here on.
 
-When OpenAI built Verified, annotators estimated the fix time for each issue — how long would a skilled engineer need to write the fix.
+When OpenAI built Verified, annotators estimated a fix time for each issue: how long a skilled engineer would need to write the fix.
 
 
 ## The headline climbs
 
-Same nine systems, April 24 to March 25 — four lines, all one dataset.
+The same nine systems, April 24 to March 25. Four lines, all one dataset.
 Blue is the overall rate: eighteen to sixty-five percent, SWE-agent to Augment.
-Orange easy, green medium, red hard.
+Orange is easy, green medium, red hard.
 Watch the spread: easy is near eighty, hard is stuck at twenty.
-The overall line is just the tier-weighted average — it hides that gap.
-Next slide reads off the exact splits.
-
+The overall line is just the tier-weighted average, so it hides that gap.
+The next slide reads off the exact splits.
 
 Easy and medium are ninety-one percent of Verified. The hard tier stalled near twenty percent. A system can gain ten overall points while solving no new hard task.
 
 So the same number both drives progress and hides where it stalls. That tension hands us into the last part: where these systems actually break.
 
-By early 2026 OpenAI retired Verified — the frontier model and agent reach eighty percent. They move on to to Pro.
+By early 2026 OpenAI retired Verified, since the frontier models and agents reach eighty percent. They have moved on to Pro.
 
-So what are the challenges for the hard, long horizon, multiple file changes task:
+So what are the challenges on the hard, long-horizon, multi-file tasks?
 
 ## 1. Nothing checks what you meant
 
-Intent capture is the one stage with no feedback edge. The agent reads the issue, commits to it, and never revisit. So the issue could be false positive and be assumped that it's right till the end of the agent run. 
+Intent capture is the one stage with no feedback edge. The agent reads the issue, commits to a reading, and never revisits it. So a misreading survives all the way to the end of the run, and nothing in the loop can flag it.
 
 ## 2. It has to guess what to read
 
-The second reason is that the repository does not fit in the context window, so before the agent can be right it has to choose what to look at — and that choice is most of the problem. 
+The second reason is that the repository does not fit in the context window. Before the agent can be right, it has to choose what to look at, and that choice is most of the problem.
 
-Hard tasks are disproportionately multi-file, exactly where agents stall 
+Hard tasks are disproportionately multi-file, which is exactly where agents stall.
 
 
 ## 3. Passing the tests is not being right
 
-Third: the oracle we lean on is not the thing we actually want. A test suite is a sample of intended behaviour, not the behaviour itself, so a patch can turn tests from failed to pass, and still be wrong — wrong.
+Third: the oracle we lean on is not the thing we actually want. A test suite is a sample of intended behaviour, not the behaviour itself. So a patch can turn the tests from failing to passing and still be wrong.
 
 Worse, that same verdict is the stopping rule: the loop stops when the tests pass.
 
@@ -337,59 +327,59 @@ Worse, that same verdict is the stopping rule: the loop stops when the tests pas
 
 - Agentic beats one-shot because it can run things, not because it reasons more.
 
-- Three of the four are the same gap: nothing outside the model catches a wrong guess about intent, a wrong file, or a wrong fix — and the fourth says you cannot buy past it.
+- Three of the four are the same gap: nothing outside the model catches a wrong guess about intent, a wrong file, or a wrong fix. The fourth says you cannot buy your way past it.
 
-- Verification is the bottleneck. In a randomised trial, experienced developers worked real issues on their own repositories, half the tasks with AI allowed, half without. 
+- Verification is the bottleneck. In a randomised trial, experienced developers worked real issues on their own repositories, half the tasks with AI allowed and half without.
 
-With AI, they generate the code much faster. But the time went into prompting, to reading and to repairing output, is also a lot.
+With AI they generated code much faster. But a lot of time went into prompting, reading and repairing the output.
 
-So they ended up being 19% slower and though that they are 20% faster.
+They ended up 19% slower, and thought they were 20% faster.
 
 ## Backup: can we trust the numbers?
 
-Verified against Pro, same model weights. 
+Verified against Pro, same model weights.
 Everything drops twenty points or more.
 
-Read the floor, not the spread — only Opus 4.5 uses the standardised harness. 
-The others self-report. 
+Read the floor, not the spread. Only Opus 4.5 uses the standardised harness.
+The others self-report.
 The one measured most strictly drops furthest.
 
-- Contamination: OpenAI dropped Verified in 2026 — models reproduce gold patches from the task ID alone.
+- Contamination: OpenAI dropped Verified in 2026, because models reproduce gold patches from the task ID alone.
 - Reward hacking: closing test leaks cuts scores by double digits.
 
 If someone asks why the tier table is from 2025: because that is where the
 stratified data stops. By early 2026 the frontier had saturated Verified near
 eighty percent and OpenAI retired it as contaminated, so nobody re-ran the
-per-difficulty breakdown. The 2025 snapshot is the last clean read; the live
+per-difficulty breakdown. The 2025 snapshot is the last clean read, and the live
 frontier signal has moved to Pro.
 
 ## Backup: surveyed systems on SWE-bench Verified
 
-Best published result for each of the five surveyed systems on Verified, pulled from swebench.com. 
-Devin's number is on a different, easier split, self-reported, and never reproduced — read it as context, not a comparison.
+The best published result for each of the five surveyed systems on Verified, pulled from swebench.com.
+Devin's number is on a different, easier split, self-reported, and never reproduced. Read it as context, not as a comparison.
 
-## Backup: Plan --- localisation
+## Backup: how planning points at real code
 
-So how does it stop guessing? Point at real code. A tree lets the model try several guesses, but nothing has run yet — so it narrows the actual repository from broad to specific, and every step names code it can check. 
-- Agentless: files, then classes and functions, then edit locations. 
+So how does it stop guessing? By pointing at real code. A tree lets the model try several guesses, but nothing has run yet, so it narrows the actual repository from broad to specific, and every step names code it can check.
+- Agentless: files, then classes and functions, then edit locations.
 - AutoCodeRover: AST-backed search APIs, coarse to fine.
 
-The useful plans name concrete program elements you can check against the repository — not invented requirements.
+The useful plans name concrete program elements you can check against the repository, not invented requirements.
 
-## Backup: Localisation --- Agentless
+## Backup: localisation in Agentless
 
-Narrowing without letting the model wander — three fixed steps, coarse to fine. 
-- Rank files: from the repo layout and the issue, shortlist the files most likely involved. 
-- Rank elements: inside those files, narrow to specific classes and functions. 
+Narrowing without letting the model wander: three fixed steps, coarse to fine.
+- Rank files: from the repo layout and the issue, shortlist the files most likely involved.
+- Rank elements: inside those files, narrow to specific classes and functions.
 - Pin locations: inside those, the exact lines to edit.
 
-Three prompts, no search, no tools. The narrowing is hard-coded into the scaffold — fixed, not discovered.
+Three prompts, no search, no tools. The narrowing is hard-coded into the scaffold, so it's fixed rather than discovered.
 
-## Backup: Localisation --- AutoCodeRover
+## Backup: localisation in AutoCodeRover
 
-Let the model navigate, but through the syntax tree — not by reading whole files. 
-- Search APIs: search_class, search_method, search_method_in_class. 
-- The agent calls them coarse to fine, pulling in just the code it needs. 
+Let the model navigate, but through the syntax tree rather than whole files.
+- Search APIs: search_class, search_method, search_method_in_class.
+- The agent calls them coarse to fine, pulling in just the code it needs.
 - AST-backed: structured, cheaper context than dumping whole files into the prompt.
 
-The model chooses what to search — agentic, where Agentless is a fixed funnel.
+The model chooses what to search. Agentless, by contrast, is a fixed funnel.
