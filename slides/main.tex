@@ -69,10 +69,10 @@
     % Key: which visual element each cross-cutting control acts on
     \draw[arr] (0,-3.15) -- ++(0.55,0);
     \node[key] at (0.78,-3.15)
-      {\textbf{Orchestration} --- the arrows: which step runs next};
+      {\textbf{Orchestration}: the arrows, which step runs next};
     \node[stage, minimum width=0.55cm, minimum height=0.34cm] at (0.27,-3.72) {};
     \node[key] at (0.78,-3.72)
-      {\textbf{Interface \& context} --- inside each stage};
+      {\textbf{Interface \& context}: inside each stage};
   \end{tikzpicture}%
 }
 
@@ -103,8 +103,7 @@
 
 \setlength{\leftmargini}{1.4em}
 
-\title{Autonomous Coding Agents}
-\subtitle{A seminar survey of agentic AI \\ for code generation --- SS26}
+\title{Agentic AI for code generation}
 \author{Thua Duc Nguyen}
 \institute{Supervisor: Derui Zhu \\ \theDepartmentName, \theUniversityName}
 \date{\today}
@@ -115,29 +114,27 @@
 
 \begin{frame}{How we write code has changed}
   \small
-  \begin{tabular}{@{}L{0.14\textwidth}L{0.26\textwidth}L{0.24\textwidth}L{0.24\textwidth}@{}}
+  \begin{tabular}{@{}L{0.16\textwidth}L{0.30\textwidth}L{0.44\textwidth}@{}}
     \toprule
-      & \textbf{Machine} & \textbf{Human} & \textbf{Checked by} \\
+      & \textbf{Machine} & \textbf{Human} \\
     \midrule
     Manual
       & Compiles and runs it
-      & Writes every line
-      & The test suite \\
+      & Writes every line; owns the design, and leans on the test suite to
+        catch mistakes \\
     \addlinespace
     Autocomplete \newline {\scriptsize 2021--}
       & Suggests the next lines
-      & Accepts or rejects each
-      & You, line by line \\
+      & Accepts or rejects each suggestion, line by line, staying the author \\
     \addlinespace
     One-shot \newline {\scriptsize 2022--}
       & Writes a whole function
-      & Specifies, reads all of it
-      & \textbf{Nothing} \\
+      & Specifies the task, then must read and verify all of it by hand \\
     \addlinespace
     \textbf{Agentic} \newline {\scriptsize 2024--}
       & Finds files, edits, runs tests
-      & States intent, reviews outcome
-      & Tests, \emph{during} generation \\
+      & States intent up front, steers midway, and reviews the final outcome
+        rather than every line \\
     \bottomrule
   \end{tabular}
 
@@ -165,73 +162,74 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Real progress}
-  \medskip
-  \textbf{SWE-bench Verified} progress --- 500 human-screened GitHub issues, graded by the project's own tests.
+% \begin{frame}{Real progress}
+%   \medskip
+%   \textbf{SWE-bench Verified}: 500 human-screened GitHub issues, graded by the
+% project's own tests.
 
-  \smallskip
-  \begin{center}
-    \begin{tikzpicture}
-      \begin{axis}[
-        width=0.88\textwidth,
-        height=3.8cm,
-        ylabel={\% resolved},
-        ymin=0, ymax=104,
-        ytick={0,20,40,60,80,100},
-        xmin=2024.10, xmax=2026.66,
-        xtick={2024.25, 2024.75, 2025.25, 2025.75, 2026.25},
-        xticklabels={Apr'24, Oct'24, Apr'25, Oct'25, Apr'26},
-        xticklabel style={font=\scriptsize},
-        yticklabel style={font=\scriptsize},
-        ylabel style={font=\scriptsize},
-        grid=major,
-        grid style={dashed, TUMGrayLight},
-        axis line style={TUMGrayDark},
-        tick style={TUMGrayDark},
-        every axis plot/.append style={thick, mark size=1.6pt},
-      ]
-      \addplot[TUMBlue, mark=*] coordinates {
-        (2024.251,18.2) (2024.467,33.6) (2024.571,23.2) (2024.918,50.8)
-        (2024.918,55.0) (2024.975,57.2) (2025.044,64.6) (2025.099,63.4)
-        (2025.203,65.4)
-      };
+%   \smallskip
+%   \begin{center}
+%     \begin{tikzpicture}
+%       \begin{axis}[
+%         width=0.88\textwidth,
+%         height=3.8cm,
+%         ylabel={\% resolved},
+%         ymin=0, ymax=104,
+%         ytick={0,20,40,60,80,100},
+%         xmin=2024.10, xmax=2026.66,
+%         xtick={2024.25, 2024.75, 2025.25, 2025.75, 2026.25},
+%         xticklabels={Apr'24, Oct'24, Apr'25, Oct'25, Apr'26},
+%         xticklabel style={font=\scriptsize},
+%         yticklabel style={font=\scriptsize},
+%         ylabel style={font=\scriptsize},
+%         grid=major,
+%         grid style={dashed, TUMGrayLight},
+%         axis line style={TUMGrayDark},
+%         tick style={TUMGrayDark},
+%         every axis plot/.append style={thick, mark size=1.6pt},
+%       ]
+%       \addplot[TUMBlue, mark=*] coordinates {
+%         (2024.251,18.2) (2024.467,33.6) (2024.571,23.2) (2024.918,50.8)
+%         (2024.918,55.0) (2024.975,57.2) (2025.044,64.6) (2025.099,63.4)
+%         (2025.203,65.4)
+%       };
 
-      \addplot[TUMBlue, mark=*] coordinates {
-        (2025.203,65.4) (2026.25,80.9)
-      };
+%       \addplot[TUMBlue, mark=*] coordinates {
+%         (2025.203,65.4) (2026.25,80.9)
+%       };
 
-      \addplot[TUMOrange, mark=square*] coordinates {
-        (2025.71,23.0) (2026.25,45.9)
-      };
+%       \addplot[TUMOrange, mark=square*] coordinates {
+%         (2025.71,23.0) (2026.25,45.9)
+%       };
 
-      \draw[<->, TUMGrayDark, thin] (axis cs:2026.25,79.0)
-        -- node[font=\tiny, text=TUMGrayDark, right=1pt, inner sep=1pt]
-           {$-35$\,pp} (axis cs:2026.25,47.8);
+%       \draw[<->, TUMGrayDark, thin] (axis cs:2026.25,79.0)
+%         -- node[font=\tiny, text=TUMGrayDark, right=1pt, inner sep=1pt]
+%            {$-35$\,pp} (axis cs:2026.25,47.8);
 
-      \node[font=\scriptsize, text=TUMBlue, anchor=north west, inner sep=2pt]
-        at (axis cs:2024.16,16.0) {SWE-agent 18.2\,\%};
-      \node[font=\scriptsize, text=TUMBlue, anchor=south east, inner sep=2pt]
-        at (axis cs:2025.15,68.0) {Augment 65.4\,\%};
-      \node[font=\scriptsize, text=TUMBlue, anchor=south east, inner sep=2pt]
-        at (axis cs:2026.36,83.0) {Opus 4.5, Verified 80.9\,\%};
-      \node[font=\scriptsize, text=TUMOrange, anchor=north east, inner sep=2pt]
-        at (axis cs:2026.36,43.5) {Pro 45.9\,\%};
-      \node[font=\scriptsize, text=TUMOrange, anchor=north east, inner sep=2pt]
-        at (axis cs:2025.60,19.0) {Pro at release $\sim$23\,\%};
-      \end{axis}
-    \end{tikzpicture}
+%       \node[font=\scriptsize, text=TUMBlue, anchor=north west, inner sep=2pt]
+%         at (axis cs:2024.16,16.0) {SWE-agent 18.2\,\%};
+%       \node[font=\scriptsize, text=TUMBlue, anchor=south east, inner sep=2pt]
+%         at (axis cs:2025.15,68.0) {Augment 65.4\,\%};
+%       \node[font=\scriptsize, text=TUMBlue, anchor=south east, inner sep=2pt]
+%         at (axis cs:2026.36,83.0) {Opus 4.5, Verified 80.9\,\%};
+%       \node[font=\scriptsize, text=TUMOrange, anchor=north east, inner sep=2pt]
+%         at (axis cs:2026.36,43.5) {Pro 45.9\,\%};
+%       \node[font=\scriptsize, text=TUMOrange, anchor=north east, inner sep=2pt]
+%         at (axis cs:2025.60,19.0) {Pro at release $\sim$23\,\%};
+%       \end{axis}
+%     \end{tikzpicture}
 
-    {\footnotesize Blue: \textbf{SWE-bench Verified.} \quad Orange:
-    \textbf{SWE-bench Pro} --- harder, released Sept~2025.}
-  \end{center}
+%     {\footnotesize Blue: \textbf{SWE-bench Verified.} \quad Orange:
+%     \textbf{SWE-bench Pro}, harder, released Sept~2025.}
+%   \end{center}
 
-  \smallskip
-  \textbf{Massive improvement in two years}, and the models were
-  not trained to be agents.
+%   \smallskip
+%   \textbf{Massive improvement in two years}, and the models were
+%   not trained to be agents.
 
-  \smallskip
-  {\footnotesize More on SWE-bench later.}
-\end{frame}
+%   \smallskip
+%   {\footnotesize More on SWE-bench later.}
+% \end{frame}
 
 \begin{frame}{What this talk shows}
   \begin{enumerate}
@@ -242,27 +240,18 @@
     \item \textbf{How do we measure performance?} \\
       {\small The benchmark, the metrics, what the numbers hide.}
       \medskip
-    \item \textbf{Why are we stuck on the hard tasks?} \\
-      {\small Four reasons --- and the pattern behind them.}
+    \item \textbf{Challenges?}
   \end{enumerate}
 \end{frame}
 
 \begin{frame}{A few terms, up front}
   \begin{tabular}{@{}L{0.20\textwidth}L{0.72\textwidth}@{}}
     \toprule
-    \textbf{Scaffold} & The non-model code around it --- tools, prompts,
-      control flow \\
+    \textbf{Scaffold} & Everything around the model that lets it act: tools, prompts, control flow \\
     \addlinespace
-    \textbf{Tool call} & A single scaffold action the model invokes and waits
-      on --- open a file, run a command, apply an edit \\
+    \textbf{Tool call} & A single scaffold action the model invokes: open a file, run a command, apply an edit \\
     \addlinespace
-    \textbf{Patch} & A description of a change --- which lines, in which
-      files --- not the changed code \\
-    \addlinespace
-    \textbf{Harness} & The fixed environment a submission is graded in ---
-      not the one it was made in \\
-    \addlinespace
-    \textbf{Oracle} & Something outside the model that can check it --- a
+    \textbf{Oracle} & Something outside the model that can verify correctness: a
       test suite, a compiler, a human \\
     \addlinespace
     \textbf{Critic} & A separate model, trained to score candidate outputs \\
@@ -273,19 +262,15 @@
 \section{How do the agentic AI systems work?}
 
 \begin{frame}{What is an agentic coding system?}
-  A system that, given a natural-language request, \textbf{autonomously} produces a
-  working code change --- navigating files, editing, executing, and revising
-  without step-by-step human guidance.
-
-  \bigskip
+  A system that:
+  \medskip
   \begin{itemize}
-    \item \textbf{Autonomous} --- decides what to do next, not told
+    \item given a natural-language request, \textbf{autonomously} produces a
+    working code change.
       \medskip
-    \item \textbf{Grounded in execution} --- runs tests, reads errors, acts on
-      them
+    \item navigates files, edits, executes, without step-by-step human guidance.
       \medskip
-    \item \textbf{Repository-scale} --- works across files in a real codebase,
-      not on isolated functions
+    \item works across files in a repo.
   \end{itemize}
 \end{frame}
 
@@ -296,140 +281,131 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{How the loop is controlled}
-  The five stages are \textbf{what} happens. Two controls decide \textbf{how} the
-  loop runs --- and each acts on a different part of it:
+% \begin{frame}{How the loop is controlled}
+%   The five stages are \textbf{what} happens. Two controls decide \textbf{how} the
+%   loop runs, and each one acts on a different part of it:
 
-  \medskip
-  \begin{center}
-    \begin{tabular}{@{}lll@{}}
-      \toprule
-       & \textbf{Orchestration} & \textbf{Interface \& context} \\
-      \midrule
-      Acts on & the \textbf{arrows} between stages & \textbf{inside} each stage \\
-      \addlinespace
-      What it does & decides the next step & sets what it can see and do \\
-      \bottomrule
-    \end{tabular}
-  \end{center}
+%   \medskip
+%   \begin{center}
+%     \begin{tabular}{@{}lll@{}}
+%       \toprule
+%        & \textbf{Orchestration} & \textbf{Interface \& context} \\
+%       \midrule
+%       Acts on & the \textbf{arrows} between stages & \textbf{inside} each stage \\
+%       \addlinespace
+%       What it does & decides the next step & sets what it can see and do \\
+%       \bottomrule
+%     \end{tabular}
+%   \end{center}
 
-  \medskip
-  Neither is a stage --- both cut \emph{across} all five, and decide whether the
-  loop even closes.
-\end{frame}
+%   \medskip
+%   Neither is a stage. Both cut \emph{across} all five, and both decide whether
+%   the loop closes at all.
+% \end{frame}
 
-\begin{frame}{Orchestration}
-  \label{fr:orch}
-  Two common ways to run the same five stages.
+% \begin{frame}{Orchestration}
+%   \label{fr:orch}
+%   \begin{tabular}{@{}L{0.22\textwidth}L{0.46\textwidth}L{0.22\textwidth}@{}}
+%     \toprule
+%     \textbf{Mode} & \textbf{How it works} & \textbf{Who decides} \\
+%     \midrule
+%     Agentic loop \newline {\scriptsize ReAct}~\cite{yao2023react}
+%       & Thought, Action, Observation; repeat
+%       & The model \\
+%     \addlinespace
+%     Fixed pipeline~\cite{xia2024agentless}
+%       & Localise, repair, validate; no loop
+%       & The scaffold \\
+%     \bottomrule
+%   \end{tabular}
+% \end{frame}
+
+% \begin{frame}{Orchestration: agentic loop}
+%   \label{fr:orch-agentic}
+%   {\small The \textbf{observe--think--act loop.}}
+
+%   \bigskip
+%   \begin{center}
+%     \begin{tikzpicture}[
+%       stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+%                     font=\small, align=center, minimum height=0.8cm,
+%                     minimum width=2.4cm},
+%       arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+%       loop/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
+%     ]
+%       \node[stage] (obs)   at (0,0)   {Observe\\{\scriptsize environment}};
+%       \node[stage] (think) at (3.2,0) {Think\\{\scriptsize reason}};
+%       \node[stage] (act)   at (6.4,0) {Act\\{\scriptsize tool call}};
+%       \draw[arr] (obs) -- (think);
+%       \draw[arr] (think) -- (act);
+%       \draw[loop] (act.south) to[out=270, in=270]
+%         node[below=1mm, font=\scriptsize, text=TUMOrange]
+%         {model loops until done} (obs.south);
+%     \end{tikzpicture}
+%   \end{center}
+
+%   \bigskip
+%   {\small Read a file, run tests, edit: \textbf{any tool, any order,} as many
+%   rounds as it takes. \\ Nothing outside the model fixes the sequence.}
+% \end{frame}
+
+% \begin{frame}{Orchestration: fixed pipeline}
+%   \label{fr:orch-fixed}
+%   {\small The \textbf{scaffold} is in control: the steps are \textbf{fixed in
+%   advance}; the model only fills each one~\cite{xia2024agentless}.}
+
+%   \bigskip
+%   \begin{center}
+%     \begin{tikzpicture}[
+%       stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+%                     font=\small, align=center, minimum height=0.8cm,
+%                     minimum width=2.2cm},
+%       stop/.style={draw=TUMGray, fill=none, rounded corners=3pt,
+%                    font=\small, align=center, minimum height=0.8cm,
+%                    minimum width=1.6cm, text=TUMGrayDark},
+%       arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+%     ]
+%       \node[stage] (loc) at (0,0)   {Localise};
+%       \node[stage] (rep) at (2.9,0) {Repair};
+%       \node[stage] (val) at (5.8,0) {Validate};
+%       \node[stop]  (end) at (8.5,0) {stop};
+%       \draw[arr] (loc) -- (rep);
+%       \draw[arr] (rep) -- (val);
+%       \draw[arr] (val) -- (end);
+%     \end{tikzpicture}
+%   \end{center}
+
+%   \bigskip
+%   {\small On failure it stops or moves on. No arrow goes back.
+%   \\ Cheaper, predictable, no recovery.}
+% \end{frame}
+
+\begin{frame}{Interface and Context}
+  Two common designs:
 
   \bigskip
 
   \begin{tabular}{@{}L{0.22\textwidth}L{0.46\textwidth}L{0.22\textwidth}@{}}
     \toprule
-    \textbf{Mode} & \textbf{How it works} & \textbf{Who decides} \\
+    \textbf{Design} & \textbf{How it works} & \textbf{Who controls context} \\
     \midrule
-    Agentic loop \newline {\scriptsize ReAct}~\cite{yao2023react}
-      & Thought, Action, Observation; repeat
-      & The model \\
-    \addlinespace
-    Fixed pipeline~\cite{xia2024agentless}
-      & Localise, repair, validate; no loop
+    ACI \newline {\scriptsize purpose-built}~\cite{yang2024sweagent}
+      & Scrollable viewer, linter-guarded edits, summarised search
       & The scaffold \\
+    \addlinespace
+    Code as action~\cite{wang2024codeact}
+      & Writes Python or bash in a sandbox; full shell access
+      & The model \\
     \bottomrule
   \end{tabular}
 \end{frame}
 
-\begin{frame}{Orchestration: agentic loop}
-  \label{fr:orch-agentic}
-  {\small The \textbf{model} is in control: the \textbf{ReAct} loop --- Thought,
-  Action, Observation --- repeated until \emph{the model} decides it is
-  done~\cite{yao2023react}.}
-
-  \bigskip
-  \begin{center}
-    \begin{tikzpicture}[
-      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
-                    font=\small, align=center, minimum height=0.8cm,
-                    minimum width=2.4cm},
-      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
-      loop/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
-    ]
-      \node[stage] (think) at (0,0)   {Thought};
-      \node[stage] (act)   at (3.2,0) {Action\\{\scriptsize tool call}};
-      \node[stage] (obs)   at (6.4,0) {Observation};
-      \draw[arr] (think) -- (act);
-      \draw[arr] (act) -- (obs);
-      \draw[loop] (obs.south) to[out=270, in=270]
-        node[below=1mm, font=\scriptsize, text=TUMOrange]
-        {model loops until done} (think.south);
-    \end{tikzpicture}
-  \end{center}
-
-  \bigskip
-  {\small Read a file, run tests, edit --- \textbf{any tool, any order,} as many
-  rounds as it takes. Nothing outside the model fixes the sequence.}
-\end{frame}
-
-\begin{frame}{Orchestration: fixed pipeline}
-  \label{fr:orch-fixed}
-  {\small The \textbf{scaffold} is in control: the steps are \textbf{fixed in
-  advance}; the model only fills each one~\cite{xia2024agentless}.}
-
-  \bigskip
-  \begin{center}
-    \begin{tikzpicture}[
-      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
-                    font=\small, align=center, minimum height=0.8cm,
-                    minimum width=2.2cm},
-      stop/.style={draw=TUMGray, fill=none, rounded corners=3pt,
-                   font=\small, align=center, minimum height=0.8cm,
-                   minimum width=1.6cm, text=TUMGrayDark},
-      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
-    ]
-      \node[stage] (loc) at (0,0)   {Localise};
-      \node[stage] (rep) at (2.9,0) {Repair};
-      \node[stage] (val) at (5.8,0) {Validate};
-      \node[stop]  (end) at (8.5,0) {stop};
-      \draw[arr] (loc) -- (rep);
-      \draw[arr] (rep) -- (val);
-      \draw[arr] (val) -- (end);
-    \end{tikzpicture}
-  \end{center}
-
-  \bigskip
-  {\small On failure it stops or moves on --- \textbf{no arrow goes back.}
-  Cheaper and predictable, but no recovery.}
-\end{frame}
-
-\begin{frame}{Interface and Context}
-
-  What the agent sees and does.
-
-  \bigskip
-
-  \textbf{Agent--Computer Interface (ACI)}
-  \begin{itemize}
-    \item Purpose-built command set
-    \item Scrollable file viewer, linter-guarded edits, summarised search
-    \item The scaffold controls what the model can see
-    \item Malformed actions rejected before they run
-  \end{itemize}
-
-  \medskip
-  \textbf{Code as action}
-  \begin{itemize}
-    \item The agent writes Python or bash in a sandbox
-    \item Full shell access, no guardrails, no summarisation
-    \item The model manages its own context
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Interface and Context}
+\begin{frame}{Interface}
   \label{fr:iface}
   \small
   \begin{tabular}{@{}L{0.14\textwidth}L{0.40\textwidth}L{0.36\textwidth}@{}}
     \toprule
-    & \textbf{ACI}~\cite{yang2024sweagent}
+    & \textbf{Agent-Computer Interface}~\cite{yang2024sweagent}
     & \textbf{Code as action}~\cite{wang2024codeact} \\
     \midrule
     \textbf{View files}
@@ -454,30 +430,23 @@
   \end{tabular}
 \end{frame}
 
-\begin{frame}{Back to the five stages}
-  \begin{center}
-    \scalebox{0.9}{\agentloopdiagram}
-  \end{center}
-
-  \medskip
-  \begin{center}
-    Now, stage by stage.
-  \end{center}
-\end{frame}
+% \begin{frame}{Back to the five stages}
+%   \begin{center}
+%     \scalebox{0.9}{\agentloopdiagram}
+%   \end{center}
+% \end{frame}
 
 \begin{frame}{Plan: finding the right code}
   \label{fr:planning}
-  Two commitments: \textbf{where} to change the code --- which file, which
-  function --- and \textbf{what} the change should be. Both are guesses; both
-  need evidence that could confirm them.
+  Two commitments: 
 
   \bigskip
   \begin{itemize}
-    \item \textbf{Where} --- among tens of thousands of functions, which one?
+    \item \textbf{Where}: among tens of thousands of functions, which one?
       The relevant symbol often does not appear in the issue text.
       \medskip
-    \item \textbf{What} --- a signature, an interface, an invariant to hold ---
-      stated concretely enough that the repository can check it.
+    \item \textbf{What}: a signature, an interface, an invariant to hold, stated
+      concretely enough that the repository can check it.
   \end{itemize}
 
 \end{frame}
@@ -614,7 +583,7 @@
     \node[b] (r2) at (3.5,0)    {ReAct run 2 $\rightarrow$ patch B};
     \node[b] (r3) at (3.5,-1.3) {ReAct run 3 $\rightarrow$ patch C};
     \node[b] (s1) at (7.7,1.3)  {tests 2/3};
-    \node[b, fill=TUMBlue!30] (s2) at (7.7,0) {tests 3/3 --- \textbf{pick}};
+    \node[b, fill=TUMBlue!30] (s2) at (7.7,0) {tests 3/3, \textbf{pick}};
     \node[b] (s3) at (7.7,-1.3) {tests 0/3};
     \draw[arr] (i) -- (r1);
     \draw[arr] (i) -- (r2);
@@ -628,8 +597,8 @@
   \medskip
   {\small The scorer is \textbf{tests or a trained critic}, not the model's
   hunch. OpenHands \textbf{60\%\,$\rightarrow$\,66\%} with five
-  reranked~\cite{openhands2025verified}; SWE-Search wraps it in MCTS with a
-  learned value --- \textbf{+23\%}, but a model call per
+  reranked~\cite{openhands2025verified}. SWE-Search wraps it in MCTS with a
+  learned value for \textbf{+23\%}, at the price of a model call per
   node~\cite{antoniades2024swesearch}.}
 \end{frame}
 
@@ -660,12 +629,9 @@
 
 \begin{frame}{Generate: infilling}
   \label{fr:gen-infill}
-  {\small Complete a \textbf{span} from the surrounding context.}
+  {\small The scaffold opens a \textbf{gap}; the model fills it.}
 
-  \smallskip
-  {\small Plan from earlier: guard \texttt{total()} so an empty cart returns 0.}
-
-  \smallskip
+  \medskip
   \begin{center}
   \begin{tikzpicture}
     \node[draw, rounded corners, fill=TUMBlue!5, inner sep=8pt,
@@ -678,20 +644,19 @@
   \end{tikzpicture}
   \end{center}
 
-  {\footnotesize Conditions on the \textcolor{black!55}{grey context}, emits
-  only the \textcolor{TUMOrange}{orange span}.}
+  {\footnotesize Reads the \textcolor{black!55}{grey}, writes only the
+  \textcolor{TUMOrange}{orange}.}
 
   \begin{tradeoffs}
-    \pro Matches the pre-training objective --- fill a gap from both sides
-    \pro Cannot be mis-placed: the scaffold decides where the gap is
-    \con One contiguous span --- in practice, one function
-    \con The surrounding code has to fit in the prompt
+    \pro Filling a gap is what models are trained on most
+    \pro Changes land in the right place, since the scaffold picks the spot
+    \con One span at a time, in practice one function
   \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Generate: diff generation}
   \label{fr:gen-diff}
-  {\small Emit a \textbf{unified diff}, not the whole file.}
+  {\small Send \textbf{only the change}, not the whole file.}
 
   \medskip
   \begin{center}
@@ -708,19 +673,17 @@
 
   \smallskip
   \begin{tradeoffs}
-    \pro Only the change travels --- edits a large file without re-emitting it
-    \pro One patch spans many hunks and many files
-    \con The model must state \emph{where}: the
-      \textcolor{black!55}{context lines} have to match
-    \con A stale anchor is rejected before a single test runs
+    \pro Edits a huge file without re-writing it
+    \pro One patch, many places, many files
+    \con The model must point to \emph{where} the edit goes --- the surrounding
+      context lines locate it
+    \con Off by one line and the patch will not apply, before any test runs
   \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Generate: sample $N$, pick one}
   \label{fr:gen-sample}
-  {\small Generate \textbf{many candidates}; rank by \textbf{tests or a critic}.
-  AlphaCode samples up to \emph{millions}, clusters by
-  execution~\cite{li2022alphacode}.}
+  {\small Write \textbf{$N$ patches}, keep the one that \textbf{passes}.}
 
   \medskip
   \begin{center}
@@ -737,7 +700,7 @@
     \node[pick] (b) at (0.33\textwidth,0)  {B: if not items:\\return 0};
     \node[cand] (c) at (0.66\textwidth,0)  {C: return 0\\always};
     \node[sc, below=1.5mm of a, text=TUMExtRed]  {tests 2/3};
-    \node[sc, below=1.5mm of b, text=TUMGreen]   {tests 3/3 --- \textbf{pick}};
+    \node[sc, below=1.5mm of b, text=TUMGreen]   {tests 3/3, \textbf{pick}};
     \node[sc, below=1.5mm of c, text=TUMExtRed]  {tests 0/3};
   \end{tikzpicture}
   \end{center}
@@ -745,15 +708,14 @@
   \smallskip
   \begin{tradeoffs}
     \pro One bad sample no longer sinks the task
-    \pro Candidates differ --- covers approaches a single pass would miss
-    \con Ranking needs an \textbf{oracle}; the model's own confidence is not
-      enough
-    \con Cost scales with $N$ --- calls, dollars, wall-clock
+    \pro Different candidates try different ideas
+    \con Picking needs an \textbf{oracle}; the model's confidence is not one
+    \con Cost grows with $N$: calls, dollars, wall-clock
   \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Execute: running the code}
-  The agent runs what it wrote. This is where the \textbf{environment can say no}.
+  The agent runs what it wrote.
 
   \medskip
   \begin{itemize}
@@ -787,7 +749,7 @@
   \medskip
   \begin{tabular}{@{}L{0.26\textwidth}L{0.30\textwidth}L{0.34\textwidth}@{}}
     \toprule
-    \textbf{Mechanism} & \textbf{What closes the loop}
+    \textbf{Mechanism} & \textbf{Correction signal}
       & \textbf{Characteristic failure} \\
     \midrule
     Self-Refine~\cite{madaan2023selfrefine}
@@ -804,9 +766,12 @@
     \bottomrule
   \end{tabular}
 
-  \bigskip
-  {\small Closed by the generator re-reading itself. Three that bring in
-  something else --- next.}
+  \smallskip
+  \begin{tradeoffs}
+    \pro Adds 2 to 3\% without tests.
+    \con Ceiling: if the model could spot its own wrong code just by looking, 
+    \\ it would have written it right the first time.
+  \end{tradeoffs}
 \end{frame}
 
 \begin{frame}{Refinement: tests and trained critics}
@@ -814,7 +779,7 @@
   \small
   \begin{tabular}{@{}L{0.26\textwidth}L{0.30\textwidth}L{0.34\textwidth}@{}}
     \toprule
-    \textbf{Mechanism} & \textbf{What closes the loop}
+    \textbf{Mechanism} & \textbf{Correction signal}
       & \textbf{Characteristic failure} \\
     \midrule
     D4C~\cite{xu2024d4c}
@@ -831,117 +796,121 @@
     \bottomrule
   \end{tabular}
 
-  \bigskip
-  {\small Per-instance sandbox --- for \textbf{reproducibility} first,
-  containment second.}
+  \smallskip
+  \begin{tradeoffs}
+    \pro Real tests can surprise the model, catching wrong patches
+    \con Generated tests and critics only echo the model's blind spots
+  \end{tradeoffs}
 \end{frame}
 
-\begin{frame}{Refinement: when does the loop stop?}
-  \label{fr:refinelast}
-  \begin{itemize}
-    \item \textbf{All tests pass}
-      \begin{itemize}
-        \item but that is quietly an oracle
-        \item the stopping rule has smuggled in ground truth
-      \end{itemize}
-      \medskip
-    \item \textbf{Diminishing returns}
-      \begin{itemize}
-        \item at fixed budget, another repair round is often \emph{worse} than
-          a fresh sample~\cite{olausson2024selfrepair}
-      \end{itemize}
-      \medskip
-    \item \textbf{Iterate or best-of-$N$ --- the same lever}
-      \begin{itemize}
-        \item fix the budget to compare
-      \end{itemize}
-  \end{itemize}
-\end{frame}
+% \begin{frame}{Refinement: when does the loop stop?}
+%   \label{fr:refinelast}
+%   \begin{itemize}
+%     \item \textbf{All tests pass}
+%       \begin{itemize}
+%         \item this trusts the test suite as ground truth
+%       \end{itemize}
+%       \medskip
+%     \item \textbf{Diminishing returns}
+%       \begin{itemize}
+%         \item beyond a few rounds, a fresh sample beats repairing
+%           again~\cite{olausson2024selfrepair}
+%       \end{itemize}
+%       \medskip
+%     \item \textbf{Repair vs.\ best-of-$N$}
+%       \begin{itemize}
+%         \item both just buy more compute to reduce errors; only comparable at
+%           an equal budget
+%       \end{itemize}
+%   \end{itemize}
+% \end{frame}
 
 \begin{frame}{Five systems compared}
   \label{fr:systems}
   \scriptsize
-  \begin{tabular}{@{}L{0.16\textwidth}L{0.14\textwidth}L{0.16\textwidth}L{0.18\textwidth}L{0.18\textwidth}@{}}
+  \setlength{\tabcolsep}{4pt}
+  \begin{tabular}{@{}L{0.14\textwidth}L{0.13\textwidth}L{0.14\textwidth}L{0.15\textwidth}L{0.16\textwidth}L{0.14\textwidth}@{}}
     \toprule
     \textbf{System}
       & \textbf{Orchestration}
       & \textbf{Interface}
       & \textbf{Planning}
-      & \textbf{Refinement} \\
+      & \textbf{Refinement}
+      & \textbf{Where used} \\
     \midrule
     SWE-agent
       & Agentic loop
       & ACI
       & Implicit (model)
-      & Self-repair \\
+      & Self-repair
+      & Research \\
     \addlinespace
     AutoCodeRover
       & Agentic loop
       & AST APIs
       & AST localisation
-      & Re-generate \\
+      & Re-generate
+      & Research \\
     \addlinespace
     OpenHands
       & Agentic loop
       & Code as action
       & Implicit (model)
-      & Best-of-$N$ + critic \\
+      & Best-of-$N$ + critic
+      & Product (All Hands) \\
     \addlinespace
     Agentless
       & Fixed pipeline
       & Skeleton + emb.
       & Hierarchical loc.
-      & Regression + gen.\ tests \\
+      & Regression + gen.\ tests
+      & Research \\
     \addlinespace
     Devin
       & Agentic loop
       & Own VM
       & Knowledge store
-      & --- \\
+      & Not disclosed
+      & Product (Cognition) \\
     \bottomrule
   \end{tabular}
 \end{frame}
 
-\begin{frame}{Where are these systems used?}
-  \label{fr:used}
-  {\small The surveyed five are mostly \textbf{research artefacts}; the tools
-  developers use daily are their \textbf{productised descendants}.}
+% \begin{frame}{Where are these systems used?}
+%   \label{fr:used}
+%   {\small The surveyed five are mostly \textbf{research artefacts}; the tools
+%   developers use daily are their \textbf{productised descendants}.}
 
-  \medskip
-  \begin{itemize}
-    \item \textbf{Research \& benchmarks} --- SWE-agent, AutoCodeRover,
-      Agentless: open-source, run mostly on SWE-bench; blueprints for the
-      patterns.
-      \smallskip
-    \item \textbf{Shipped as products} --- OpenHands (All Hands AI, open
-      platform), Devin (Cognition, commercial cloud agent).
-      \smallskip
-    \item \textbf{What developers actually use} --- Claude Code, Cursor,
-      Copilot, Codex: the \emph{same} observe--think--act loop, purpose-built
-      interface, and execution-grounded refinement.
-  \end{itemize}
+%   \medskip
+%   \begin{itemize}
+%     \item \textbf{Research \& benchmarks}: SWE-agent, AutoCodeRover and
+%       Agentless. Open-source, run mostly on SWE-bench, blueprints for the
+%       patterns.
+%       \smallskip
+%     \item \textbf{Shipped as products}: OpenHands (All Hands AI, open
+%       platform), Devin (Cognition, commercial cloud agent).
+%       \smallskip
+%     \item \textbf{What developers actually use}: Claude Code, Cursor, Copilot,
+%       Codex. The \emph{same} observe, think, act loop, the same purpose-built
+%       interface, the same execution-grounded refinement.
+%   \end{itemize}
 
-  \medskip
-  {\small Same ingredients --- deployed as IDE assistants, autonomous PR/issue
-  bots, and CI jobs.}
-\end{frame}
+%   \medskip
+%   {\small Same ingredients, deployed as IDE assistants, autonomous PR and issue
+%   bots, and CI jobs.}
+% \end{frame}
 
 \section{How do we measure performance?}
 
-\begin{frame}{Sonnet 5 --- which benchmarks?}
-  \label{fr:sonnet5}
-  \begin{columns}[t]
+\begin{frame}{Which benchmarks do they use?}
+  \label{fr:benchmarks}
+  \footnotesize
+  \begin{columns}[T]
     \begin{column}{0.5\textwidth}
-      \begin{itemize}
-        \item SWE-bench Verified~\cite{openai2024verified}
-        \item SWE-bench Pro~\cite{deng2025swebenchpro}
-        \item SWE-bench Multilingual~\cite{swebench2025multilingual}
-        \item SWE-bench Multimodal~\cite{yang2024swebenchmm}
+      \textbf{Sonnet 5}~\cite{anthropic2026sonnet5}
+      \begin{itemize}\itemsep0pt
+        \item SWE-bench~\cite{openai2024verified,deng2025swebenchpro,swebench2025multilingual,yang2024swebenchmm}
         \item Terminal-Bench 2.1~\cite{merrill2026terminalbench}
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{itemize}
         \item OSWorld-Verified~\cite{xie2024osworld,xlang2025osworldverified}
         \item Humanity's Last Exam~\cite{phan2025hle}
         \item GDPval-AA v2~\cite{aa2026gdpvalaa,patwardhan2025gdpval}
@@ -979,8 +948,8 @@
   suite}~\cite{jimenez2024swebench}.
 
   \smallskip
-  {\small \textbf{2{,}294} tasks from \textbf{12} mature Python projects ---
-  Django, scikit-learn, matplotlib, sympy, \ldots --- real, merged fixes,
+  {\small \textbf{2{,}294} tasks from \textbf{12} mature Python projects
+  (Django, scikit-learn, matplotlib, sympy, \ldots). Real, merged fixes,
   nothing synthetic.}
 
   \bigskip
@@ -993,7 +962,7 @@
       \smallskip
     \item \textbf{Produce}
       \begin{itemize}
-        \item a patch --- the source fix; the grading tests stay hidden
+        \item a patch: the source fix. The grading tests stay hidden
       \end{itemize}
       \smallskip
     \item \textbf{Graded}
@@ -1004,22 +973,22 @@
   \end{enumerate}
 \end{frame}
 
-\begin{frame}{SWE-bench: metrics}
-  \medskip
-  \begin{itemize}
-    \item \textbf{Functional correctness} --- does it run and pass? The only
-      thing that counts.
-      \smallskip
-    \item \textbf{pass@$k$} --- give it $k$ tries; solved if any one
-      passes~\cite{chen2021humaneval}.
-      \smallskip
-    \item \textbf{Resolve rate} --- pass@1 on a whole repo: solved on the first
-      try.
-      \smallskip
-    \item \textbf{Cost} --- dollars, calls, time. A higher score can cost much
-      more~\cite{sweeffi2025}.
-  \end{itemize}
-\end{frame}
+% \begin{frame}{SWE-bench: metrics}
+%   \medskip
+%   \begin{itemize}
+%     \item \textbf{Functional correctness}: does it run and pass? The only thing
+%       that counts.
+%       \smallskip
+%     \item \textbf{pass@$k$}: give it $k$ tries, solved if any one
+%       passes~\cite{chen2021humaneval}.
+%       \smallskip
+%     \item \textbf{Resolve rate}: pass@1 over a whole split, solved on the first
+%       try.
+%       \smallskip
+%     \item \textbf{Cost}: dollars, calls, time. A higher score can cost much
+%       more~\cite{sweeffi2025}.
+%   \end{itemize}
+% \end{frame}
 
 \begin{frame}{SWE-bench: the five splits}
   \label{fr:splits}
@@ -1040,7 +1009,8 @@
   \end{tabularx}
 
   \medskip
-  {\small \textbf{Pro} is the contamination-resistant successor: enterprise and
+  {\small \textbf{Pro} is the contamination-resistant successor to
+  \textbf{Verified}: enterprise and
   \textbf{held-out} repositories (kept off public GitHub), several languages, and
   tasks needing \textbf{large multi-file} changes. The frontier drops from
   $\sim$80\,\% on Verified to $\sim$46\,\%~\cite{deng2025swebenchpro}.}
@@ -1048,7 +1018,7 @@
 
 \begin{frame}{SWE-bench: how hard is each task?}
   \label{fr:difficulty}
-  \textbf{Verified tasks are devided into three categories}
+  \textbf{Verified tasks come in three difficulty tiers}
   \medskip
   \begin{center}
     \small
@@ -1196,13 +1166,13 @@
   \end{itemize}
 \end{frame}
 
-\section{Why are we stuck on the hard tasks?}
+\section{Challenges?}
 
 \begin{frame}{1. Nothing checks what you meant}
   \label{fr:ambiguity}
   \begin{itemize}
-    \item The agent commits to \textbf{one reading} of the issue --- and
-      nothing ever contradicts it.
+    \item The agent commits to \textbf{one reading} of the issue, and nothing
+      ever contradicts it.
       \medskip
     \item A wrong guess about something the tests never check
       \textbf{scores as a success}.
@@ -1219,7 +1189,7 @@
     \item The repository \textbf{does not fit in context}. Choosing what to
       read is most of the problem.
       \medskip
-    \item Hard tasks are disproportionately \textbf{multi-file} --- exactly
+    \item Hard tasks are disproportionately \textbf{multi-file}, which is exactly
       where agents stall (frame~\ref{fr:numbers}).
   \end{itemize}
 
@@ -1249,7 +1219,7 @@
       because it reasons more.
       \medskip
     \item \textbf{Verification is the bottleneck.} In a randomised trial,
-      developers were 19\,\% \emph{slower} --- believing they were 20\,\%
+      developers were 19\,\% \emph{slower}, and believed they were 20\,\%
       faster~\cite{metr2025rct}.
   \end{itemize}
 \end{frame}
@@ -1258,7 +1228,7 @@
 
 \appendix
 
-\begin{frame}[noframenumbering]{Backup: SWE-bench --- can we trust the numbers?}
+\begin{frame}[noframenumbering]{Backup: can we trust the SWE-bench numbers?}
   \label{fr:trust}
   \textbf{Verified against Pro}, April 2026:
 
@@ -1279,14 +1249,14 @@
   \end{center}
 
   \medskip
-  {\footnotesize Read the \textbf{floor} only --- every model drops $\sim$20
+  {\footnotesize Read the \textbf{floor} only: every model drops $\sim$20
   percentage points or more. \textbf{Not the spread:} the one measured row drops
   \emph{furthest}, so the ranking is an artefact of who
   scored~\cite{deng2025swebenchpro,agentmarketcap2026gap}.}
 
   \medskip
   \begin{itemize}
-    \item \textbf{Contamination.} OpenAI dropped Verified in 2026 --- models
+    \item \textbf{Contamination.} OpenAI dropped Verified in 2026; models
       reproduce gold patches from the task ID alone~\cite{openai2026swebench}.
     \item \textbf{Reward hacking.} Closing test leaks cuts scores by double
       digits: agents partly learn the grader~\cite{cursor2025rewardhacking}.
@@ -1327,8 +1297,8 @@
 
   \smallskip
   {\scriptsize $^*$On \textbf{SWE-bench Full}, a different and easier split
-  than the Verified numbers above --- not directly comparable. Self-reported;
-  Cognition stopped publishing benchmark numbers in
+  than the Verified numbers above, so not directly comparable. Self-reported,
+  and Cognition stopped publishing benchmark numbers in
   2024~\cite{cognition2024devin}.}
 \end{frame}
 
@@ -1350,59 +1320,58 @@
   {\small An agent cannot fix what it never places in context.}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Backup: Plan --- localisation}
+\begin{frame}[noframenumbering]{Backup: how planning points at real code}
   \label{fr:localisation}
   {\large So how does it \textbf{stop guessing}?}
 
   \medskip
-  Point at real code. Narrow the repo from broad to specific --- each step
-  something you can check:
+  Narrow the repo from broad to specific, each step something you can check:
 
   \bigskip
   \begin{itemize}
-    \item \textbf{Agentless} --- files $\rightarrow$ classes/functions
+    \item \textbf{Agentless}: files $\rightarrow$ classes/functions
       $\rightarrow$ edit locations~\cite{xia2024agentless}
       \medskip
-    \item \textbf{AutoCodeRover} --- AST-backed search APIs, coarse to
+    \item \textbf{AutoCodeRover}: AST-backed search APIs, coarse to
       fine~\cite{zhang2024autocoderover}
   \end{itemize}
 
   \bigskip
   \begin{block}{What the useful ones share}
     They name \textbf{concrete program elements} that can be checked against the
-    repository --- not invented requirements.
+    repository, not invented requirements.
   \end{block}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Backup: Localisation --- Agentless}
+\begin{frame}[noframenumbering]{Backup: localisation in Agentless}
   {\small Narrowing without letting the model wander: three fixed steps, coarse
   to fine~\cite{xia2024agentless}.}
 
   \bigskip
   \begin{enumerate}
-    \item \textbf{Rank files} --- from the repo layout and the issue, shortlist
-      the files most likely involved.
+    \item \textbf{Rank files}: from the repo layout and the issue, shortlist the
+      files most likely involved.
       \medskip
-    \item \textbf{Rank elements} --- inside those files, narrow to specific
-      classes and functions.
+    \item \textbf{Rank elements}: inside those files, narrow to specific classes
+      and functions.
       \medskip
-    \item \textbf{Pin locations} --- inside those, the exact lines to edit.
+    \item \textbf{Pin locations}: inside those, the exact lines to edit.
   \end{enumerate}
 
   \bigskip
   \begin{block}{Fixed, not discovered}
-    Three prompts, coarse to fine. No search, no tools --- the narrowing is
+    Three prompts, coarse to fine. No search, no tools: the narrowing is
     hard-coded into the scaffold.
   \end{block}
 \end{frame}
 
-\begin{frame}[noframenumbering]{Backup: Localisation --- AutoCodeRover}
-  {\small Let the model navigate --- but through the syntax tree, not by reading
-  whole files~\cite{zhang2024autocoderover}.}
+\begin{frame}[noframenumbering]{Backup: localisation in AutoCodeRover}
+  {\small Let the model navigate, but through the syntax tree rather than whole
+  files~\cite{zhang2024autocoderover}.}
 
   \bigskip
   \begin{itemize}
-    \item \textbf{Search APIs} --- \texttt{search\_class},
+    \item \textbf{Search APIs}: \texttt{search\_class},
       \texttt{search\_method}, \texttt{search\_method\_in\_class}.
       \medskip
     \item The agent calls them \textbf{coarse to fine}, pulling in just the code
@@ -1414,7 +1383,7 @@
 
   \bigskip
   \begin{block}{Discovered, not fixed}
-    The model chooses what to search --- agentic, where Agentless is a fixed
+    The model chooses what to search. Agentless, by contrast, is a fixed
     funnel.
   \end{block}
 \end{frame}
