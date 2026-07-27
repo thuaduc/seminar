@@ -15,6 +15,66 @@
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
+\usepackage{etoolbox}
+
+% Reusable five-stage agent-loop diagram.
+% Optional arg = stage to highlight (intent|plan|gen|exec|refine); default none.
+\newcommand{\agentloopdiagram}[1][none]{%
+  \def\hlintent{stage}\def\hlplan{stage}\def\hlgen{stage}%
+  \def\hlexec{stage}\def\hlrefine{stage}%
+  \ifstrequal{#1}{intent}{\def\hlintent{here}}{}%
+  \ifstrequal{#1}{plan}{\def\hlplan{here}}{}%
+  \ifstrequal{#1}{gen}{\def\hlgen{here}}{}%
+  \ifstrequal{#1}{exec}{\def\hlexec{here}}{}%
+  \ifstrequal{#1}{refine}{\def\hlrefine{here}}{}%
+  \begin{tikzpicture}[
+    stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
+                  font=\small, align=center, minimum height=0.8cm,
+                  minimum width=2.2cm},
+    here/.style={draw=TUMOrange, fill=TUMOrange!15, rounded corners=3pt,
+                 font=\small\bfseries, align=center, minimum height=0.8cm,
+                 minimum width=2.2cm},
+    note/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
+    arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
+    feedback/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
+    newtask/.style={-{Stealth[length=1.4mm]}, thin, dotted, TUMGray},
+    fblab/.style={font=\tiny, text=TUMOrange, align=center, inner sep=1.5pt,
+                  fill=white},
+    ntlab/.style={font=\tiny, text=TUMGrayDark, align=center, inner sep=1.5pt,
+                  fill=white},
+    key/.style={font=\scriptsize, text=TUMGrayDark, anchor=west},
+  ]
+    \node[\hlintent] (intent) at (0,0)      {Intent\\capture};
+    \node[\hlplan]   (plan)   at (3.3,0)    {Planning};
+    \node[\hlgen]    (gen)    at (6.6,0)    {Code\\generation};
+    \node[\hlexec]   (exec)   at (6.6,-1.9) {Execution};
+    \node[\hlrefine] (refine) at (3.3,-1.9) {Refinement};
+
+    \draw[arr] (intent) -- (plan);
+    \draw[arr] (plan) -- (gen);
+    \draw[arr] (gen) -- (exec);
+    \draw[arr] (exec) -- (refine);
+
+    \draw[newtask] (refine.west) to[out=180, in=270]
+      node[ntlab, pos=0.55] {new task,\\not feedback} (intent.south);
+
+    \draw[feedback] (refine.north) -- node[fblab, right] {replan} (plan.south);
+    \draw[feedback] (refine.north east) -- node[fblab, pos=0.5] {regenerate}
+      (gen.south west);
+
+    \node[note, above=0.15cm of intent] {NL issue or spec};
+    \node[note, below=0.15cm of exec] {test failures, traces};
+
+    % Key: which visual element each cross-cutting control acts on
+    \draw[arr] (0,-3.15) -- ++(0.55,0);
+    \node[key] at (0.78,-3.15)
+      {\textbf{Orchestration} --- the arrows: which step runs next};
+    \node[stage, minimum width=0.55cm, minimum height=0.34cm] at (0.27,-3.72) {};
+    \node[key] at (0.78,-3.72)
+      {\textbf{Interface \& context} --- inside each stage};
+  \end{tikzpicture}%
+}
+
 \TUMbeamersetup{
   title page   = TUM tower,
   content page = TUM more space,
@@ -227,40 +287,7 @@
 \begin{frame}{The agent loop}
   \label{fr:stages}
   \begin{center}
-    \begin{tikzpicture}[
-      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
-                    font=\small, align=center, minimum height=0.8cm,
-                    minimum width=2.2cm},
-      note/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
-      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
-      feedback/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
-      newtask/.style={-{Stealth[length=1.4mm]}, thin, dotted, TUMGray},
-      fblab/.style={font=\tiny, text=TUMOrange, align=center, inner sep=1.5pt,
-                    fill=white},
-      ntlab/.style={font=\tiny, text=TUMGrayDark, align=center, inner sep=1.5pt,
-                    fill=white},
-    ]
-      \node[stage] (intent) at (0,0)      {Intent\\capture};
-      \node[stage] (plan)   at (3.3,0)    {Planning};
-      \node[stage] (gen)    at (6.6,0)    {Code\\generation};
-      \node[stage] (exec)   at (6.6,-1.9) {Execution};
-      \node[stage] (refine) at (3.3,-1.9) {Refinement};
-
-      \draw[arr] (intent) -- (plan);
-      \draw[arr] (plan) -- (gen);
-      \draw[arr] (gen) -- (exec);
-      \draw[arr] (exec) -- (refine);
-
-      \draw[newtask] (refine.west) to[out=180, in=270]
-        node[ntlab, pos=0.55] {new task,\\not feedback} (intent.south);
-
-      \draw[feedback] (refine.north) -- node[fblab, right] {replan} (plan.south);
-      \draw[feedback] (refine.north east) -- node[fblab, pos=0.5] {regenerate}
-        (gen.south west);
-
-      \node[note, above=0.15cm of intent] {NL issue or spec};
-      \node[note, below=0.15cm of exec] {test failures, traces};
-    \end{tikzpicture}
+    \agentloopdiagram
   \end{center}
 \end{frame}
 
@@ -392,7 +419,7 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Interface: side by side}
+\begin{frame}{Interface and Context}
   \label{fr:iface}
   \small
   \begin{tabular}{@{}L{0.14\textwidth}L{0.40\textwidth}L{0.36\textwidth}@{}}
@@ -424,31 +451,12 @@
 
 \begin{frame}{Back to the five stages}
   \begin{center}
-  \scalebox{0.9}{%
-    \begin{tikzpicture}[
-      stage/.style={draw=TUMBlue, fill=TUMBlue!8, rounded corners=3pt,
-                    font=\small, align=center, minimum height=0.8cm,
-                    minimum width=2.2cm},
-      here/.style={draw=TUMOrange, fill=TUMOrange!15, rounded corners=3pt,
-                   font=\small\bfseries, align=center, minimum height=0.8cm,
-                   minimum width=2.2cm},
-      arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
-    ]
-      \node[stage] (intent) at (0,0)    {Intent\\capture};
-      \node[here]  (plan)   at (2.6,0)  {Planning};
-      \node[stage] (gen)    at (5.2,0)  {Code\\generation};
-      \node[stage] (exec)   at (7.8,0)  {Execution};
-      \node[stage] (refine) at (10.4,0) {Refinement};
-      \draw[arr] (intent) -- (plan);
-      \draw[arr] (plan) -- (gen);
-      \draw[arr] (gen) -- (exec);
-      \draw[arr] (exec) -- (refine);
-    \end{tikzpicture}}
+    \scalebox{0.9}{\agentloopdiagram[plan]}
   \end{center}
 
-  \bigskip
-  Orchestration and interface cut \emph{across} all five. Now, stage by
-  stage --- starting where the model has the \textbf{least to lean on}.
+  \medskip
+  Now, stage by stage --- starting with \textbf{Planning}, where the model has
+  the \textbf{least to lean on}.
 \end{frame}
 
 \begin{frame}{Plan: finding the right code}

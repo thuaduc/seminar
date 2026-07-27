@@ -68,6 +68,8 @@ Nearly all systems do the same five things.
 - Refinement — the agent reads the execution result and decides what to change. 
 - It either regenerates the patch or replans from an earlier point.
 
+The key at the bottom flags the two cross-cutting controls we cover next: orchestration is the arrows — which step runs next; interface and context is inside each box — what the agent can see and do.
+
 ## How the loop is controlled
 
 The five stages are what happens. Two controls decide how the loop runs —
