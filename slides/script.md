@@ -302,6 +302,8 @@ Roughly two years of splits, oldest to newest.
 - Multilingual, May 2025: nine languages. 
 - Pro, Sep 2025: long-horizon, multi-file, held-out repos.
 
+Pro is the one to watch — the contamination-resistant successor. Enterprise and held-out repositories kept off public GitHub, several languages, and tasks that need large multi-file changes. That is why the frontier falls from about eighty percent on Verified to about forty-six on Pro.
+
 Verified is the most curated, not the hardest. 
 Resolve rates are not comparable across splits.
 
