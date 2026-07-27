@@ -898,11 +898,22 @@
 
   \bigskip
   \begin{enumerate}
-    \item \textbf{Given} --- the issue text $+$ the repository \emph{before}
-      the merge.
-    \item \textbf{Produce} --- a patch.
-    \item \textbf{Graded} --- \emph{fail-to-pass} must flip,
-      \emph{pass-to-pass} must not regress.
+    \item \textbf{Given}
+      \begin{itemize}
+        \item the issue text
+        \item the repository \emph{before} the merge
+      \end{itemize}
+      \smallskip
+    \item \textbf{Produce}
+      \begin{itemize}
+        \item a patch --- the source fix; the grading tests stay hidden
+      \end{itemize}
+      \smallskip
+    \item \textbf{Graded}
+      \begin{itemize}
+        \item \emph{fail-to-pass} tests must flip
+        \item \emph{pass-to-pass} must not regress
+      \end{itemize}
   \end{enumerate}
 \end{frame}
 
