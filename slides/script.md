@@ -31,7 +31,7 @@ Three questions.
 
 Five words you'll keep hearing — quick definitions before I use them. 
 Scaffold: the non-model code around it — tools, prompts, control flow. 
-AST: a parsed structure of the code — classes, functions, calls, not raw text. 
+Tool call: the model asking the scaffold to act — read a file, run the tests — and getting the output back. 
 Harness: the environment a result is run and graded in. 
 Oracle: something outside the model that can check it — a test suite, a compiler, a human. 
 Critic: a separate model, trained to score candidate outputs.
@@ -132,29 +132,16 @@ Context is managed, not logged.
 
 Same four operations, side by side — viewing, editing, searching, executing.
 
-The ACI ablation is the cleanest evidence that the scaffold matters, not the model. 
-- Same model, same benchmark, on Lite. 
-- Drop the linter, minus three points. 
-- Raw search instead of summarised, minus six. 
-- Whole files instead of a window, minus five.
-
-That's the two axes.
-
 ## Back to the five stages
 
-Same diagram as before, one stage lit up. Orchestration and interface cut across all five — now we go through them one at a time, starting where the model has the least to lean on: planning.
+Now we go through them one at a time, starting with plan.
 
 ## Plan: finding the right code
 
 Planning makes two commitments: where to change the code, and what the change should be. 
 Where — you choose one function among tens of thousands, and the symbol often does not appear in the issue text. 
 What — a signature, an interface, an invariant, stated concretely enough that the repository can check it. 
-Both are guesses; the section is mostly about the first, because that is the one with no pre-training prior to lean on.
 
-Add fault localisation to AutoCodeRover: 
-- nineteen to twenty-two percent on Lite, 
-- seven new instances solved, 
-- nothing changed about patch generation.
 
 ## Plan shape
     
@@ -170,12 +157,6 @@ How does the agent explore possible plans? Before any code is written, it search
 
 - Graph of thoughts — like a tree, but branches can merge back together. 
 - The model can revisit an earlier state or combine ideas from two different paths.
-
-The key question is what scores each branch? 
-- A half-finished patch has not been tested yet. 
-- There is no compiler output, no test result — nothing external to judge it. 
-- So the scorer is usually the model itself, guessing whether the path looks right.
-
 
 ## Plan: Chain of Thought
 
@@ -201,16 +182,20 @@ Treat the graph as the conceptual top of the spectrum, not something running in 
 
 Planning ends here, and it all happens blind: where and what, chosen before anything runs. Generation is next — it finally produces something execution can check. (Grounding mechanics — Agentless, AutoCodeRover — are in the backup slides if the question comes up.)
 
-## Generate: turning it into code
+## Generate: infilling
 
-Three approaches. 
-- Infilling — the model completes a span given surrounding context, works well within a single function. 
-- Diff generation — produce a unified diff, smaller output but fragile if the context is stale. 
-- Sample N and pick one — generate many candidates, rank by test results or a critic.
+Now generation turns that plan into code. Same empty-cart example, three ways to emit the edit.
 
-Two correct patches can share no token. 
-You cannot compare them as strings. 
-Ranking must use execution or AST normalisation.
+First, infilling. The model completes a span given the surrounding lines — grey is the context it conditions on, orange is all it emits: the two-line guard. Cheap and reliable, but really only within a single function.
+
+## Generate: diff generation
+
+Second, a unified diff — only the change travels, not the whole file. Smaller output, and it edits large files without re-emitting them. The catch: the context lines have to match the current file. If the file moved on, the patch won't apply — stale-context fragility.
+
+## Generate: sample N, pick one
+
+Third, don't trust one shot — sample many and pick. Same plan, N attempts: one wraps a try/except, one adds the guard, one returns zero always. Rank them by the tests — patch B passes three of three, pick it.
+The point: the ranking needs an oracle. Two correct patches can share no token, so you can't compare them as strings, and the model's own confidence isn't enough — you run them. AlphaCode takes this to the extreme: sample up to millions, cluster by execution behaviour.
 
 ## Execute: running the code
 
@@ -256,7 +241,8 @@ Five systems side by side — how each handles orchestration, interface, plannin
 
 ## Where are these systems used?
 
-One honest caveat before we measure. The five we studied are mostly research artefacts — open-source, run mostly on SWE-bench. Blueprints, not products.
+The five we studied are mostly research artefacts — open-source, run mostly on SWE-bench. Blueprints, not products.
+
 - SWE-agent, AutoCodeRover, Agentless live in papers and on the leaderboard.
 - Two are shipped: OpenHands as an open platform from All Hands AI, Devin as Cognition's commercial cloud agent.
 - And the tools developers actually reach for daily — Claude Code, Cursor, Copilot, Codex — are productised descendants: the same observe-think-act loop, the same purpose-built interface, the same execution-grounded refinement.
@@ -265,14 +251,13 @@ Same ingredients, deployed as IDE assistants, autonomous PR bots, and CI jobs. S
 
 ## SWE-bench
 
-*Part two — how we measure.* Every number ahead scores one thing: did the final patch pass. Watch what that leaves invisible — plan quality, localisation, the work of refinement.
+Let's talk about benchmark. There are a ton of benchmarks out there. But one of the first, most used by research papers is SWE bench.
 
-Each task is a real, merged pull request from a popular open-source project —
+It's a suite of tasks. Each task is a real, merged pull request from a popular open-source project: Django, scikit-learn, matplotlib 
 one that both closes a GitHub issue and touches the test suite.
 Nothing synthetic: a human reported the bug, a maintainer fixed it, the fix shipped.
 
-Twenty-three hundred of them, mined from twelve large, mature Python libraries —
-Django, scikit-learn, matplotlib, sympy and the like.
+
 Real codebases, hundreds of thousands of lines, the maintainer's own patch as ground truth — not toy problems.
 The flip side is a monoculture: Python only, twelve projects — a limitation we come back to.
 

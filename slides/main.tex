@@ -252,8 +252,8 @@
     \textbf{Scaffold} & The non-model code around it --- tools, prompts,
       control flow \\
     \addlinespace
-    \textbf{AST} & A parsed structure of the code --- classes, functions,
-      calls, not raw text \\
+    \textbf{Tool call} & The model asking the scaffold to act --- read a file,
+      run the tests --- and getting the output back \\
     \addlinespace
     \textbf{Harness} & The environment a result is run and graded in \\
     \addlinespace
@@ -630,31 +630,84 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{Generate: turning it into code}
-  The model writes or edits source code --- a patch, a new function, a refactored
-  block.
+\begin{frame}{Generate: infilling}
+  \label{fr:gen-infill}
+  {\small Complete a \textbf{span} from the surrounding context --- works well
+  \textbf{within a single function}.}
+
+  \smallskip
+  {\small Plan from earlier: guard \texttt{total()} so an empty cart returns 0.}
+
+  \smallskip
+  \begin{center}
+  \begin{tikzpicture}
+    \node[draw, rounded corners, fill=TUMBlue!5, inner sep=8pt,
+          text width=0.78\textwidth, font=\ttfamily\small, align=left]
+      {\textcolor{black!55}{def total(items):}\\
+       \textcolor{black!55}{~~~~prices = [i.price for i in items]}\\
+       \textcolor{TUMOrange}{~~~~if not items:}\\
+       \textcolor{TUMOrange}{~~~~~~~~return 0}\\
+       \textcolor{black!55}{~~~~return sum(prices) / len(items)}};
+  \end{tikzpicture}
+  \end{center}
+
+  \smallskip
+  {\small Conditions on the \textcolor{black!55}{grey context}, emits only the
+  \textcolor{TUMOrange}{orange span}.}
+\end{frame}
+
+\begin{frame}{Generate: diff generation}
+  \label{fr:gen-diff}
+  {\small Emit a \textbf{unified diff}, not the whole file --- smaller output,
+  but \textbf{fragile if the context is stale}.}
 
   \medskip
-  \begin{itemize}
-    \item \textbf{Infilling}
-      \begin{itemize}
-        \item completes a span from the surrounding context
-        \item works well within a single function
-      \end{itemize}
-      \medskip
-    \item \textbf{Diff generation}
-      \begin{itemize}
-        \item a unified diff, not a whole file --- smaller output
-        \item fragile if the surrounding context is stale
-      \end{itemize}
-      \medskip
-    \item \textbf{Sample $N$, pick one}
-      \begin{itemize}
-        \item many candidates, ranked by test results or a critic
-        \item AlphaCode samples up to \emph{millions}, clusters by
-          execution~\cite{li2022alphacode}
-      \end{itemize}
-  \end{itemize}
+  \begin{center}
+  \begin{tikzpicture}
+    \node[draw, rounded corners, fill=TUMBlue!5, inner sep=8pt,
+          text width=0.78\textwidth, font=\ttfamily\small, align=left]
+      {\textcolor{black!55}{@@ def total(items): @@}\\
+       \textcolor{black!55}{~~~~~prices = [i.price for i in items]}\\
+       \textcolor{TUMGreen}{+~~~~if not items:}\\
+       \textcolor{TUMGreen}{+~~~~~~~~return 0}\\
+       \textcolor{black!55}{~~~~~return sum(prices) / len(items)}};
+  \end{tikzpicture}
+  \end{center}
+
+  \medskip
+  {\small Only the change travels --- but the \textcolor{black!55}{context
+  lines} must still \textbf{match}, or the patch will not apply.}
+\end{frame}
+
+\begin{frame}{Generate: sample $N$, pick one}
+  \label{fr:gen-sample}
+  {\small Generate \textbf{many candidates}; rank by \textbf{tests or a critic}.
+  AlphaCode samples up to \emph{millions}, clusters by
+  execution~\cite{li2022alphacode}.}
+
+  \medskip
+  \begin{center}
+  \begin{tikzpicture}[
+    cand/.style={draw=TUMBlue, fill=TUMBlue!5, rounded corners=3pt,
+                 font=\footnotesize, align=center, inner sep=5pt,
+                 text width=0.24\textwidth, minimum height=1.0cm},
+    pick/.style={draw=TUMOrange, very thick, fill=TUMOrange!12,
+                 rounded corners=3pt, font=\footnotesize, align=center,
+                 inner sep=5pt, text width=0.24\textwidth, minimum height=1.0cm},
+    sc/.style={font=\scriptsize, align=center},
+  ]
+    \node[cand] (a) at (0,0)               {A: wrap in\\try/except};
+    \node[pick] (b) at (0.33\textwidth,0)  {B: if not items:\\return 0};
+    \node[cand] (c) at (0.66\textwidth,0)  {C: return 0\\always};
+    \node[sc, below=1.5mm of a, text=TUMExtRed]  {tests 2/3};
+    \node[sc, below=1.5mm of b, text=TUMGreen]   {tests 3/3 --- \textbf{pick}};
+    \node[sc, below=1.5mm of c, text=TUMExtRed]  {tests 0/3};
+  \end{tikzpicture}
+  \end{center}
+
+  \medskip
+  {\small Same plan, $N$ attempts. Ranking needs an \textbf{oracle} --- the
+  model's own confidence is not enough.}
 \end{frame}
 
 \begin{frame}{Execute: running the code}
@@ -1133,6 +1186,70 @@
     \item \textbf{Reward hacking.} Closing test leaks cuts scores by double
       digits: agents partly learn the grader~\cite{cursor2025rewardhacking}.
   \end{itemize}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Backup: Sonnet 5 --- what did Anthropic report?}
+  \label{fr:sonnet5}
+  Released 2026-06-30, ``the most agentic Sonnet yet,'' priced below
+  Opus~\cite{anthropic2026sonnet5}.
+
+  \medskip
+  \begin{center}
+    \small
+    \begin{tabular}{@{}lcl@{}}
+      \toprule
+      \textbf{Model} & \textbf{SWE-bench Pro} & \textbf{Scored by} \\
+      \midrule
+      Sonnet 4.6 & 58.1\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
+      Sonnet 5 & 63.2\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
+      Opus 4.8 & 69.2\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \medskip
+  {\footnotesize Anthropic's own system card, same simple bash-plus-file-edit
+  scaffold used since Claude 3.5~\cite{vellum2026sonnet5}. No independent Pro
+  leaderboard has scored Sonnet 5 yet --- same gap as the April
+  table~\cite{deng2025swebenchpro}.}
+
+  \medskip
+  {\small A Verified score above 80\,\% circulated at launch, but figures
+  disagree (82--85\,\%) and none trace to the system card directly ---
+  omitted here on purpose.}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Backup: GPT-5.6 --- what did OpenAI report?}
+  \label{fr:gpt56}
+  Preview announced 2026-06-26 --- the \textbf{U.S. government} asked OpenAI
+  to cap access to $\sim$20 approved partners first; public release followed
+  13 days later, 2026-07-09~\cite{techcrunch2026gpt56gate}.
+
+  \medskip
+  Three tiers --- \textbf{Sol} (flagship), \textbf{Terra}, \textbf{Luna}:
+
+  \medskip
+  \begin{center}
+    \small
+    \begin{tabular}{@{}lccl@{}}
+      \toprule
+      & \textbf{SWE-bench Pro} & \textbf{Terminal-Bench} & \textbf{Scored by} \\
+      \midrule
+      Sol & 64.6\,\% & 88.8\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
+      Terra & 63.4\,\% & 87.4\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
+      Luna & 62.7\,\% & 84.7\,\% & {\color{TUMGrayDark}\emph{self-reported}} \\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+
+  \medskip
+  {\footnotesize No Verified score published at all --- the eval table leads
+  with Pro, the harder split~\cite{openai2026gpt56}.}
+
+  \medskip
+  {\small For 13 days, the most capable model on the market had \textbf{no
+  public benchmark of any kind} --- access, not just scoring, gates what can
+  be verified~\cite{techcrunch2026gpt56gate}.}
 \end{frame}
 
 \begin{frame}[noframenumbering]{Backup: surveyed systems on SWE-bench Verified}
