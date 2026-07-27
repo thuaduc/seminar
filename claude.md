@@ -32,6 +32,7 @@ Out of scope: editor autocompletion, code search, and multi-agent *role-play* fr
 
 - **Body must stay under 15 pages**, excluding references. It currently ends on p15 with references starting p15; there is almost no slack. Any addition needs a corresponding cut.
 - Do **not** reintroduce the term "vibe coding" — it was deliberately stripped throughout.
+- Do **not** use en dashes (`--`). Use an em dash (`---`) for parenthetical breaks, or reword.
 - The security/trustworthiness material was deliberately removed as off-thesis. The `veracode2025genai`, `susvibes2025`, and `securitydebt2025` bib entries were deleted with it (recoverable from git history).
 
 ## Typesetting notes
