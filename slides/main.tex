@@ -44,10 +44,7 @@
     note/.style={font=\scriptsize, text=TUMGrayDark, align=center, inner sep=1pt},
     arr/.style={-{Stealth[length=1.8mm]}, very thick, TUMGrayDark},
     feedback/.style={-{Stealth[length=1.8mm]}, very thick, dashed, TUMOrange},
-    newtask/.style={-{Stealth[length=1.4mm]}, thin, dotted, TUMGray},
     fblab/.style={font=\tiny, text=TUMOrange, align=center, inner sep=1.5pt,
-                  fill=white},
-    ntlab/.style={font=\tiny, text=TUMGrayDark, align=center, inner sep=1.5pt,
                   fill=white},
     key/.style={font=\scriptsize, text=TUMGrayDark, anchor=west},
   ]
@@ -61,9 +58,6 @@
     \draw[arr] (plan) -- (gen);
     \draw[arr] (gen) -- (exec);
     \draw[arr] (exec) -- (refine);
-
-    \draw[newtask] (refine.west) to[out=180, in=270]
-      node[ntlab, pos=0.55] {new task,\\not feedback} (intent.south);
 
     \draw[feedback] (refine.north) -- node[fblab, right] {replan} (plan.south);
     \draw[feedback] (refine.north east) -- node[fblab, pos=0.5] {regenerate}
