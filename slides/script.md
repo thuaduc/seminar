@@ -254,6 +254,15 @@ Hold on to that middle column from the refinement tables.
 
 Five systems side by side — how each handles orchestration, interface, planning, and refinement.
 
+## Where are these systems used?
+
+One honest caveat before we measure. The five we studied are mostly research artefacts — open-source, run mostly on SWE-bench. Blueprints, not products.
+- SWE-agent, AutoCodeRover, Agentless live in papers and on the leaderboard.
+- Two are shipped: OpenHands as an open platform from All Hands AI, Devin as Cognition's commercial cloud agent.
+- And the tools developers actually reach for daily — Claude Code, Cursor, Copilot, Codex — are productised descendants: the same observe-think-act loop, the same purpose-built interface, the same execution-grounded refinement.
+
+Same ingredients, deployed as IDE assistants, autonomous PR bots, and CI jobs. So the patterns we just dissected are the patterns in the tools you already use.
+
 ## SWE-bench
 
 *Part two — how we measure.* Every number ahead scores one thing: did the final patch pass. Watch what that leaves invisible — plan quality, localisation, the work of refinement.
