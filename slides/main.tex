@@ -67,12 +67,9 @@
     \node[note, below=0.15cm of exec] {test failures, traces};
 
     % Key: which visual element each cross-cutting control acts on
-    \draw[arr] (0,-3.15) -- ++(0.55,0);
-    \node[key] at (0.78,-3.15)
-      {\textbf{Orchestration}: the arrows, which step runs next};
     \node[stage, minimum width=0.55cm, minimum height=0.34cm] at (0.27,-3.72) {};
     \node[key] at (0.78,-3.72)
-      {\textbf{Interface \& context}: inside each stage};
+      {\textbf{Interface}: connect LLM and system};
   \end{tikzpicture}%
 }
 
@@ -380,7 +377,7 @@
 %   \\ Cheaper, predictable, no recovery.}
 % \end{frame}
 
-\begin{frame}{Interface and Context}
+\begin{frame}{Interface}
   Two common designs:
 
   \bigskip
