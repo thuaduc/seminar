@@ -240,7 +240,7 @@
     \item \textbf{How do we measure performance?} \\
       {\small The benchmark, the metrics, what the numbers hide.}
       \medskip
-    \item \textbf{Challenges?}
+    \item \textbf{What are the current challenges?}
   \end{enumerate}
 \end{frame}
 
@@ -719,17 +719,19 @@
 
   \medskip
   \begin{itemize}
+    \item \textbf{Linter / type checker}
+      \begin{itemize}
+        \item catches syntax errors and type mismatches before tests run
+      \end{itemize}
+      \medskip
+
     \item \textbf{Test suite}
       \begin{itemize}
         \item fail-to-pass tests must flip
         \item pass-to-pass must not regress
       \end{itemize}
       \medskip
-    \item \textbf{Linter / type checker}
-      \begin{itemize}
-        \item catches syntax errors and type mismatches before tests run
-      \end{itemize}
-      \medskip
+
     \item \textbf{Error traces}
       \begin{itemize}
         \item stack traces and assertion messages say \emph{what} failed and
@@ -747,59 +749,51 @@
   Execution returned a verdict. What the agent does with it is refinement.
 
   \medskip
-  \begin{tabular}{@{}L{0.26\textwidth}L{0.30\textwidth}L{0.34\textwidth}@{}}
+  \begin{tabular}{@{}L{0.30\textwidth}L{0.60\textwidth}@{}}
     \toprule
-    \textbf{Mechanism} & \textbf{Correction signal}
-      & \textbf{Characteristic failure} \\
+    \textbf{Mechanism} & \textbf{Correction signal} \\
     \midrule
     Self-Refine~\cite{madaan2023selfrefine}
-      & The model critiques itself
-      & Plateaus \\
+      & The model to critique and rewrite its own output \\
     \addlinespace
     Reflexion~\cite{shinn2023reflexion}
-      & Verbal critique across attempts; self-written tests
-      & Inherits what the tests missed \\
+      & Model summarize what went wrong after a failed attempt before trying again. \\
     \addlinespace
     Self-debugging~\cite{chen2024selfdebug}
-      & Explains its own code; test verdict if any
-      & Explains the bug as intended \\
+      & Model explains its own code while also considering the execution results. \\
     \bottomrule
   \end{tabular}
 
   \smallskip
   \begin{tradeoffs}
-    \pro Adds 2 to 3\% without tests.
+    \pro Increase success rate by 2 to 3\%.
     \con Ceiling: if the model could spot its own wrong code just by looking, 
     \\ it would have written it right the first time.
   \end{tradeoffs}
 \end{frame}
 
-\begin{frame}{Refinement: tests and trained critics}
+\begin{frame}{Refinement: tests}
   \label{fr:refine2}
   \small
-  \begin{tabular}{@{}L{0.26\textwidth}L{0.30\textwidth}L{0.34\textwidth}@{}}
+  \begin{tabular}{@{}L{0.30\textwidth}L{0.60\textwidth}@{}}
     \toprule
-    \textbf{Mechanism} & \textbf{Correction signal}
-      & \textbf{Characteristic failure} \\
+    \textbf{Mechanism} & \textbf{Correction signal} \\
     \midrule
     D4C~\cite{xu2024d4c}
-      & Failing tests $+$ the whole function
-      & Plausible but incorrect patches \\
+      & Hands the failing tests and the whole function back to the model and asks for a fresh fix. \\
     \addlinespace
     Agentless validate~\cite{xia2024agentless}
-      & Regression $+$ generated tests
-      & The generated half inherits the misreading \\
+      & Uses project's own regression tests and adds generated ones to screen out bad patches. \\
     \addlinespace
     Best-of-$N$ $+$ critic~\cite{openhands2025verified}
-      & Executed rollouts, ranked by a trained critic
-      & Cost scales with $N$ \\
-    \bottomrule
+      & Executed rollouts, ranked by a trained critic \\
+      \bottomrule
   \end{tabular}
 
   \smallskip
   \begin{tradeoffs}
     \pro Real tests can surprise the model, catching wrong patches
-    \con Generated tests and critics only echo the model's blind spots
+    \con Tests catch only the cases they run, not a guarantee of correctness
   \end{tradeoffs}
 \end{frame}
 
@@ -829,47 +823,41 @@
   \label{fr:systems}
   \scriptsize
   \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{@{}L{0.14\textwidth}L{0.13\textwidth}L{0.14\textwidth}L{0.15\textwidth}L{0.16\textwidth}L{0.14\textwidth}@{}}
+  \begin{tabular}{@{}L{0.18\textwidth}L{0.16\textwidth}L{0.18\textwidth}L{0.20\textwidth}L{0.18\textwidth}@{}}
     \toprule
     \textbf{System}
       & \textbf{Orchestration}
       & \textbf{Interface}
-      & \textbf{Planning}
       & \textbf{Refinement}
       & \textbf{Where used} \\
     \midrule
     SWE-agent
       & Agentic loop
       & ACI
-      & Implicit (model)
       & Self-repair
       & Research \\
     \addlinespace
     AutoCodeRover
       & Agentic loop
       & AST APIs
-      & AST localisation
       & Re-generate
       & Research \\
     \addlinespace
     OpenHands
       & Agentic loop
       & Code as action
-      & Implicit (model)
       & Best-of-$N$ + critic
       & Product (All Hands) \\
     \addlinespace
     Agentless
       & Fixed pipeline
       & Skeleton + emb.
-      & Hierarchical loc.
       & Regression + gen.\ tests
       & Research \\
     \addlinespace
     Devin
       & Agentic loop
-      & Own VM
-      & Knowledge store
+      & Not disclosed
       & Not disclosed
       & Product (Cognition) \\
     \bottomrule
@@ -1166,16 +1154,16 @@
   \end{itemize}
 \end{frame}
 
-\section{Challenges?}
+\section{What are the current challenges?}
 
-\begin{frame}{1. Nothing checks what you meant}
+\begin{frame}{1. The agent never asks}
   \label{fr:ambiguity}
   \begin{itemize}
-    \item The agent commits to \textbf{one reading} of the issue, and nothing
-      ever contradicts it.
+    \item It reads the issue \textbf{once}, decides what it means, and
+      \textbf{never revisits} that.
       \medskip
-    \item A wrong guess about something the tests never check
-      \textbf{scores as a success}.
+    \item If the tests don't cover the misunderstanding, the wrong fix
+      \textbf{still passed}.
   \end{itemize}
 
   \vfill
@@ -1184,13 +1172,10 @@
    work~\cite{lahiri2022ticoder,mu2024clarifygpt,vijayvargiya2026ambiguity}.}
 \end{frame}
 
-\begin{frame}{2. It has to guess what to read}
+\begin{frame}{2. The repo doesn't fit}
   \begin{itemize}
-    \item The repository \textbf{does not fit in context}. Choosing what to
-      read is most of the problem.
-      \medskip
-    \item Hard tasks are disproportionately \textbf{multi-file}, which is exactly
-      where agents stall (frame~\ref{fr:numbers}).
+    \item Before it can be right, it has to \textbf{pick what to look at}.
+      That choice is most of the problem.
   \end{itemize}
 
   \vfill
@@ -1211,17 +1196,6 @@
   {\footnotesize
    ``Reward hacking is swamping model intelligence
    gains''~\cite{cursor2025rewardhacking}.}
-\end{frame}
-
-\begin{frame}{Takeaways}
-  \begin{itemize}
-    \item \textbf{Agentic beats one-shot because it can run things}, not
-      because it reasons more.
-      \medskip
-    \item \textbf{Verification is the bottleneck.} In a randomised trial,
-      developers were 19\,\% \emph{slower}, and believed they were 20\,\%
-      faster~\cite{metr2025rct}.
-  \end{itemize}
 \end{frame}
 
 \setbeamertemplate{footline}{}

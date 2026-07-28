@@ -163,6 +163,7 @@ Planning ends here, and all of it happens blind: where and what, chosen before a
 Now generation turns the plan into code. Same empty-cart example, three ways to write the edit.
 
 First, infilling. The scaffold opens a gap and the model fills it. It reads the grey lines and writes only the orange ones, the two-line guard.
+
 In its favour: this is the operation models are trained on most. The bulk of training is cutting a span out of a real file and asking the model to put it back, given what surrounds it. So it is the shape the model is strongest at, and the diff format on the next slide is not. It also can't land in the wrong place, because the scaffold picked the spot. Against it: one span at a time, in practice one function, and the surrounding code has to fit in the prompt.
 
 ## Generate: diff generation
@@ -189,14 +190,11 @@ After execution returns a verdict, refinement decides what to do with it.
 
 These first three all work the same way: the model reads back its own output and tries to fix it.
 - Self-Refine: the model critiques its own answer and rewrites it, with no outside signal.
-- Reflexion: after a failed attempt it writes itself a short note on what went wrong, then retries with that note in view.
-- Self-debugging: the model explains its own code back to itself, like talking to a rubber duck, and uses a test verdict if there is one.
-
-So they fail the same way. It plateaus, or it explains the bug as intended, because whatever misread the problem also misreads the fix. 
+- Reflexion: after a failed attempt it writes itself a short note on what went wrong, then retries with that note in context.
+- Self-debugging: the model explains its own code back to itself, combine with test verdict.
 
 The ceiling is simple: if a model could spot its own wrong code just by looking, it would have written it right the first time. 
 
-Still, it isn't useless. Self-debugging adds two to three percent without tests and twelve with them, and that gap is the next slide.
 
 ## Refinement: tests and trained critics
 
@@ -209,20 +207,9 @@ External tests or critic can genuinely surprise the model. Generated tests canno
 
 But they are also limited. Tests catch only the cases they run; the critic, only what it learned.
 
-## Refinement: when does the loop stop?
-
-All tests pass, but that smuggles ground truth into the stopping condition.
-
-Diminishing returns: at a fixed budget, another repair round is often worse than a fresh sample.
-
-Iterative repair and best-of-N are the same lever: extra inference to cut variance.
-- OpenHands: sixty percent on Verified with one rollout, sixty-six with five reranked by a critic.
-
-Hold on to that middle column from the refinement tables.
-
 ## Five systems compared
 
-Five systems side by side: how each one handles orchestration, interface, planning, and refinement, and where each is actually used.
+Five systems side by side: how each one handles orchestration, interface, and refinement, and where each is actually used.
 
 ## Where are these systems used?
 
@@ -306,13 +293,13 @@ By early 2026 OpenAI retired Verified, since the frontier models and agents reac
 
 So what are the challenges on the hard, long-horizon, multi-file tasks?
 
-## 1. Nothing checks what you meant
+## 1. The agent never asks
 
-Intent capture is the one stage with no feedback edge. The agent reads the issue, commits to a reading, and never revisits it. So a misreading survives all the way to the end of the run, and nothing in the loop can flag it.
+Intent capture is the one stage with no feedback edge. The agent reads the issue once, decides what it means, and never revisits that. Nothing ever asks it to check. If the tests don't cover the misunderstanding, the wrong fix still passed.
 
-## 2. It has to guess what to read
+## 2. The repo doesn't fit
 
-The second reason is that the repository does not fit in the context window. Before the agent can be right, it has to choose what to look at, and that choice is most of the problem.
+The second challenge is that the repo doesn't fit in the context window. Before the agent can be right, it has to choose what to look at, and that choice is most of the problem.
 
 Hard tasks are disproportionately multi-file, which is exactly where agents stall.
 
